@@ -39,8 +39,16 @@ jobs:
       - name: Quitar rutas de servidor
         run: rm -rf src/app/api
 
+      # Next descarga Fredoka y Nunito de Google Fonts al compilar; si Google falla
+      # un momento, se reintenta hasta 3 veces antes de rendirse.
       - name: Compilar sitio estático
-        run: npm run build
+        run: |
+          for intento in 1 2 3; do
+            if npm run build; then exit 0; fi
+            echo "::warning::La compilación falló (intento $intento de 3). Reintentando en 20 s..."
+            sleep 20
+          done
+          exit 1
         env:
           GITHUB_PAGES: "true"
           NEXT_BASE_PATH: ${{ steps.pages.outputs.base_path }}
