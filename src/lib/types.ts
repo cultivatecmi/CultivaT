@@ -63,9 +63,18 @@ export interface GameStats {
   best: Partial<Record<string, number>>;
 }
 
+export interface Profile {
+  /** nombre que el niño elige mostrar (no es su nombre real obligatorio) */
+  displayName: string;
+  /** foto de perfil comprimida (data URL) o emoji */
+  avatar: string | null;
+  avatarEmoji: string;
+}
+
 export interface GameState {
   version: 1;
   nickname: string;
+  profile: Profile;
   plantName: string;
   isDemo: boolean;
   /** 0-100 */

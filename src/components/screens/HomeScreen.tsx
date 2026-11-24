@@ -554,7 +554,8 @@ export function HomeScreen() {
       // toque rápido: la herramienta vuela sola hasta Brotín
       const r = plantRef.current?.getBoundingClientRect();
       if (!r) return endDrag();
-      const fy = d.tool === "sponge" ? 0.5 : d.tool === "feed" ? 0.28 : 0.12;
+      // la esponja va a la cabecita (donde salen las manchitas)
+      const fy = d.tool === "sponge" ? plantGeometry(latest.current.stage).hy / VIEW_H : d.tool === "feed" ? 0.28 : 0.12;
       d.x = r.left + r.width * (d.tool === "water" ? 0.62 : 0.5);
       d.y = r.top + r.height * fy + 40;
       d.over = true;
@@ -749,7 +750,7 @@ export function HomeScreen() {
 
       <ActionBar
         activeTool={activeTool}
-        alerts={{ water: state.water < 30 && state.climate !== "lluvia", feed: state.nutrients < 30, shade: heat }}
+        alerts={{ water: state.water < 30 && state.climate !== "lluvia", feed: state.nutrients < 30, shade: heat, sponge: state.dirt > 0 }}
         onToolPointerDown={onToolPointerDown}
         onToolPointerMove={onToolPointerMove}
         onToolPointerUp={onToolPointerUp}

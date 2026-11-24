@@ -74,6 +74,7 @@ export function createInitialState(nickname: string, now = Date.now()): GameStat
   return {
     version: 1,
     nickname,
+    profile: { displayName: nickname, avatar: null, avatarEmoji: "🧑‍🌾" },
     plantName: "Brotín",
     isDemo: false,
     water: 80,
@@ -178,6 +179,16 @@ export function sanitizeState(raw: unknown, nickname: string): GameState {
     ...r,
     version: 1,
     nickname: typeof r.nickname === "string" && r.nickname ? r.nickname : nickname,
+    profile: {
+      displayName:
+        typeof r.profile?.displayName === "string" && r.profile.displayName.trim()
+          ? r.profile.displayName.slice(0, 20)
+          : typeof r.nickname === "string" && r.nickname
+            ? r.nickname
+            : nickname,
+      avatar: typeof r.profile?.avatar === "string" ? r.profile.avatar : null,
+      avatarEmoji: typeof r.profile?.avatarEmoji === "string" ? r.profile.avatarEmoji : "🧑‍🌾",
+    },
     water: clamp(num(r.water, base.water)),
     fresh: clamp(num(r.fresh, base.fresh)),
     nutrients: clamp(num(r.nutrients, base.nutrients)),

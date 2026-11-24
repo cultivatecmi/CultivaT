@@ -84,6 +84,8 @@ interface GameContextValue {
   markAllRead: () => void;
   clearNotifications: () => void;
   setPlantName: (name: string) => void;
+  /** Cambia nombre visible o foto/emoji de perfil */
+  updateProfile: (p: Partial<GameState["profile"]>) => void;
   enableBrowserNotifications: () => Promise<boolean>;
 }
 
@@ -627,6 +629,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     commit({ ...s, notifications: [] });
   }, [current, commit]);
 
+  const updateProfile = useCallback(
+    (p: Partial<GameState["profile"]>) => {
+      const s = current();
+      if (!s) return;
+      const next = { ...s.profile, ...p };
+      next.displayName = (next.displayName || s.nickname).slice(0, 20);
+      commit({ ...s, profile: next });
+    },
+    [current, commit]
+  );
+
   const setPlantName = useCallback(
     (name: string) => {
       const s = current();
@@ -684,12 +697,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       markAllRead,
       clearNotifications,
       setPlantName,
+      updateProfile,
       enableBrowserNotifications,
     }),
     [
       hydrated, session, state, now, syncStatus, tab, toasts, pushToast, login, startDemo, logout,
       care, boost, openUmbrella, cleanDirt, addDirt, setClimate, cycleClimate, growStage, reward, recordGame, recordTriviaRound, buyItem, equipItem, addPhoto, deletePhoto,
-      markAllRead, clearNotifications, setPlantName, enableBrowserNotifications,
+      markAllRead, clearNotifications, setPlantName, updateProfile, enableBrowserNotifications,
     ]
   );
 

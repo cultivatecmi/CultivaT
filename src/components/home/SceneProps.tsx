@@ -73,11 +73,12 @@ export function UmbrellaSvg({ className, fading }: { className?: string; fading?
 // Bandeja de herramientas
 // ---------------------------------------------------------------------------
 
-/** Solo 3 acciones: limpiar y acariciar se hacen frotando la planta con el dedo */
+/** 4 acciones (también se puede limpiar/acariciar frotando la planta con el dedo) */
 export const TOOLS: { id: ToolId; emoji: string; ghost: string; label: string; color: string; dark: string }[] = [
   { id: "water", emoji: "💧", ghost: "🚿", label: "Regar", color: "#29B6F6", dark: "#0288D1" },
   { id: "feed", emoji: "🧪", ghost: "🧪", label: "Abonar", color: "#66BB6A", dark: "#388E3C" },
   { id: "shade", emoji: "☂️", ghost: "☂️", label: "Sombra", color: "#FF8A65", dark: "#E64A19" },
+  { id: "sponge", emoji: "🧽", ghost: "🧽", label: "Limpiar", color: "#FFCA28", dark: "#F9A825" },
 ];
 
 interface BarProps {
@@ -91,7 +92,7 @@ interface BarProps {
 /** 3 botones circulares flotantes (tócalos o arrástralos hacia la planta) */
 export function ActionBar({ activeTool, alerts, onToolPointerDown, onToolPointerMove, onToolPointerUp }: BarProps) {
   return (
-    <div className="pointer-events-none absolute inset-x-0 z-30 flex justify-center gap-7" style={{ bottom: "var(--tray-b)" }}>
+    <div className="pointer-events-none absolute inset-x-0 z-30 flex justify-center gap-5" style={{ bottom: "var(--tray-b)" }}>
       {TOOLS.map((t) => {
         const active = activeTool === t.id;
         const alert = alerts[t.id];

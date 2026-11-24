@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Cloud, Lock, Play, Smartphone } from "lucide-react";
 import { useGame } from "@/components/GameProvider";
+import { ProfileAvatar } from "@/components/settings/SettingsPanel";
+import { listLocalProfiles, type SavedProfile } from "@/lib/storage";
+import { cn } from "@/lib/utils";
 import { PlantScene } from "@/components/plant/PlantScene";
 import { TapButton } from "@/components/ui/TapButton";
 
@@ -13,6 +16,12 @@ export function Welcome() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [bounce, setBounce] = useState(0);
+  const [saved, setSaved] = useState<SavedProfile[]>([]);
+  const pinRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setSaved(listLocalProfiles());
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +53,33 @@ export function Welcome() {
 
       <form onSubmit={submit} className="mt-6 space-y-3 rounded-3xl border-2 border-stone-200 bg-white p-5 shadow-sm">
         <h2 className="text-xl font-semibold">¡Entra a tu jardín!</h2>
+        {saved.length > 0 && (
+          <div>
+            <p className="mb-1.5 font-display text-sm font-medium text-stone-600">Perfiles en este dispositivo</p>
+            <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+              {saved.map((p) => (
+                <button
+                  key={p.nickname}
+                  type="button"
+                  onClick={() => {
+                    setNickname(p.nickname);
+                    setPin("");
+                    setError(null);
+                    pinRef.current?.focus();
+                  }}
+                  className={cn(
+                    "flex shrink-0 flex-col items-center gap-1 rounded-2xl border-2 px-2.5 py-2",
+                    nickname.trim().toLowerCase() === p.nickname.toLowerCase() ? "border-hoja bg-hoja-light" : "border-stone-200 bg-white"
+                  )}
+                >
+                  <ProfileAvatar avatar={p.avatar} emoji={p.avatarEmoji} size={44} />
+                  <span className="max-w-[72px] truncate font-display text-xs font-semibold">{p.displayName}</span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-xs text-stone-500">Toca tu perfil y escribe tu PIN, o crea uno nuevo abajo.</p>
+          </div>
+        )}
         <label className="block">
           <span className="mb-1 block font-display text-sm font-medium text-stone-600">Tu apodo</span>
           <input
@@ -61,6 +97,7 @@ export function Welcome() {
             <Lock size={14} /> PIN secreto de 4 números
           </span>
           <input
+            ref={pinRef}
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
             inputMode="numeric"

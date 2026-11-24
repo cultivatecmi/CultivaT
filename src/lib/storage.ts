@@ -111,6 +111,36 @@ export function saveLocalState(nick: string, state: GameState, pin?: string | nu
   return safeSet(profileKey(nick), JSON.stringify({ pinHash, state } satisfies LocalProfile));
 }
 
+export interface SavedProfile {
+  nickname: string;
+  displayName: string;
+  avatar: string | null;
+  avatarEmoji: string;
+}
+
+/** Perfiles guardados en este dispositivo (para cambiar de perfil rápido) */
+export function listLocalProfiles(): SavedProfile[] {
+  const out: SavedProfile[] = [];
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (!key?.startsWith(`${PREFIX}:profile:`) || key.endsWith(":demo")) continue;
+      const p = loadLocalProfile(key.slice(`${PREFIX}:profile:`.length));
+      const st = p?.state;
+      if (!st?.nickname) continue;
+      out.push({
+        nickname: st.nickname,
+        displayName: st.profile?.displayName || st.nickname,
+        avatar: st.profile?.avatar ?? null,
+        avatarEmoji: st.profile?.avatarEmoji || "🧑‍🌾",
+      });
+    }
+  } catch {
+    /* sin almacenamiento */
+  }
+  return out.sort((a, b) => a.displayName.localeCompare(b.displayName));
+}
+
 export type LoginResult =
   | { ok: true; state: GameState | null; created: boolean }
   | { ok: false; error: string };
