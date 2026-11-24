@@ -208,12 +208,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setHydrated(true);
 
     // el audio solo puede activarse tras un gesto del usuario
+    // (Safari en iPhone solo acepta touchend/click como gesto válido; se escucha en fase de captura
+    // para que ningún componente lo bloquee con stopPropagation)
     const unlock = () => unlockAudio();
-    window.addEventListener("pointerdown", unlock);
-    window.addEventListener("keydown", unlock);
+    const events = ["touchend", "click", "pointerup", "keydown"] as const;
+    events.forEach((ev) => window.addEventListener(ev, unlock, { capture: true, passive: true }));
     return () => {
-      window.removeEventListener("pointerdown", unlock);
-      window.removeEventListener("keydown", unlock);
+      events.forEach((ev) => window.removeEventListener(ev, unlock, { capture: true }));
     };
   }, []);
 
