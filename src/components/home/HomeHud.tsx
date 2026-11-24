@@ -5,6 +5,7 @@ import { Bell, Settings } from "lucide-react";
 import { useGameState } from "@/components/GameProvider";
 import { NotificationsPanel } from "@/components/layout/NotificationsPanel";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
+import { StagesPanel } from "./StagesPanel";
 import { isShaded } from "@/lib/game";
 import { getStage } from "@/lib/stages";
 import { playSound } from "@/lib/sound";
@@ -56,6 +57,7 @@ export function HomeHud() {
   const { state, now, markAllRead, session, growStage } = useGameState();
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState(false);
+  const [stages, setStages] = useState(false);
   const st = getStage(state.xp);
   const unread = state.notifications.filter((n) => !n.read).length;
   const climate = CLIMATES[state.climate];
@@ -81,9 +83,20 @@ export function HomeHud() {
         </div>
 
         <div className="relative">
-          <Ring value={st.progress * 100} color="#4CAF50" size={36} stroke={3.5} label={`${st.stage.name}: nivel`}>
-            <span className="text-base">{st.stage.emoji}</span>
-          </Ring>
+          <button
+            type="button"
+            onClick={() => {
+              playSound("tap");
+              setStages(true);
+            }}
+            className="block rounded-full active:scale-90"
+            aria-label={`Ver etapas: ${st.stage.name}, ${Math.round(st.progress * 100)}%`}
+            title="Ver progreso y etapas"
+          >
+            <Ring value={st.progress * 100} color="#4CAF50" size={36} stroke={3.5} label={`${st.stage.name}: nivel`}>
+              <span className="text-base">{st.stage.emoji}</span>
+            </Ring>
+          </button>
           {session?.isDemo && (
             <button
               type="button"
@@ -143,6 +156,7 @@ export function HomeHud() {
       </div>
 
       {settings && <SettingsPanel onClose={() => setSettings(false)} />}
+      {stages && <StagesPanel onClose={() => setStages(false)} />}
     </div>
   );
 }
