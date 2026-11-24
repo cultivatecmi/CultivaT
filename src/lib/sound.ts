@@ -1,0 +1,242 @@
+/**
+ * Efectos de sonido sintetizados con Web Audio API (sin archivos de audio).
+ * El contexto se crea/activa con el primer toque del usuario (requisito de los navegadores).
+ */
+
+export type SoundName =
+  | "drop"
+  | "coin"
+  | "bite"
+  | "bounce"
+  | "squash"
+  | "levelup"
+  | "pop"
+  | "whoosh"
+  | "scrub"
+  | "tap"
+  | "rain"
+  | "correct"
+  | "wrong"
+  | "flip"
+  | "beep"
+  | "go";
+
+const MUTE_KEY = "cultivat:v1:muted";
+
+let ctx: AudioContext | null = null;
+let master: GainNode | null = null;
+let noiseBuf: AudioBuffer | null = null;
+let muted = false;
+let mutedLoaded = false;
+const listeners = new Set<() => void>();
+const lastPlayed: Partial<Record<SoundName, number>> = {};
+
+// ---------------------------------------------------------------------------
+// Silencio
+// ---------------------------------------------------------------------------
+
+function loadMuted() {
+  if (mutedLoaded || typeof window === "undefined") return;
+  mutedLoaded = true;
+  try {
+    muted = window.localStorage.getItem(MUTE_KEY) === "1";
+  } catch {
+    /* sin almacenamiento */
+  }
+}
+
+export function isMuted() {
+  loadMuted();
+  return muted;
+}
+
+export function setMuted(value: boolean) {
+  muted = value;
+  mutedLoaded = true;
+  try {
+    window.localStorage.setItem(MUTE_KEY, value ? "1" : "0");
+  } catch {
+    /* sin almacenamiento */
+  }
+  listeners.forEach((l) => l());
+}
+
+export function subscribeMuted(fn: () => void) {
+  listeners.add(fn);
+  return () => {
+    listeners.delete(fn);
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Motor
+// ---------------------------------------------------------------------------
+
+function getCtx(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  if (!ctx) {
+    const AC =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AC) return null;
+    try {
+      ctx = new AC();
+      master = ctx.createGain();
+      master.gain.value = 0.55;
+      master.connect(ctx.destination);
+    } catch {
+      return null;
+    }
+  }
+  if (ctx.state === "suspended") void ctx.resume().catch(() => undefined);
+  return ctx;
+}
+
+/** Llamar desde un gesto del usuario para habilitar el audio */
+export function unlockAudio() {
+  getCtx();
+}
+
+function getNoise(c: AudioContext) {
+  if (!noiseBuf) {
+    noiseBuf = c.createBuffer(1, Math.floor(c.sampleRate * 0.6), c.sampleRate);
+    const data = noiseBuf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  }
+  return noiseBuf;
+}
+
+interface ToneOpts {
+  type?: OscillatorType;
+  f0: number;
+  f1?: number;
+  at?: number;
+  dur: number;
+  vol: number;
+  attack?: number;
+}
+
+function tone(c: AudioContext, t: number, o: ToneOpts, gainMul: number) {
+  const osc = c.createOscillator();
+  const g = c.createGain();
+  const t0 = t + (o.at ?? 0);
+  osc.type = o.type ?? "sine";
+  osc.frequency.setValueAtTime(o.f0, t0);
+  if (o.f1) osc.frequency.exponentialRampToValueAtTime(o.f1, t0 + o.dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002, o.vol * gainMul), t0 + (o.attack ?? 0.006));
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur);
+  osc.connect(g);
+  g.connect(master!);
+  osc.start(t0);
+  osc.stop(t0 + o.dur + 0.03);
+}
+
+interface NoiseOpts {
+  filter: BiquadFilterType;
+  f0: number;
+  f1?: number;
+  q?: number;
+  at?: number;
+  dur: number;
+  vol: number;
+}
+
+function noise(c: AudioContext, t: number, o: NoiseOpts, gainMul: number) {
+  const src = c.createBufferSource();
+  src.buffer = getNoise(c);
+  const filter = c.createBiquadFilter();
+  const g = c.createGain();
+  const t0 = t + (o.at ?? 0);
+  filter.type = o.filter;
+  filter.Q.value = o.q ?? 1;
+  filter.frequency.setValueAtTime(o.f0, t0);
+  if (o.f1) filter.frequency.exponentialRampToValueAtTime(o.f1, t0 + o.dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002, o.vol * gainMul), t0 + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur);
+  src.connect(filter);
+  filter.connect(g);
+  g.connect(master!);
+  src.start(t0, Math.random() * 0.2);
+  src.stop(t0 + o.dur + 0.03);
+}
+
+const MIN_GAP_MS: Partial<Record<SoundName, number>> = { drop: 70, scrub: 90, pop: 60, bounce: 60, rain: 400 };
+
+/** Reproduce un efecto. `gain` permite sonidos más suaves (0-1). */
+export function playSound(name: SoundName, gain = 1) {
+  if (isMuted()) return;
+  const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+  const gap = MIN_GAP_MS[name] ?? 30;
+  if (now - (lastPlayed[name] ?? -Infinity) < gap) return;
+  lastPlayed[name] = now;
+
+  const c = getCtx();
+  if (!c || !master || c.state !== "running") return;
+  const t = c.currentTime + 0.005;
+
+  switch (name) {
+    case "drop": // "plip" de gota
+      tone(c, t, { f0: 520 + Math.random() * 120, f1: 1500, dur: 0.09, vol: 0.32 }, gain);
+      tone(c, t, { f0: 900, f1: 1800, at: 0.05, dur: 0.06, vol: 0.1 }, gain);
+      break;
+    case "coin": // moneda clásica
+      tone(c, t, { type: "square", f0: 988, dur: 0.08, vol: 0.09 }, gain);
+      tone(c, t, { type: "square", f0: 1319, at: 0.075, dur: 0.28, vol: 0.09 }, gain);
+      break;
+    case "bite": // mordisco crujiente
+      noise(c, t, { filter: "bandpass", f0: 1600, q: 1.4, dur: 0.05, vol: 0.55 }, gain);
+      noise(c, t, { filter: "bandpass", f0: 1200, q: 1.4, at: 0.09, dur: 0.05, vol: 0.45 }, gain);
+      tone(c, t, { type: "triangle", f0: 190, f1: 110, dur: 0.07, vol: 0.25 }, gain);
+      break;
+    case "bounce": // "boing"
+      tone(c, t, { f0: 150, f1: 480, dur: 0.17, vol: 0.4 }, gain);
+      tone(c, t, { type: "triangle", f0: 300, f1: 960, dur: 0.12, vol: 0.08 }, gain);
+      break;
+    case "squash": // aplastar bicho
+      noise(c, t, { filter: "lowpass", f0: 1400, f1: 300, dur: 0.16, vol: 0.6 }, gain);
+      tone(c, t, { f0: 220, f1: 50, dur: 0.2, vol: 0.4 }, gain);
+      break;
+    case "levelup": // arpegio de victoria
+      [523, 659, 784, 1047].forEach((f, i) =>
+        tone(c, t, { type: "triangle", f0: f, at: i * 0.09, dur: i === 3 ? 0.45 : 0.16, vol: 0.22 }, gain)
+      );
+      tone(c, t, { type: "sine", f0: 1568, at: 0.36, dur: 0.4, vol: 0.08 }, gain);
+      break;
+    case "pop": // corazoncitos / caricia
+      tone(c, t, { f0: 700 + Math.random() * 200, f1: 1250, dur: 0.07, vol: 0.18 }, gain);
+      break;
+    case "whoosh": // sombrilla
+      noise(c, t, { filter: "bandpass", f0: 300, f1: 2600, q: 0.9, dur: 0.32, vol: 0.4 }, gain);
+      break;
+    case "scrub": // esponja
+      noise(c, t, { filter: "highpass", f0: 2600, dur: 0.06, vol: 0.14 }, gain);
+      tone(c, t, { f0: 1800 + Math.random() * 600, f1: 2600, at: 0.02, dur: 0.05, vol: 0.05 }, gain);
+      break;
+    case "tap":
+      tone(c, t, { type: "triangle", f0: 660, f1: 880, dur: 0.06, vol: 0.14 }, gain);
+      break;
+    case "rain":
+      noise(c, t, { filter: "highpass", f0: 1800, dur: 0.6, vol: 0.12 }, gain);
+      break;
+    case "correct": // ¡bien!
+      tone(c, t, { type: "triangle", f0: 660, dur: 0.1, vol: 0.22 }, gain);
+      tone(c, t, { type: "triangle", f0: 990, at: 0.09, dur: 0.22, vol: 0.22 }, gain);
+      break;
+    case "wrong": // error suave (no asusta)
+      tone(c, t, { type: "square", f0: 220, f1: 140, dur: 0.22, vol: 0.08 }, gain);
+      tone(c, t, { type: "sine", f0: 180, f1: 110, at: 0.02, dur: 0.25, vol: 0.18 }, gain);
+      break;
+    case "flip": // voltear carta
+      noise(c, t, { filter: "bandpass", f0: 2400, f1: 900, q: 1.2, dur: 0.08, vol: 0.25 }, gain);
+      break;
+    case "beep": // cuenta regresiva
+      tone(c, t, { type: "sine", f0: 784, dur: 0.12, vol: 0.2 }, gain);
+      break;
+    case "go":
+      tone(c, t, { type: "sine", f0: 1175, dur: 0.3, vol: 0.22 }, gain);
+      tone(c, t, { type: "triangle", f0: 1568, at: 0.02, dur: 0.25, vol: 0.06 }, gain);
+      break;
+  }
+}

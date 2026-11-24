@@ -1,0 +1,99 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { Play, RotateCcw } from "lucide-react";
+import { TapButton } from "@/components/ui/TapButton";
+import { playSound } from "@/lib/sound";
+import { cn } from "@/lib/utils";
+
+/** Cuenta regresiva 3-2-1-¡Ya! que llama a onDone al terminar */
+export function Countdown({ onDone }: { onDone: () => void }) {
+  const [n, setN] = useState(3);
+  const doneRef = useRef(onDone);
+  doneRef.current = onDone;
+  useEffect(() => {
+    if (n === 0) {
+      playSound("go");
+      const t = setTimeout(() => doneRef.current(), 450);
+      return () => clearTimeout(t);
+    }
+    playSound("beep");
+    const t = setTimeout(() => setN(n - 1), 650);
+    return () => clearTimeout(t);
+  }, [n]);
+  return (
+    <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-black/10">
+      <span key={n} className="anim-count font-display text-8xl font-bold text-white [text-shadow:0_4px_0_rgba(0,0,0,.3)]">
+        {n === 0 ? "¡Ya!" : n}
+      </span>
+    </div>
+  );
+}
+
+interface IntroProps {
+  emoji: string;
+  title: string;
+  color: string;
+  children: React.ReactNode;
+  best?: string | null;
+  buttonTone: "cielo" | "hoja" | "sol" | "alerta";
+  onStart: () => void;
+  className?: string;
+}
+
+export function GameIntro({ emoji, title, color, children, best, buttonTone, onStart, className }: IntroProps) {
+  return (
+    <div className={cn("flex h-full flex-col items-center justify-center gap-3 p-6 text-center", className)}>
+      <div className="anim-card-float text-7xl drop-shadow-md">{emoji}</div>
+      <h3 className="text-3xl font-bold" style={{ color }}>
+        {title}
+      </h3>
+      <div className="max-w-[300px] text-[15px] leading-snug text-tinta">{children}</div>
+      {best && <p className="rounded-full bg-white/80 px-3 py-1 font-display text-sm font-semibold text-tierra">🏆 Tu récord: {best}</p>}
+      <TapButton tone={buttonTone} size="lg" onClick={onStart}>
+        <Play size={20} /> ¡Jugar!
+      </TapButton>
+    </div>
+  );
+}
+
+interface ResultProps {
+  medal: string;
+  title: string;
+  stats: { label: string; value: string }[];
+  coins: number;
+  newBest: boolean;
+  buttonTone: "cielo" | "hoja" | "sol" | "alerta";
+  onRetry: () => void;
+  onExit: () => void;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export function GameResult({ medal, title, stats, coins, newBest, buttonTone, onRetry, onExit, className, children }: ResultProps) {
+  return (
+    <div className={cn("flex h-full flex-col items-center justify-center gap-3 p-6 text-center", className)}>
+      <div className="anim-pop text-7xl">{medal}</div>
+      <h3 className="text-3xl font-bold text-tinta">{title}</h3>
+      {newBest && <span className="anim-streak rounded-full bg-sol px-3 py-1 font-display text-sm font-bold text-white">⭐ ¡Nuevo récord!</span>}
+      <div className="flex flex-wrap justify-center gap-2">
+        {stats.map((s) => (
+          <div key={s.label} className="min-w-[78px] rounded-2xl bg-white/85 px-3 py-1.5 shadow-sm">
+            <div className="font-display text-xl font-bold leading-tight">{s.value}</div>
+            <div className="text-[11px] font-semibold text-stone-500">{s.label}</div>
+          </div>
+        ))}
+      </div>
+      {children}
+      <div className="rounded-2xl border-b-4 border-sol-dark bg-sol px-5 py-2 font-display text-xl font-semibold text-white shadow">+{coins} 🪙 ganadas</div>
+      <div className="flex gap-2">
+        <TapButton tone="blanco" onClick={onExit}>
+          Otros juegos
+        </TapButton>
+        <TapButton tone={buttonTone} onClick={onRetry}>
+          <RotateCcw size={18} /> Otra vez
+        </TapButton>
+      </div>
+    </div>
+  );
+}
