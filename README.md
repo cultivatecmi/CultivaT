@@ -34,6 +34,16 @@ Para abrirla desde un celular en la misma red Wi-Fi: `npm run dev:lan` y entra a
 
 Agrega `GEMINI_API_KEY` en `.env.local` (clave gratuita en <https://aistudio.google.com/apikey>). Sin clave, Sabi responde con su "libreta" de respuestas educativas preprogramadas.
 
+## 🌐 Publicar en GitHub Pages
+
+El workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) compila la app como sitio estático (`out/index.html`) y la publica en cada push a `main`.
+
+1. En GitHub: **Settings → Pages → Build and deployment → Source: "GitHub Actions"** (una sola vez).
+2. Haz merge a `main` (o ejecuta el workflow a mano en la pestaña **Actions**).
+3. La app queda en `https://cultivatecmi.github.io/CultivaT/`.
+
+En Pages no hay servidor, así que Sabi usa sus respuestas preprogramadas y el progreso se guarda en el navegador (o en Supabase si se agregan las variables). Para probar la exportación en local: `GITHUB_PAGES=true NEXT_BASE_PATH=/CultivaT npm run build` (requiere quitar temporalmente `src/app/api`).
+
 ## 🚀 Desplegar en Vercel
 
 1. Sube la carpeta a un repositorio de GitHub.
@@ -82,7 +92,9 @@ Cada juego guarda tu récord y entrega XP para que la planta crezca.
 
 ## 🌱 Brotín por etapas
 
-Semilla (semillita con ojitos) → Brote (tallo con 2 hojas-brazo) → Planta Joven (corona de 4 hojas) → Floreciendo (girasol). La geometría de cada etapa está en `src/components/plant/geometry.ts` y la usan el SVG, los accesorios y la pantalla principal.
+Planta literal que crece de chiquita a grande y se mece con la brisa: Germinando (tallito con 2 hojitas bebé) → Brote joven (doble de alto, 4 hojas) → Planta frondosa (8 hojas en niveles y capullos) → Floreciendo (flor abierta). En el Modo Demo, el botón **✨ Crecer Etapa** avanza las etapas en vivo.
+
+El clima de "Mi Planta" cambia solo cada 35-45 s entre Soleado (26 °C), Ola de calor (42 °C, agua y frescura bajan muy rápido) y Lluvia fresca (19 °C, el agua sube sola), con aviso en pantalla y en la campana. La geometría de cada etapa está en `src/components/plant/geometry.ts` y la usan el SVG, los accesorios y la pantalla principal.
 
 ## 🛍️ Tienda
 
