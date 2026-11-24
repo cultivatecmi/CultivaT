@@ -382,6 +382,10 @@ html.dark body { color: #eef3ec; }
 .dark textarea { color: #eef3ec; }
 .dark .from-sol-light { --tw-gradient-from: #3a3118; }
 .dark .to-hoja-light { --tw-gradient-to: #1f3a26; }
+/* menú inferior: café en modo claro, gris claro en modo oscuro */
+.nav-idle { color: #6d4c41; }
+.dark .nav-idle { color: #e3e8e4; }
+.dark nav .opacity-70 { opacity: 0.85; }
 /* noche en el jardín de "Mi Planta" */
 .night-overlay { opacity: 0; transition: opacity 1s; }
 .dark .night-overlay { opacity: 1; }
