@@ -32,12 +32,12 @@ export function BottomNav() {
                 )}
               >
                 <span
-                  className={cn("grid h-10 w-10 place-items-center rounded-2xl transition-all", active && "-translate-y-0.5 shadow-md")}
-                  style={{ background: active ? color : "transparent", color: active ? "#fff" : "#6D4C41" }}
+                  className={cn("grid h-10 w-10 place-items-center rounded-2xl transition-all", active ? "-translate-y-0.5 shadow-md" : "nav-idle")}
+                  style={{ background: active ? color : "transparent", color: active ? "#fff" : undefined }}
                 >
                   <Icon size={24} strokeWidth={2.4} />
                 </span>
-                <span className="font-display text-[12px] font-semibold" style={{ color: active ? color : "#6D4C41" }}>
+                <span className={cn("font-display text-[12px] font-semibold", !active && "nav-idle")} style={{ color: active ? color : undefined }}>
                   {label}
                 </span>
               </button>
