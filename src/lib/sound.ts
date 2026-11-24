@@ -92,9 +92,67 @@ function getCtx(): AudioContext | null {
   return ctx;
 }
 
-/** Llamar desde un gesto del usuario para habilitar el audio */
+let unlocked = false;
+let silentAudio: HTMLAudioElement | null = null;
+
+/** WAV de 0.1 s de silencio, generado en memoria (sin archivos externos) */
+function silentWavUrl() {
+  const rate = 8000;
+  const samples = rate / 10;
+  const buf = new ArrayBuffer(44 + samples * 2);
+  const v = new DataView(buf);
+  const str = (o: number, s: string) => [...s].forEach((ch, i) => v.setUint8(o + i, ch.charCodeAt(0)));
+  str(0, "RIFF");
+  v.setUint32(4, 36 + samples * 2, true);
+  str(8, "WAVE");
+  str(12, "fmt ");
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true);
+  v.setUint32(28, rate * 2, true);
+  v.setUint16(32, 2, true);
+  v.setUint16(34, 16, true);
+  str(36, "data");
+  v.setUint32(40, samples * 2, true);
+  return URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
+}
+
+/**
+ * Llamar desde un gesto del usuario (touchend / click / keydown) para habilitar el audio.
+ * En iPhone además pide modo "reproducción" para que suene aunque el interruptor de silencio esté activado.
+ */
 export function unlockAudio() {
-  getCtx();
+  if (typeof window === "undefined") return;
+  // iOS 17+: los sonidos del juego se tratan como reproducción multimedia
+  try {
+    const nav = navigator as Navigator & { audioSession?: { type: string } };
+    if (nav.audioSession) nav.audioSession.type = "playback";
+  } catch {
+    /* no disponible */
+  }
+  const c = getCtx();
+  if (!c) return;
+  if (unlocked && c.state === "running") return;
+  try {
+    // un sample silencioso dentro del gesto "despierta" el audio en Safari
+    const b = c.createBuffer(1, 1, 22050);
+    const src = c.createBufferSource();
+    src.buffer = b;
+    src.connect(c.destination);
+    src.start(0);
+    // iOS anterior a 17: un <audio> silencioso cambia la sesión a "reproducción"
+    if (!silentAudio) {
+      silentAudio = new Audio(silentWavUrl());
+      silentAudio.setAttribute("playsinline", "");
+      silentAudio.loop = true;
+      silentAudio.volume = 0.01;
+    }
+    void silentAudio.play().catch(() => undefined);
+    unlocked = true;
+  } catch {
+    /* sin audio */
+  }
 }
 
 function getNoise(c: AudioContext) {
@@ -173,7 +231,21 @@ export function playSound(name: SoundName, gain = 1) {
   lastPlayed[name] = now;
 
   const c = getCtx();
-  if (!c || !master || c.state !== "running") return;
+  if (!c || !master) return;
+  if (c.state !== "running") {
+    // el audio aún se está activando (primer toque en móviles): suena en cuanto despierte
+    void c
+      .resume()
+      .then(() => {
+        if (c.state === "running") render(c, name, gain);
+      })
+      .catch(() => undefined);
+    return;
+  }
+  render(c, name, gain);
+}
+
+function render(c: AudioContext, name: SoundName, gain: number) {
   const t = c.currentTime + 0.005;
 
   switch (name) {
