@@ -164,8 +164,8 @@ const TIPS: Record<"water" | "nutrients" | "fresh" | "happy", Record<DiagStatus,
   },
   happy: {
     ok: "¡Está muy feliz contigo! 😊",
-    warn: "Le encantaría jugar: acaríciala o saca la pelota ⚽.",
-    bad: "Se siente solita 😢. Acaríciala, juega a la pelota ⚽ o atrapa pulgones con ella.",
+    warn: "Le encantaría un cariño: acaríciala frotándola con el dedo 💚.",
+    bad: "Se siente solita 😢. Acaríciala con el dedo o atrapa pulgones con ella.",
   },
 };
 
@@ -179,7 +179,7 @@ export function diagnosePlant(s: GameState): Diagnosis {
   const extras: string[] = [];
   if (s.climate === "calor") extras.push("🔥 Hoy hay ola de calor en Culiacán (42 °C): riega temprano y usa la sombrilla.");
   if (s.climate === "lluvia") extras.push("🌧️ Está lloviendo: la lluvia la riega sola, ¡no necesita tanta agua!");
-  if (s.dirt > 0) extras.push(`🧽 Tiene ${s.dirt} ${s.dirt === 1 ? "manchita" : "manchitas"} de tierra en las hojas: límpialas con la esponja.`);
+  if (s.dirt > 0) extras.push(`🧽 Tiene ${s.dirt} ${s.dirt === 1 ? "manchita" : "manchitas"} de tierra: frótala con el dedo para limpiarla.`);
   const bad = items.filter((i) => i.status === "bad").length;
   const warn = items.filter((i) => i.status === "warn").length;
   const overall: DiagStatus = bad ? "bad" : warn ? "warn" : "ok";

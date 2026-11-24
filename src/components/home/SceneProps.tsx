@@ -73,32 +73,31 @@ export function UmbrellaSvg({ className, fading }: { className?: string; fading?
 // Bandeja de herramientas
 // ---------------------------------------------------------------------------
 
-export const TOOLS: { id: ToolId; emoji: string; label: string; color: string }[] = [
-  { id: "water", emoji: "🚿", label: "Regar", color: "#29B6F6" },
-  { id: "feed", emoji: "🧪", label: "Abono", color: "#4CAF50" },
-  { id: "shade", emoji: "☂️", label: "Sombra", color: "#FF7043" },
-  { id: "sponge", emoji: "🧽", label: "Limpiar", color: "#FFB300" },
-  { id: "ball", emoji: "⚽", label: "Pelota", color: "#8D6E63" },
+/** Solo 3 acciones: limpiar y acariciar se hacen frotando la planta con el dedo */
+export const TOOLS: { id: ToolId; emoji: string; ghost: string; label: string; color: string; dark: string }[] = [
+  { id: "water", emoji: "💧", ghost: "🚿", label: "Regar", color: "#29B6F6", dark: "#0288D1" },
+  { id: "feed", emoji: "🧪", ghost: "🧪", label: "Abonar", color: "#66BB6A", dark: "#388E3C" },
+  { id: "shade", emoji: "☂️", ghost: "☂️", label: "Sombra", color: "#FF8A65", dark: "#E64A19" },
 ];
 
-interface TrayProps {
+interface BarProps {
   activeTool: ToolId | null;
-  ballOn: boolean;
   alerts: Partial<Record<ToolId, boolean>>;
   onToolPointerDown: (tool: ToolId, e: React.PointerEvent<HTMLButtonElement>) => void;
   onToolPointerMove: (e: React.PointerEvent<HTMLButtonElement>) => void;
   onToolPointerUp: (e: React.PointerEvent<HTMLButtonElement>) => void;
 }
 
-export function ToolTray({ activeTool, ballOn, alerts, onToolPointerDown, onToolPointerMove, onToolPointerUp }: TrayProps) {
+/** 3 botones circulares flotantes (tócalos o arrástralos hacia la planta) */
+export function ActionBar({ activeTool, alerts, onToolPointerDown, onToolPointerMove, onToolPointerUp }: BarProps) {
   return (
-    <div className="absolute inset-x-0 z-30 flex justify-center px-3" style={{ bottom: "var(--tray-b)" }}>
-      <div className="flex w-full max-w-[400px] items-stretch justify-between gap-1 rounded-[26px] border-2 border-white bg-white/85 p-1.5 shadow-xl shadow-black/15 backdrop-blur-sm">
-        {TOOLS.map((t) => {
-          const active = activeTool === t.id || (t.id === "ball" && ballOn);
-          return (
+    <div className="pointer-events-none absolute inset-x-0 z-30 flex justify-center gap-7" style={{ bottom: "var(--tray-b)" }}>
+      {TOOLS.map((t) => {
+        const active = activeTool === t.id;
+        const alert = alerts[t.id];
+        return (
+          <div key={t.id} className="flex flex-col items-center gap-1">
             <button
-              key={t.id}
               type="button"
               onPointerDown={(e) => onToolPointerDown(t.id, e)}
               onPointerMove={onToolPointerMove}
@@ -106,19 +105,20 @@ export function ToolTray({ activeTool, ballOn, alerts, onToolPointerDown, onTool
               onPointerCancel={onToolPointerUp}
               onContextMenu={(e) => e.preventDefault()}
               className={cn(
-                "relative flex flex-1 touch-none select-none flex-col items-center rounded-2xl border-b-4 px-1 pb-1 pt-1.5 transition-transform active:scale-95",
-                active ? "-translate-y-1 text-white" : "border-stone-200 bg-white text-tinta"
+                "pointer-events-auto relative grid h-[62px] w-[62px] touch-none select-none place-items-center rounded-full border-b-4 shadow-lg shadow-black/20 transition-transform active:translate-y-0.5 active:scale-95",
+                active && "-translate-y-1 scale-105",
+                alert && "badge-pulse"
               )}
-              style={active ? { background: t.color, borderColor: "rgba(0,0,0,.2)" } : undefined}
-              aria-label={t.id === "ball" ? (ballOn ? "Guardar la pelota" : "Sacar la pelota") : `${t.label}: arrastra hacia la planta o tócala`}
+              style={{ background: `radial-gradient(circle at 35% 30%, #fff8, transparent 55%), ${t.color}`, borderColor: t.dark }}
+              aria-label={`${t.label}: tócalo o arrástralo hacia la planta`}
             >
-              <span className={cn("text-[28px] leading-none", activeTool === t.id && "opacity-30")}>{t.emoji}</span>
-              <span className="mt-0.5 font-display text-[11px] font-semibold">{t.label}</span>
-              {alerts[t.id] && <span className="absolute right-1 top-1 h-3 w-3 animate-pulse rounded-full border-2 border-white bg-alerta" />}
+              <span className={cn("text-[30px] leading-none drop-shadow", active && "opacity-30")}>{t.emoji}</span>
+              {alert && <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 animate-pulse rounded-full border-2 border-white bg-alerta" />}
             </button>
-          );
-        })}
-      </div>
+            <span className="font-display text-xs font-bold text-white [text-shadow:0_1px_3px_rgba(0,0,0,.55)]">{t.label}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }

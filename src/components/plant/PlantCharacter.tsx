@@ -2,17 +2,16 @@
 
 import { memo, useId } from "react";
 import type { Mood } from "@/lib/types";
-import { Leaf } from "./parts";
 import { Pot } from "./Pot";
 import { PlantFace } from "./PlantFace";
 import { PlantAccessory } from "./PlantAccessory";
-import { CX, SOIL_Y, STEM_BASE_Y, crownBaseY, plantGeometry, type LeafDef, type PlantGeo } from "./geometry";
+import { CX, SOIL_Y, STEM_BASE_Y, bezierAt, plantGeometry, type LeafDef, type PlantGeo } from "./geometry";
 
 export type Reaction = "risa" | "comiendo" | null;
 
 interface Props {
   mood: Mood;
-  /** 0 Germinando · 1 Brote joven · 2 Planta frondosa · 3 Floreciendo */
+  /** 0 Semilla · 1 Brote · 2 Planta joven · 3 Floreciendo */
   stage: number;
   pot: string;
   accessory: string | null;
@@ -25,168 +24,205 @@ interface Props {
 }
 
 interface Palette {
-  base: string;
-  light: string;
-  dark: string;
+  stem: string;
+  stemLight: string;
+  stemDark: string;
   leaf: string;
   leafLight: string;
   leafDark: string;
+  bud: string;
+  budLight: string;
 }
 
 const PALETTE: Record<Mood, Palette> = {
-  feliz: { base: "#66BB6A", light: "#C8F2B8", dark: "#2E7D32", leaf: "#43A047", leafLight: "#A5E08A", leafDark: "#2E7D32" },
-  sedienta: { base: "#B5D88A", light: "#F1F7D6", dark: "#7CB342", leaf: "#9CCC65", leafLight: "#DCEDC8", leafDark: "#689F38" },
-  acalorada: { base: "#8BC34A", light: "#FFE3BF", dark: "#558B2F", leaf: "#7CB342", leafLight: "#C5E1A5", leafDark: "#558B2F" },
-  hambrienta: { base: "#81C784", light: "#E2F5E3", dark: "#43A047", leaf: "#66BB6A", leafLight: "#B9E4BB", leafDark: "#388E3C" },
-  marchita: { base: "#A1887F", light: "#DDD2CD", dark: "#6D4C41", leaf: "#8D6E63", leafLight: "#C8B7B0", leafDark: "#5D4037" },
+  feliz: { stem: "#5DAF4E", stemLight: "#A5D98A", stemDark: "#2E7D32", leaf: "#4CAF50", leafLight: "#AEE58F", leafDark: "#2E7D32", bud: "#66BB6A", budLight: "#C8F0B0" },
+  sedienta: { stem: "#9CCC65", stemLight: "#DCEDC8", stemDark: "#689F38", leaf: "#9CCC65", leafLight: "#E6F2C9", leafDark: "#689F38", bud: "#AED581", budLight: "#F1F8E0" },
+  acalorada: { stem: "#7CB342", stemLight: "#C5E1A5", stemDark: "#558B2F", leaf: "#7CB342", leafLight: "#D4E9A8", leafDark: "#558B2F", bud: "#8BC34A", budLight: "#FFE0B2" },
+  hambrienta: { stem: "#81C784", stemLight: "#C8E6C9", stemDark: "#43A047", leaf: "#66BB6A", leafLight: "#C8E6C9", leafDark: "#388E3C", bud: "#81C784", budLight: "#E8F5E9" },
+  marchita: { stem: "#A1887F", stemLight: "#D7CCC8", stemDark: "#6D4C41", leaf: "#A1887F", leafLight: "#D7CCC8", leafDark: "#6D4C41", bud: "#A1887F", budLight: "#E0D6D1" },
 };
 
 const DIRT_SPOTS = [
-  { x: -0.55, y: -0.55, s: 1 },
-  { x: 0.6, y: 0.12, s: 0.85 },
-  { x: -0.38, y: 0.66, s: 0.8 },
+  { x: -0.52, y: -0.5, s: 1 },
+  { x: 0.58, y: 0.1, s: 0.85 },
+  { x: -0.35, y: 0.62, s: 0.8 },
 ];
 
-/** tallo + cabecita en una sola forma orgánica */
-function plantPath({ R, hy, top, neckY, stemW: sw, baseW: bw }: PlantGeo) {
-  const c = CX;
-  const b = STEM_BASE_Y;
-  const h = b - neckY;
-  return [
-    `M ${c} ${top}`,
-    `C ${c + R * 0.72} ${top} ${c + R} ${hy - R * 0.62} ${c + R} ${hy}`,
-    `C ${c + R} ${hy + R * 0.55} ${c + sw * 1.7} ${neckY - R * 0.22} ${c + sw} ${neckY}`,
-    `C ${c + sw * 0.92} ${neckY + h * 0.4} ${c + bw} ${b - h * 0.25} ${c + bw} ${b}`,
-    `L ${c - bw} ${b}`,
-    `C ${c - bw} ${b - h * 0.25} ${c - sw * 0.92} ${neckY + h * 0.4} ${c - sw} ${neckY}`,
-    `C ${c - sw * 1.7} ${neckY - R * 0.22} ${c - R} ${hy + R * 0.55} ${c - R} ${hy}`,
-    `C ${c - R} ${hy - R * 0.62} ${c - R * 0.72} ${top} ${c} ${top} Z`,
-  ].join(" ");
+// ---------------------------------------------------------------------------
+// Tallo liso que se adelgaza hacia arriba
+// ---------------------------------------------------------------------------
+
+function stemPath(s: NonNullable<PlantGeo["stem"]>) {
+  const left: string[] = [];
+  const right: string[] = [];
+  const N = 24;
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const p = bezierAt(s, t);
+    const len = Math.hypot(p.dx, p.dy) || 1;
+    const nx = -p.dy / len;
+    const ny = p.dx / len;
+    const w = s.w0 + (s.w1 - s.w0) * t;
+    left.push(`${(p.x + nx * w).toFixed(1)} ${(p.y + ny * w).toFixed(1)}`);
+    right.push(`${(p.x - nx * w).toFixed(1)} ${(p.y - ny * w).toFixed(1)}`);
+  }
+  return `M ${left.join(" L ")} L ${right.reverse().join(" L ")} Z`;
+}
+
+// ---------------------------------------------------------------------------
+// Hoja real (corazón o lanceolada) con nervaduras
+// ---------------------------------------------------------------------------
+
+function leafShape(shape: LeafDef["shape"], len: number) {
+  const p = len * 0.16; // pecíolo
+  const L = len - p;
+  if (shape === "heart") {
+    const W = L * 0.44;
+    return {
+      p,
+      L,
+      W,
+      d: `M ${p + L * 0.08} 0 C ${p - L * 0.08} ${-W * 0.8} ${p + L * 0.38} ${-W * 1.28} ${p + L} 0 C ${p + L * 0.38} ${W * 1.28} ${p - L * 0.08} ${W * 0.8} ${p + L * 0.08} 0 Z`,
+    };
+  }
+  const W = L * 0.3;
+  return {
+    p,
+    L,
+    W,
+    d: `M ${p} 0 C ${p + L * 0.22} ${-W * 0.85} ${p + L * 0.62} ${-W * 0.78} ${p + L} 0 C ${p + L * 0.62} ${W * 0.78} ${p + L * 0.22} ${W * 0.85} ${p} 0 Z`,
+  };
 }
 
 type ArmMode = "idle" | "wave" | "fan" | "droop";
 
-/** hoja lateral con pecíolo; las del par superior hacen de bracitos */
-function SideLeaf({ l, droop, armMode, fill, vein }: { l: LeafDef; droop: boolean; armMode: ArmMode; fill: string; vein: string }) {
-  const angle = droop ? (l.side === 1 ? 38 : 142) : l.angle;
-  let anim: { values: string; dur: string } | null;
-  if (l.arm && !droop) {
-    anim =
-      armMode === "wave"
-        ? { values: l.side === 1 ? "0;-38;6;-38;0" : "0;38;-6;38;0", dur: "0.7s" }
-        : armMode === "fan"
-          ? l.side === 1
-            ? { values: "0;-42;0", dur: "0.32s" }
-            : { values: "0;6;0", dur: "1.2s" }
-          : { values: l.side === 1 ? "0;-8;0" : "0;8;0", dur: "2.8s" };
-  } else if (!droop) {
-    // brisa: cada hoja con su propio ritmo
-    anim = { values: l.side === 1 ? "0;-7;2;0" : "0;7;-2;0", dur: `${(2.6 + l.phase * 1.7).toFixed(2)}s` };
-  } else {
-    anim = null;
+function RealLeaf({ l, droop, armMode, uid, c }: { l: LeafDef; droop: boolean; armMode: ArmMode; uid: string; c: Palette }) {
+  const angle = droop ? (l.side === 1 ? 40 : 140) : l.angle;
+  let anim: { values: string; dur: string } | null = null;
+  if (!droop) {
+    if (l.arm) {
+      anim =
+        armMode === "wave"
+          ? { values: l.side === 1 ? "0;-36;6;-36;0" : "0;36;-6;36;0", dur: "0.7s" }
+          : armMode === "fan" && l.side === 1
+            ? { values: "0;-40;0", dur: "0.34s" }
+            : { values: l.side === 1 ? "0;-7;0" : "0;7;0", dur: "2.9s" };
+    } else {
+      anim = { values: l.side === 1 ? "0;-6;2;0" : "0;6;-2;0", dur: `${(2.7 + l.phase * 1.6).toFixed(2)}s` };
+    }
   }
+  const { p, L, W, d } = leafShape(l.shape, l.len);
+  const veins = [0.28, 0.48, 0.68].map((k) => ({ x0: p + L * k, x1: p + L * (k + 0.16), y: W * 0.62 * (1 - k * 0.7) }));
   return (
     <g transform={`translate(${l.x} ${l.y}) rotate(${angle})`}>
       {anim && <animateTransform attributeName="transform" type="rotate" values={anim.values} dur={anim.dur} repeatCount="indefinite" additive="sum" />}
-      <path d={`M0 0 L ${l.len * 0.24} 0`} stroke={vein} strokeWidth={3} strokeLinecap="round" />
-      <Leaf x={l.len * 0.18} y={0} len={l.len * 0.82} angle={0} fill={fill} vein={vein} />
+      <path d={`M 0 0 L ${p + L * 0.1} 0`} stroke={c.stemDark} strokeWidth={2.6} strokeLinecap="round" />
+      <path d={d} fill={`url(#leaf-${uid})`} stroke={c.leafDark} strokeWidth={0.9} strokeOpacity={0.6} />
+      <path d={`M ${p + L * 0.06} 0 Q ${p + L * 0.5} ${-W * 0.06} ${p + L * 0.92} 0`} stroke={c.leafDark} strokeWidth={1.3} fill="none" opacity={0.5} strokeLinecap="round" />
+      {veins.map((v, i) => (
+        <g key={i} stroke={c.leafDark} strokeWidth={0.9} opacity={0.38} strokeLinecap="round" fill="none">
+          <path d={`M ${v.x0} 0 Q ${(v.x0 + v.x1) / 2} ${-v.y * 0.45} ${v.x1} ${-v.y}`} />
+          <path d={`M ${v.x0} 0 Q ${(v.x0 + v.x1) / 2} ${v.y * 0.45} ${v.x1} ${v.y}`} />
+        </g>
+      ))}
+      <path d={`M ${p + L * 0.2} ${-W * 0.45} Q ${p + L * 0.45} ${-W * 0.75} ${p + L * 0.7} ${-W * 0.4}`} stroke="#fff" strokeWidth={1.3} fill="none" opacity={0.35} strokeLinecap="round" />
     </g>
   );
 }
 
-function Bud({ x, y, angle, c }: { x: number; y: number; angle: number; c: Palette }) {
-  return (
-    <g transform={`translate(${x} ${y}) rotate(${angle})`}>
-      <path d="M0 2 C -5 -2 -5 -10 0 -15 C 5 -10 5 -2 0 2 Z" fill="#F48FB1" />
-      <path d="M0 3 C -6 -1 -6 -7 -2 -9 L 0 -4 L 2 -9 C 6 -7 6 -1 0 3 Z" fill={c.leaf} stroke={c.leafDark} strokeWidth={0.8} />
-    </g>
-  );
+// ---------------------------------------------------------------------------
+// Órgano de la punta (donde vive la carita)
+// ---------------------------------------------------------------------------
+
+function budPath(R: number, hy: number) {
+  const c = CX;
+  return `M ${c} ${hy - R * 1.55} C ${c + R * 0.5} ${hy - R * 1.12} ${c + R * 1.02} ${hy - R * 0.55} ${c + R} ${hy + R * 0.1} C ${c + R * 0.98} ${hy + R * 0.72} ${c + R * 0.52} ${hy + R} ${c} ${hy + R} C ${c - R * 0.52} ${hy + R} ${c - R * 0.98} ${hy + R * 0.72} ${c - R} ${hy + R * 0.1} C ${c - R * 1.02} ${hy - R * 0.55} ${c - R * 0.5} ${hy - R * 1.12} ${c} ${hy - R * 1.55} Z`;
 }
 
-function Crown({ g, mood, base, leafFill, c, uid }: { g: PlantGeo; mood: Mood; base: number; leafFill: string; c: Palette; uid: string }) {
-  const droop = mood === "marchita" || mood === "sedienta";
-  const sway = !droop && (
-    <animateTransform attributeName="transform" type="rotate" values={`-4 ${CX} ${base};4 ${CX} ${base};-4 ${CX} ${base}`} dur="3.2s" repeatCount="indefinite" />
-  );
+function seedPath(R: number, hy: number) {
+  const c = CX;
+  return `M ${c} ${hy - R * 1.08} C ${c + R * 0.55} ${hy - R} ${c + R * 1.02} ${hy - R * 0.45} ${c + R * 1.02} ${hy + R * 0.1} C ${c + R * 1.02} ${hy + R * 0.75} ${c + R * 0.6} ${hy + R} ${c} ${hy + R} C ${c - R * 0.6} ${hy + R} ${c - R * 1.02} ${hy + R * 0.75} ${c - R * 1.02} ${hy + R * 0.1} C ${c - R * 1.02} ${hy - R * 0.45} ${c - R * 0.55} ${hy - R} ${c} ${hy - R * 1.08} Z`;
+}
 
-  if (g.crown === "baby") {
-    const tipY = base - 7;
-    return (
-      <g>
-        {sway}
-        <path d={`M ${CX} ${base + 3} L ${CX} ${tipY}`} stroke={c.leafDark} strokeWidth={3} strokeLinecap="round" />
-        <Leaf x={CX} y={tipY} len={16} angle={droop ? 165 : -150} fill={leafFill} vein={c.leafDark} />
-        <Leaf x={CX} y={tipY} len={16} angle={droop ? 15 : -30} fill={leafFill} vein={c.leafDark} />
-      </g>
-    );
-  }
-
-  if (g.crown === "curl") {
-    const tipX = CX + (droop ? 8 : 4);
-    const tipY = base - 14 + (droop ? 5 : 0);
-    return (
-      <g>
-        {sway}
-        <path d={`M ${CX} ${base + 3} Q ${CX + 6} ${base - 6} ${tipX} ${tipY}`} stroke={c.leafDark} strokeWidth={3} fill="none" strokeLinecap="round" />
-        <Leaf x={tipX} y={tipY} len={14} angle={droop ? 160 : -145} fill={leafFill} vein={c.leafDark} />
-        <Leaf x={tipX} y={tipY} len={12} angle={droop ? 25 : -35} fill={leafFill} vein={c.leafDark} />
-      </g>
-    );
-  }
-
-  if (g.crown === "buds") {
-    return (
-      <g>
-        {sway}
-        <Leaf x={CX} y={base + 2} len={14} angle={droop ? 175 : -160} fill={leafFill} vein={c.leafDark} />
-        <Leaf x={CX} y={base + 2} len={14} angle={droop ? 5 : -20} fill={leafFill} vein={c.leafDark} />
-        {[
-          { x: CX - 11, y: base - 10, a: -25 },
-          { x: CX + 11, y: base - 10, a: 25 },
-          { x: CX, y: base - 17, a: 0 },
-        ].map((b) => (
-          <g key={b.x}>
-            <path d={`M ${CX} ${base + 2} Q ${(CX + b.x) / 2} ${base - 4} ${b.x} ${b.y}`} stroke={c.leafDark} strokeWidth={2.4} fill="none" strokeLinecap="round" />
-            <Bud x={b.x} y={b.y} angle={droop ? b.a + 40 : b.a} c={c} />
-          </g>
-        ))}
-      </g>
-    );
-  }
-
-  // flor abierta
-  const R = g.R;
-  const fy = base - R * 0.85;
+function Head({ g, mood, uid, c }: { g: PlantGeo; mood: Mood; uid: string; c: Palette }) {
+  const { R, hy, head } = g;
   const wilted = mood === "marchita";
+  const droop = wilted || mood === "sedienta";
+  const soft = `url(#soft-${uid})`;
+
+  if (head === "seed") {
+    const d = seedPath(R, hy);
+    return (
+      <g>
+        {/* mini brote saliendo de la semilla */}
+        <path d={`M ${CX + 2} ${hy - R * 1.02} q -2 -9 4 -14 q 6 -4 9 2`} stroke={c.stemDark} strokeWidth={2.8} fill="none" strokeLinecap="round" />
+        <RealLeaf l={{ x: CX + 14, y: hy - R * 1.02 - 11, angle: droop ? 30 : -40, len: 15, side: 1, arm: false, phase: 0, shape: "heart" }} droop={false} armMode="idle" uid={uid} c={c} />
+        <RealLeaf l={{ x: CX + 6, y: hy - R * 1.02 - 13, angle: droop ? 150 : -150, len: 11, side: -1, arm: false, phase: 0.5, shape: "heart" }} droop={false} armMode="idle" uid={uid} c={c} />
+        <path d={d} fill={`url(#seed-${uid})`} stroke="#8D6E63" strokeWidth={1.6} strokeOpacity={0.6} />
+        <g clipPath={`url(#headclip-${uid})`}>
+          <ellipse cx={CX - R * 0.38} cy={hy - R * 0.55} rx={R * 0.42} ry={R * 0.26} fill="#fff" opacity={0.5} filter={soft} />
+        </g>
+        <path d={`M ${CX + 2} ${hy - R * 1.02} Q ${CX - R * 0.42} ${hy - R * 0.35} ${CX - R * 0.22} ${hy + R * 0.55}`} stroke="#8D6E63" strokeOpacity={0.35} strokeWidth={1.8} fill="none" strokeLinecap="round" />
+      </g>
+    );
+  }
+
+  if (head === "flower") {
+    const petal = wilted ? "#BCAAA4" : `url(#petal-${uid})`;
+    const stroke = wilted ? "#8D6E63" : "#E65100";
+    return (
+      <g transform={droop ? `rotate(${wilted ? 24 : 12} ${CX} ${hy + R})` : undefined}>
+        {Array.from({ length: 14 }).map((_, i) => (
+          <ellipse key={`o${i}`} cx={CX} cy={hy - R * 1.48} rx={R * 0.3} ry={R * 0.6} transform={`rotate(${(i * 360) / 14} ${CX} ${hy})`} fill={petal} stroke={stroke} strokeWidth={0.7} strokeOpacity={0.5} />
+        ))}
+        {Array.from({ length: 14 }).map((_, i) => (
+          <ellipse key={`i${i}`} cx={CX} cy={hy - R * 1.25} rx={R * 0.22} ry={R * 0.45} transform={`rotate(${(i * 360) / 14 + 360 / 28} ${CX} ${hy})`} fill={wilted ? "#D7CCC8" : "#FFD54F"} />
+        ))}
+        {/* disco del girasol con semillitas */}
+        <circle cx={CX} cy={hy} r={R * 1.08} fill={`url(#disk-${uid})`} stroke="#4E342E" strokeWidth={1.4} />
+        {Array.from({ length: 18 }).map((_, i) => {
+          const a = (i * Math.PI * 2) / 18;
+          return <circle key={i} cx={CX + Math.cos(a) * R * 0.9} cy={hy + Math.sin(a) * R * 0.9} r={1.3} fill="#4E342E" opacity={0.55} />;
+        })}
+        <ellipse cx={CX - R * 0.42} cy={hy - R * 0.55} rx={R * 0.35} ry={R * 0.2} fill="#fff" opacity={0.22} filter={soft} />
+      </g>
+    );
+  }
+
+  // yema de hoja (brote) o botón floral (planta joven)
+  const d = budPath(R, hy);
   return (
     <g>
-      {sway}
-      <defs>
-        <radialGradient id={`petal-${uid}`} cx="0.5" cy="0.9" r="0.9">
-          <stop offset="0" stopColor={wilted ? "#D7CCC8" : "#FFD1E3"} />
-          <stop offset="1" stopColor={wilted ? "#A1887F" : "#F50057"} />
-        </radialGradient>
-      </defs>
-      <path d={`M ${CX} ${base + 3} L ${CX} ${fy}`} stroke={c.leafDark} strokeWidth={3.5} strokeLinecap="round" />
-      <Leaf x={CX} y={base - 4} len={15} angle={droop ? 170 : -165} fill={leafFill} vein={c.leafDark} />
-      <Leaf x={CX} y={base - 8} len={15} angle={droop ? 10 : -15} fill={leafFill} vein={c.leafDark} />
-      <g transform={`translate(${CX} ${fy}) rotate(${droop ? 30 : 0})`}>
-        {!droop && <animateTransform attributeName="transform" type="rotate" values="0;14;0" dur="5s" repeatCount="indefinite" additive="sum" />}
-        {Array.from({ length: 8 }).map((_, i) => (
-          <ellipse key={`o${i}`} cx={0} cy={-R * 0.5} rx={R * 0.3} ry={R * 0.52} transform={`rotate(${i * 45})`} fill={`url(#petal-${uid})`} stroke={wilted ? "#8D6E63" : "#C51162"} strokeWidth={0.8} />
-        ))}
-        {Array.from({ length: 8 }).map((_, i) => (
-          <ellipse key={`i${i}`} cx={0} cy={-R * 0.3} rx={R * 0.16} ry={R * 0.3} transform={`rotate(${i * 45 + 22.5})`} fill={wilted ? "#E0D6D1" : "#FF80AB"} />
-        ))}
-        <circle r={R * 0.26} fill="#FFD54F" stroke="#F57F17" strokeWidth={1.2} />
-        {[0, 72, 144, 216, 288].map((a) => (
-          <circle key={a} cx={R * 0.12 * Math.cos((a * Math.PI) / 180)} cy={R * 0.12 * Math.sin((a * Math.PI) / 180)} r={1.3} fill="#E65100" />
-        ))}
-        <circle cx={-R * 0.08} cy={-R * 0.09} r={R * 0.07} fill="#fff" opacity={0.7} />
+      {head === "flowerbud" && (
+        <g>
+          {[-0.42, 0, 0.42].map((k) => (
+            <path key={k} d={`M ${CX + k * R} ${hy - R * 0.7} C ${CX + k * R - R * 0.3} ${hy - R * 1.3} ${CX + k * R * 1.4} ${hy - R * 1.75} ${CX + k * R * 1.4} ${hy - R * 1.8} C ${CX + k * R * 1.4 + R * 0.05} ${hy - R * 1.5} ${CX + k * R + R * 0.3} ${hy - R * 1.2} ${CX + k * R} ${hy - R * 0.7} Z`} fill={wilted ? "#D7CCC8" : "#FFCA28"} stroke={wilted ? "#A1887F" : "#F57F17"} strokeWidth={0.8} />
+          ))}
+        </g>
+      )}
+      <path d={d} fill={`url(#bud-${uid})`} stroke={c.leafDark} strokeWidth={1.5} strokeOpacity={0.55} />
+      <g clipPath={`url(#headclip-${uid})`}>
+        <ellipse cx={CX - R * 0.4} cy={hy - R * 0.65} rx={R * 0.4} ry={R * 0.3} fill="#fff" opacity={0.5} filter={soft} />
+        <ellipse cx={CX + R * 0.2} cy={hy + R * 1.05} rx={R * 1.1} ry={R * 0.45} fill={c.leafDark} opacity={0.35} filter={soft} />
       </g>
+      {head === "leafbud" ? (
+        <path d={`M ${CX} ${hy - R * 1.5} Q ${CX + R * 0.08} ${hy - R * 1.0} ${CX} ${hy - R * 0.55}`} stroke={c.leafDark} strokeWidth={1.4} fill="none" opacity={0.5} strokeLinecap="round" />
+      ) : (
+        [-0.62, 0.62].map((k) => (
+          <path key={k} d={`M ${CX + k * R} ${hy + R * 0.85} Q ${CX + k * R * 1.15} ${hy - R * 0.2} ${CX + k * R * 0.55} ${hy - R * 1.0}`} stroke={c.leafDark} strokeWidth={1.3} fill="none" opacity={0.45} strokeLinecap="round" />
+        ))
+      )}
     </g>
   );
 }
+
+function headClipPath(g: PlantGeo) {
+  if (g.head === "seed") return seedPath(g.R, g.hy);
+  if (g.head === "flower") return `M ${CX - g.R * 1.08} ${g.hy} a ${g.R * 1.08} ${g.R * 1.08} 0 1 0 ${g.R * 2.16} 0 a ${g.R * 1.08} ${g.R * 1.08} 0 1 0 ${-g.R * 2.16} 0 Z`;
+  return budPath(g.R, g.hy);
+}
+
+// ---------------------------------------------------------------------------
 
 function PlantCharacterBase({ mood, stage, pot, accessory, reaction = null, dirt = 0, wet = false, className }: Props) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
@@ -195,31 +231,48 @@ function PlantCharacterBase({ mood, stage, pot, accessory, reaction = null, dirt
   const { R, hy } = g;
   const face = reaction ?? mood;
   const droop = mood === "marchita" || mood === "sedienta";
-  const leafFill = `url(#leaf-${uid})`;
-  const shape = plantPath(g);
-  const base = crownBaseY(g, accessory);
   const armMode: ArmMode = reaction === "risa" ? "wave" : droop ? "droop" : mood === "acalorada" ? "fan" : "idle";
-
-  const posture =
-    mood === "marchita" ? `rotate(-6 ${CX} ${STEM_BASE_Y}) translate(0 3)` : mood === "sedienta" ? `rotate(4 ${CX} ${STEM_BASE_Y})` : undefined;
+  const posture = mood === "marchita" ? `rotate(-5 ${CX} ${STEM_BASE_Y}) translate(0 3)` : mood === "sedienta" ? `rotate(3 ${CX} ${STEM_BASE_Y})` : undefined;
+  const isFlower = g.head === "flower";
 
   return (
     <svg viewBox="0 0 240 262" className={className} role="img" aria-label={`Planta ${mood}`} style={{ overflow: "visible" }}>
       <defs>
-        <linearGradient id={`body-${uid}`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor={c.light} />
-          <stop offset="0.42" stopColor={c.base} />
-          <stop offset="1" stopColor={c.dark} />
+        <linearGradient id={`stem-${uid}`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor={c.stemLight} />
+          <stop offset="0.45" stopColor={c.stem} />
+          <stop offset="1" stopColor={c.stemDark} />
         </linearGradient>
-        <linearGradient id={`leaf-${uid}`} x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id={`leaf-${uid}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor={c.leafLight} />
-          <stop offset="1" stopColor={c.leaf} />
+          <stop offset="0.55" stopColor={c.leaf} />
+          <stop offset="1" stopColor={c.leafDark} />
         </linearGradient>
-        <clipPath id={`clip-${uid}`}>
-          <path d={shape} />
+        <radialGradient id={`bud-${uid}`} cx="0.35" cy="0.3" r="0.9">
+          <stop offset="0" stopColor={c.budLight} />
+          <stop offset="0.5" stopColor={c.bud} />
+          <stop offset="1" stopColor={c.leafDark} />
+        </radialGradient>
+        <radialGradient id={`seed-${uid}`} cx="0.35" cy="0.3" r="0.9">
+          <stop offset="0" stopColor={mood === "marchita" ? "#DDD4CE" : "#F8E6C8"} />
+          <stop offset="0.5" stopColor={mood === "marchita" ? "#A99A8F" : mood === "acalorada" ? "#E0985E" : "#D2A46E"} />
+          <stop offset="1" stopColor="#8D6E63" />
+        </radialGradient>
+        <radialGradient id={`petal-${uid}`} cx="0.5" cy="1" r="1">
+          <stop offset="0" stopColor="#F57F17" />
+          <stop offset="0.45" stopColor="#FFB300" />
+          <stop offset="1" stopColor="#FFE082" />
+        </radialGradient>
+        <radialGradient id={`disk-${uid}`} cx="0.4" cy="0.35" r="0.8">
+          <stop offset="0" stopColor="#BCAAA4" />
+          <stop offset="0.6" stopColor="#A1887F" />
+          <stop offset="1" stopColor="#795548" />
+        </radialGradient>
+        <clipPath id={`headclip-${uid}`}>
+          <path d={headClipPath(g)} />
         </clipPath>
         <filter id={`soft-${uid}`} x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation={R * 0.16} />
+          <feGaussianBlur stdDeviation={R * 0.15} />
         </filter>
         <radialGradient id={`ground-${uid}`}>
           <stop offset="0" stopColor="#000" stopOpacity="0.28" />
@@ -230,68 +283,70 @@ function PlantCharacterBase({ mood, stage, pot, accessory, reaction = null, dirt
       <ellipse cx={CX} cy={257} rx={70} ry={8} fill={`url(#ground-${uid})`} />
 
       <g transform={posture}>
-        {/* brisa: toda la planta se mece suavemente desde la tierra */}
         <g>
+          {/* brisa suave desde la tierra */}
           {!droop && (
             <animateTransform
               attributeName="transform"
               type="rotate"
-              values={`-1.6 ${CX} ${STEM_BASE_Y};1.6 ${CX} ${STEM_BASE_Y};-1.6 ${CX} ${STEM_BASE_Y}`}
+              values={`-1.8 ${CX} ${STEM_BASE_Y};1.8 ${CX} ${STEM_BASE_Y};-1.8 ${CX} ${STEM_BASE_Y}`}
               keyTimes="0;0.5;1"
               calcMode="spline"
               keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
-              dur="4.6s"
+              dur="4.8s"
               repeatCount="indefinite"
             />
           )}
 
-          <Crown g={g} mood={mood} base={base} leafFill={leafFill} c={c} uid={uid} />
-
           {g.leaves.map((l, i) => (
-            <SideLeaf key={i} l={l} droop={droop} armMode={armMode} fill={leafFill} vein={c.leafDark} />
+            <RealLeaf key={i} l={l} droop={droop} armMode={armMode} uid={uid} c={c} />
           ))}
 
-          {/* tallo + cabecita con volumen */}
-          <path d={shape} fill={`url(#body-${uid})`} />
-          <g clipPath={`url(#clip-${uid})`}>
-            <ellipse cx={CX} cy={hy + R * 0.5} rx={R * 0.55} ry={R * 0.34} fill={c.light} opacity={0.3} />
-            <ellipse cx={CX - R * 0.4} cy={hy - R * 0.7} rx={R * 0.45} ry={R * 0.32} fill="#fff" opacity={0.55} filter={`url(#soft-${uid})`} />
-            <ellipse cx={CX} cy={SOIL_Y + 6} rx={R * 1.2} ry={R * 0.5} fill={c.dark} opacity={0.35} filter={`url(#soft-${uid})`} />
-            {g.stage >= 1 && (
-              <path d={`M ${CX - g.stemW * 0.35} ${g.neckY + 2} L ${CX - g.baseW * 0.42} ${SOIL_Y}`} stroke="#fff" strokeWidth={1.6} opacity={0.35} strokeLinecap="round" />
-            )}
-          </g>
-          <path d={shape} fill="none" stroke={c.dark} strokeOpacity={0.5} strokeWidth={1.8} />
-          <ellipse cx={CX - R * 0.5} cy={hy - R * 0.78} rx={R * 0.13} ry={R * 0.07} fill="#fff" opacity={0.85} transform={`rotate(-35 ${CX - R * 0.5} ${hy - R * 0.78})`} />
+          {g.stem && (
+            <g>
+              <path d={stemPath(g.stem)} fill={`url(#stem-${uid})`} stroke={c.stemDark} strokeWidth={0.8} strokeOpacity={0.5} />
+              <path
+                d={`M ${g.stem.p0[0] - 2} ${SOIL_Y} C ${g.stem.c1[0] - 2} ${g.stem.c1[1]} ${g.stem.c2[0] - 2} ${g.stem.c2[1]} ${g.stem.p3[0] - 1.5} ${g.stem.p3[1] + 4}`}
+                stroke="#fff"
+                strokeWidth={1.3}
+                fill="none"
+                opacity={0.3}
+                strokeLinecap="round"
+              />
+            </g>
+          )}
+
+          <Head g={g} mood={mood} uid={uid} c={c} />
 
           {DIRT_SPOTS.slice(0, Math.max(0, Math.min(3, dirt))).map((d, i) => {
             const x = CX + d.x * R;
             const y = hy + d.y * R;
             const s = R * 0.15 * d.s;
             return (
-              <g key={i} opacity={0.88}>
-                <path d={`M ${x - s} ${y} Q ${x - s} ${y - s * 1.1} ${x} ${y - s} Q ${x + s * 1.3} ${y - s * 0.9} ${x + s} ${y + s * 0.2} Q ${x + s * 0.6} ${y + s * 1.1} ${x - s * 0.2} ${y + s * 0.9} Q ${x - s * 1.2} ${y + s * 0.8} ${x - s} ${y} Z`} fill="#6D4C41" />
-                <circle cx={x + s * 1.5} cy={y + s * 0.6} r={s * 0.3} fill="#6D4C41" />
+              <g key={i} opacity={0.85}>
+                <path d={`M ${x - s} ${y} Q ${x - s} ${y - s * 1.1} ${x} ${y - s} Q ${x + s * 1.3} ${y - s * 0.9} ${x + s} ${y + s * 0.2} Q ${x + s * 0.6} ${y + s * 1.1} ${x - s * 0.2} ${y + s * 0.9} Q ${x - s * 1.2} ${y + s * 0.8} ${x - s} ${y} Z`} fill="#5D4037" />
+                <circle cx={x + s * 1.5} cy={y + s * 0.6} r={s * 0.3} fill="#5D4037" />
               </g>
             );
           })}
 
-          <PlantFace
-            face={face}
-            r={R}
-            rx={R}
-            cy={hy}
-            eyeDX={g.eyeDX}
-            eyeY={g.eyeY}
-            eyeRx={g.eyeRx}
-            eyeRy={g.eyeRy}
-            mouthY={g.mouthY}
-            hideEyes={false}
-            lid={c.base}
-            cheek={{ dx: R * 0.66, y: hy + R * 0.4 }}
-          />
-
-          <PlantAccessory id={accessory} g={g} />
+          <g transform={isFlower && droop ? `rotate(${mood === "marchita" ? 24 : 12} ${CX} ${hy + R})` : undefined}>
+            <PlantFace
+              face={face}
+              r={R}
+              rx={isFlower ? R * 1.9 : R}
+              cy={hy}
+              eyeDX={g.eyeDX}
+              eyeY={g.eyeY}
+              eyeRx={g.eyeRx}
+              eyeRy={g.eyeRy}
+              mouthY={g.mouthY}
+              hideEyes={false}
+              lid={isFlower ? "#A1887F" : g.head === "seed" ? "#D2A46E" : c.bud}
+              cheek={{ dx: R * 0.66, y: hy + R * 0.34 }}
+            />
+            <PlantAccessory id={accessory} g={g} />
+          </g>
         </g>
       </g>
 

@@ -5,8 +5,7 @@ import { useGameState } from "@/components/GameProvider";
 import { PlantCharacter, type Reaction } from "@/components/plant/PlantCharacter";
 import { GardenBackdrop } from "@/components/home/GardenBackdrop";
 import { HomeHud } from "@/components/home/HomeHud";
-import { BouncyBall, type BallBounds } from "@/components/home/BouncyBall";
-import { AphidSvg, ParticleLayer, ToolTray, TOOLS, UmbrellaSvg, type Particle } from "@/components/home/SceneProps";
+import { ActionBar, AphidSvg, ParticleLayer, TOOLS, UmbrellaSvg, type Particle } from "@/components/home/SceneProps";
 import { computeMood, isHeatActive, isShaded, TAP_MESSAGES } from "@/lib/game";
 import { leafSpots, plantGeometry, VIEW_H } from "@/components/plant/geometry";
 import { getStage } from "@/lib/stages";
@@ -20,7 +19,7 @@ const TRAY_B = "calc(94px + env(safe-area-inset-bottom))";
 const PLANT_B = "calc(180px + env(safe-area-inset-bottom))";
 /** inicio del escenario: deja la línea del piso justo bajo la maceta (el escenario mide 0.8 × ancho) */
 const SCENE_B = "calc(198px + env(safe-area-inset-bottom) - 0.16 * min(100vw, 430px))";
-const PLANT_W = "min(250px, 62vw, calc((100dvh - 350px) * 0.9))";
+const PLANT_W = "min(290px, 72vw, calc((100dvh - 320px) * 0.9))";
 
 const POSTURE: Record<Mood, string> = {
   feliz: "anim-bob",
@@ -74,7 +73,6 @@ export function HomeScreen() {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [activeTool, setActiveTool] = useState<ToolId | null>(null);
   const [pouring, setPouring] = useState(false);
-  const [ballOn, setBallOn] = useState(false);
   const [bug, setBug] = useState<{ id: number; x: number; y: number; squashed: boolean } | null>(null);
   const [hint, setHint] = useState(true);
 
@@ -252,7 +250,7 @@ export function HomeScreen() {
   // Caricias y toques
   // -------------------------------------------------------------------------
 
-  const pet = useRef<{ id: number; x: number; y: number; t: number; dist: number; acc: number } | null>(null);
+  const pet = useRef<{ id: number; x: number; y: number; t: number; dist: number; acc: number; scrub: number } | null>(null);
   const lastHappy = useRef(0);
 
   const addHappy = useCallback((amount: number) => {
@@ -288,7 +286,7 @@ export function HomeScreen() {
 
   const onPlantDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
-    pet.current = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), dist: 0, acc: 0 };
+    pet.current = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), dist: 0, acc: 0, scrub: 0 };
     setHint(false);
   };
 
@@ -303,9 +301,39 @@ export function HomeScreen() {
     if (p.acc > 45) {
       p.acc = 0;
       kick(1.6);
+      const l = toLocal(e.clientX, e.clientY);
+      const L = latest.current;
+      // si tiene manchitas, frotar la limpia; si no, son caricias
+      if (L.ctx.state.dirt > 0) {
+        p.scrub += 1;
+        playSound("scrub");
+        emit(
+          [0, 1, 2].map(() => ({
+            x: l.x + (Math.random() - 0.5) * 30,
+            y: l.y + (Math.random() - 0.5) * 20,
+            kind: "rise" as const,
+            content: "bubble",
+            size: 9 + Math.random() * 12,
+            dx: (Math.random() - 0.5) * 50,
+          })),
+          1300
+        );
+        if (p.scrub >= 4) {
+          p.scrub = 0;
+          const res = L.ctx.cleanDirt();
+          if (res.ok) {
+            playSound("coin");
+            emit([
+              { x: l.x, y: l.y - 10, kind: "text", content: "+1 🪙", size: 20 },
+              ...[0, 1, 2, 3].map((i) => ({ x: l.x, y: l.y, kind: "burst" as const, content: "✨", dx: (i - 1.5) * 34, dy: -50, size: 18 })),
+            ]);
+            say(res.full ? "¡Quedé rechinando de limpia! ✨" : "¡Una manchita menos! Sigue frotando 🧽");
+          }
+        }
+        return;
+      }
       playSound("pop", 0.7);
       addHappy(2);
-      const l = toLocal(e.clientX, e.clientY);
       emit([{ x: l.x, y: l.y, kind: "rise", content: pick(["💖", "💕", "💗", "✨"]), dx: (Math.random() - 0.5) * 40, size: 20 }]);
       if (mood === "feliz") {
         setReaction("risa");
@@ -365,6 +393,15 @@ export function HomeScreen() {
     d.ticks += 1;
 
     if (d.tool === "water") {
+      // con lluvia no se riega: ya la riega el cielo (evita ahogar las raíces)
+      if (L.ctx.state.climate === "lluvia") {
+        if (!d.warned) {
+          d.warned = true;
+          say("¡Ya me riega la lluvia! Si me pones más agua mis raíces se pueden ahogar 🌧️", 4200);
+          playSound("tap");
+        }
+        return;
+      }
       const res = L.ctx.boost("water", 5, true);
       if (res.ok) {
         const soil = plantPoint(0.5, 0.7);
@@ -473,13 +510,6 @@ export function HomeScreen() {
   tickRef.current = tick;
 
   const onToolPointerDown = (tool: ToolId, e: React.PointerEvent<HTMLButtonElement>) => {
-    setHint(false);
-    if (tool === "ball") {
-      playSound("tap");
-      setBallOn((b) => !b);
-      if (!ballOn) say("¡Tócala para hacer dominadas! ⚽");
-      return;
-    }
     if (drag.current) return;
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -544,32 +574,6 @@ export function HomeScreen() {
   );
 
   // -------------------------------------------------------------------------
-  // Pelota saltarina
-  // -------------------------------------------------------------------------
-
-  const getBounds = useCallback((): BallBounds => {
-    const h = homeRef.current?.getBoundingClientRect();
-    const p = plantRef.current?.getBoundingClientRect();
-    if (!h || !p) return { width: 375, floor: 500, ceil: 130 };
-    return { width: h.width, floor: p.bottom - h.top - 2, ceil: 128 };
-  }, []);
-
-  const onKick = useCallback(
-    (combo: number, x: number, y: number) => {
-      playSound("bounce");
-      addHappy(3);
-      emit([{ x, y, kind: "burst", content: pick(["⭐", "✨", "💫"]), dx: (Math.random() - 0.5) * 60, dy: -50, size: 20 }], 700);
-      if (combo > 0 && combo % 5 === 0) {
-        latest.current.ctx.reward(1, 1, `¡${combo} dominadas!`);
-        say(`¡Wow! ¡${combo} dominadas! ⚽`);
-      }
-    },
-    [addHappy, emit, say]
-  );
-
-  const onFloorHit = useCallback((speed: number) => playSound("bounce", Math.min(0.5, speed / 2400)), []);
-
-  // -------------------------------------------------------------------------
   // Eventos sorpresa: pulgones y manchitas de tierra
   // -------------------------------------------------------------------------
 
@@ -615,7 +619,7 @@ export function HomeScreen() {
         const L = latest.current;
         if (L.ctx.state.dirt < 3) {
           L.ctx.addDirt();
-          if (Math.random() < 0.6) say("¡Ay! Me cayó tierrita en las hojas 🧽");
+          if (Math.random() < 0.6) say("¡Ay! Me cayó tierrita. ¡Frótame con el dedo para limpiarme! 🧽");
         }
         schedule();
       }, 35000 + Math.random() * 15000);
@@ -660,8 +664,15 @@ export function HomeScreen() {
 
   // -------------------------------------------------------------------------
 
-  const toolEmoji = TOOLS.find((t) => t.id === activeTool)?.emoji ?? "";
+  const toolEmoji = TOOLS.find((t) => t.id === activeTool)?.ghost ?? "";
   const umbrellaLeft = state.shadeUntil - now;
+  // la felicidad se ve en el brillo de la planta (sin medidor aparte)
+  const happyGlow =
+    state.happy >= 70
+      ? "saturate(1.12) brightness(1.04) drop-shadow(0 0 10px rgba(255,236,150,.75))"
+      : state.happy < 30
+        ? "saturate(0.65) brightness(0.92)"
+        : "none";
 
   return (
     <div
@@ -671,17 +682,7 @@ export function HomeScreen() {
     >
       <GardenBackdrop background={state.equipped.background} climate={state.climate} floorBottom={SCENE_B} />
 
-      <HomeHud
-        hint={
-          heat
-            ? { text: "🥵 ¡Usa la sombrilla ☂️!", alert: true }
-            : hint
-              ? { text: "👆 Arrastra una herramienta" }
-              : bug && !bug.squashed
-                ? { text: "🐛 ¡Atrapa el pulgón!", alert: true }
-                : null
-        }
-      />
+      <HomeHud />
 
       {/* Brotín */}
       <div
@@ -702,7 +703,7 @@ export function HomeScreen() {
         )}
 
         <div className={dancing ? "anim-dance" : reaction ? "" : POSTURE[mood]}>
-          <div ref={springRef} style={{ transformOrigin: "50% 92%" }}>
+          <div ref={springRef} style={{ transformOrigin: "50% 92%", filter: happyGlow, transition: "filter 1s" }}>
             <PlantCharacter
               mood={mood}
               stage={stage}
@@ -744,14 +745,11 @@ export function HomeScreen() {
         )}
       </div>
 
-      {ballOn && <BouncyBall getBounds={getBounds} onKick={onKick} onFloorHit={onFloorHit} />}
-
       <ParticleLayer particles={particles} />
 
-      <ToolTray
+      <ActionBar
         activeTool={activeTool}
-        ballOn={ballOn}
-        alerts={{ water: state.water < 30, feed: state.nutrients < 30, shade: heat, sponge: state.dirt > 0, ball: state.happy < 30 }}
+        alerts={{ water: state.water < 30 && state.climate !== "lluvia", feed: state.nutrients < 30, shade: heat }}
         onToolPointerDown={onToolPointerDown}
         onToolPointerMove={onToolPointerMove}
         onToolPointerUp={onToolPointerUp}
