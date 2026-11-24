@@ -1,7 +1,8 @@
 /**
  * Geometría de la planta por etapa (unidades del viewBox 240×262).
- * La planta es un tallo literal que sale de la tierra, con hojas a los lados
- * y una "cabecita" en la punta del tallo donde vive la carita.
+ * Planta real estilizada: tallo liso y curvo que sale de la tierra, hojas reales
+ * a los lados y, en la punta, el órgano donde vive la carita:
+ *   semilla → yema de hoja → botón floral → flor abierta (girasol).
  * La usan el SVG, los accesorios y la pantalla principal (pulgones, partículas, mirada).
  */
 
@@ -9,111 +10,137 @@ export const VIEW_W = 240;
 export const VIEW_H = 262;
 export const CX = 120;
 export const SOIL_Y = 184;
-/** donde nace el tallo (dentro de la maceta) */
 export const STEM_BASE_Y = 202;
 
-export type CrownKind = "baby" | "curl" | "buds" | "flower";
+export type HeadKind = "seed" | "leafbud" | "flowerbud" | "flower";
 
 export interface LeafDef {
-  /** punto de unión con el tallo */
   x: number;
   y: number;
   /** grados (0 = derecha, -90 = arriba) */
   angle: number;
   len: number;
   side: -1 | 1;
-  /** el par más alto funciona como bracitos (saluda/celebra) */
+  /** el par más alto saluda como bracitos */
   arm: boolean;
-  /** desfase para que la brisa no mueva todas igual */
   phase: number;
+  /** forma: corazón (cordada) o lanceolada */
+  shape: "heart" | "lance";
 }
 
 export interface PlantGeo {
   stage: number;
-  /** medio ancho de la cabecita */
+  head: HeadKind;
+  /** radio del órgano con cara */
   R: number;
   /** centro de la cara */
   hy: number;
-  /** punta de la cabecita */
+  hx: number;
+  /** parte alta "redonda" del órgano (para sombreros y gorras) */
   top: number;
-  /** donde la cabecita se vuelve tallo */
-  neckY: number;
-  /** medio ancho del tallo en el cuello y en la base */
-  stemW: number;
-  baseW: number;
   eyeY: number;
   eyeDX: number;
   eyeRx: number;
   eyeRy: number;
   mouthY: number;
+  /** tallo: curva cúbica desde la tierra hasta la cabeza */
+  stem: { p0: [number, number]; c1: [number, number]; c2: [number, number]; p3: [number, number]; w0: number; w1: number } | null;
   leaves: LeafDef[];
-  crown: CrownKind;
 }
 
-interface StageSpec {
+interface Spec {
+  head: HeadKind;
   R: number;
-  hy: number;
-  /** pares de hojas: [y, largo, ¿son bracitos?] de abajo hacia arriba */
-  pairs: [number, number, boolean][];
-  crown: CrownKind;
+  /** donde el tallo toca la cabeza */
+  attachY: number;
+  /** pares de hojas: [t sobre el tallo 0-1, largo, ¿bracitos?, forma] */
+  pairs: [number, number, boolean, "heart" | "lance"][];
+  w0: number;
+  w1: number;
 }
 
-const SPECS: StageSpec[] = [
-  // 1 · Germinando: apenas asoma de la tierra con 2 hojitas bebé
-  { R: 17, hy: 160, pairs: [], crown: "baby" },
-  // 2 · Brote joven: el doble de alto y 4 hojas laterales
-  { R: 19, hy: 127, pairs: [[172, 24, false], [153, 22, true]], crown: "curl" },
-  // 3 · Planta frondosa: tallo alto, 6 hojas en 3 niveles + capullos
-  { R: 21, hy: 103, pairs: [[173, 30, false], [155, 33, false], [137, 29, true]], crown: "buds" },
-  // 4 · Floreciendo: tamaño máximo, 8 hojas y flor abierta
-  { R: 23, hy: 97, pairs: [[175, 34, false], [160, 39, false], [145, 37, false], [130, 32, true]], crown: "flower" },
+const SPECS: Spec[] = [
+  { head: "seed", R: 22, attachY: 0, pairs: [], w0: 0, w1: 0 },
+  { head: "leafbud", R: 20, attachY: 140, pairs: [[0.38, 26, false, "heart"], [0.74, 24, true, "heart"]], w0: 6, w1: 4 },
+  {
+    head: "flowerbud",
+    R: 21,
+    attachY: 108,
+    pairs: [[0.24, 32, false, "heart"], [0.52, 34, false, "lance"], [0.78, 28, true, "lance"]],
+    w0: 7,
+    w1: 4.5,
+  },
+  {
+    head: "flower",
+    R: 22,
+    attachY: 96,
+    pairs: [[0.2, 36, false, "heart"], [0.42, 40, false, "heart"], [0.62, 37, false, "lance"], [0.82, 31, true, "lance"]],
+    w0: 8.5,
+    w1: 5,
+  },
 ];
+
+/** punto y tangente sobre la curva cúbica */
+export function bezierAt(s: NonNullable<PlantGeo["stem"]>, t: number) {
+  const u = 1 - t;
+  const [p0, c1, c2, p3] = [s.p0, s.c1, s.c2, s.p3];
+  const x = u * u * u * p0[0] + 3 * u * u * t * c1[0] + 3 * u * t * t * c2[0] + t * t * t * p3[0];
+  const y = u * u * u * p0[1] + 3 * u * u * t * c1[1] + 3 * u * t * t * c2[1] + t * t * t * p3[1];
+  const dx = 3 * u * u * (c1[0] - p0[0]) + 6 * u * t * (c2[0] - c1[0]) + 3 * t * t * (p3[0] - c2[0]);
+  const dy = 3 * u * u * (c1[1] - p0[1]) + 6 * u * t * (c2[1] - c1[1]) + 3 * t * t * (p3[1] - c2[1]);
+  return { x, y, dx, dy };
+}
 
 export function plantGeometry(stage: number): PlantGeo {
   const s = Math.max(0, Math.min(3, Math.round(stage)));
   const spec = SPECS[s];
-  const { R, hy } = spec;
-  const stemW = Math.max(5, R * 0.3);
+  const { R } = spec;
+
+  let hx = CX;
+  let hy: number;
+  let stem: PlantGeo["stem"] = null;
   const leaves: LeafDef[] = [];
-  spec.pairs.forEach(([y, len, arm], i) => {
-    const up = i * 6; // las hojas de arriba apuntan un poco más hacia arriba
-    leaves.push(
-      { x: CX - stemW * 0.6, y, angle: arm ? 198 : 205 + up, len, side: -1, arm, phase: i * 0.37 },
-      { x: CX + stemW * 0.6, y: y - 3, angle: arm ? -18 : -25 - up, len, side: 1, arm, phase: i * 0.37 + 0.2 }
-    );
-  });
+
+  if (spec.head === "seed") {
+    hy = 165;
+  } else {
+    const h = STEM_BASE_Y - spec.attachY;
+    stem = {
+      p0: [CX, STEM_BASE_Y],
+      c1: [CX - 10, STEM_BASE_Y - h * 0.35],
+      c2: [CX + 12, STEM_BASE_Y - h * 0.72],
+      p3: [CX, spec.attachY],
+      w0: spec.w0,
+      w1: spec.w1,
+    };
+    hx = CX;
+    hy = spec.attachY - R * (spec.head === "flower" ? 0.95 : 0.85);
+    spec.pairs.forEach(([t, len, arm, shape], i) => {
+      const p = bezierAt(stem!, t);
+      const up = i * 5;
+      // hojas alternas: la izquierda un poco más abajo que la derecha
+      leaves.push(
+        { x: p.x - 1, y: p.y + 3, angle: arm ? 196 : 202 + up, len, side: -1, arm, phase: i * 0.41, shape },
+        { x: p.x + 1, y: p.y - 3, angle: arm ? -16 : -22 - up, len, side: 1, arm, phase: i * 0.41 + 0.23, shape }
+      );
+    });
+  }
+
   return {
     stage: s,
+    head: spec.head,
     R,
+    hx,
     hy,
-    top: hy - R * 1.25,
-    neckY: hy + R * 0.95,
-    stemW,
-    baseW: stemW * 1.35,
-    eyeY: hy - R * 0.05,
-    eyeDX: R * 0.44,
-    eyeRx: R * 0.24,
-    eyeRy: R * 0.27,
-    mouthY: hy + R * 0.55,
+    top: hy - R * 1.02,
+    eyeY: hy - R * 0.08,
+    eyeDX: R * 0.42,
+    eyeRx: R * 0.22,
+    eyeRy: R * 0.26,
+    mouthY: hy + R * 0.48,
+    stem,
     leaves,
-    crown: spec.crown,
   };
-}
-
-/** accesorios que tapan la coronilla: lo de arriba (hojitas, capullos, flor) sale por encima */
-export function crownBaseY(g: PlantGeo, accessory: string | null) {
-  switch (accessory) {
-    case "acc-sombrero":
-      return g.hy - g.R * 1.36;
-    case "acc-corona":
-      return g.hy - g.R * 1.55;
-    case "acc-gorra":
-      return g.top - g.R * 0.18;
-    case "acc-audifonos":
-      return g.top - g.R * 0.42;
-    default:
-      return g.top + 2;
-  }
 }
 
 /** Puntos (en % de la caja del SVG) donde pueden posarse los pulgones: sus hojas */
@@ -123,8 +150,8 @@ export function leafSpots(stage: number): { x: number; y: number }[] {
   const py = (v: number) => (v / VIEW_H) * 100;
   const spots = g.leaves.map((l) => {
     const a = (l.angle * Math.PI) / 180;
-    return { x: px(l.x + Math.cos(a) * l.len * 0.62), y: py(l.y + Math.sin(a) * l.len * 0.62) };
+    return { x: px(l.x + Math.cos(a) * l.len * 0.6), y: py(l.y + Math.sin(a) * l.len * 0.6) };
   });
-  spots.push({ x: px(CX + 10), y: py(g.top - 8) });
+  if (!spots.length) spots.push({ x: px(g.hx + 12), y: py(g.top - 6) });
   return spots;
 }

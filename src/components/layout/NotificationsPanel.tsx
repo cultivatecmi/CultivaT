@@ -5,7 +5,7 @@ import { BellRing, LogOut, Trash2, X } from "lucide-react";
 import { useGameState } from "@/components/GameProvider";
 import { cn, timeAgo } from "@/lib/utils";
 
-export function NotificationsPanel({ onClose }: { onClose: () => void }) {
+export function NotificationsPanel({ onClose, extra }: { onClose: () => void; extra?: React.ReactNode }) {
   const { state, clearNotifications, enableBrowserNotifications, logout, now, session } = useGameState();
   const [perm, setPerm] = useState<string>("default");
 
@@ -39,6 +39,7 @@ export function NotificationsPanel({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="space-y-2 border-t border-stone-100 p-3">
+          {extra}
           {perm === "default" && (
             <button
               type="button"

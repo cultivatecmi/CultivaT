@@ -96,6 +96,13 @@ function GardenBackdropBase({ background, climate, floorBottom }: Props) {
         );
       })}
 
+      {/* modo oscuro: el jardín se ve de noche con estrellitas */}
+      <div className="night-overlay absolute inset-x-0 top-0 h-[45%]">
+        {[[8, 6], [22, 14], [35, 4], [48, 11], [62, 7], [77, 15], [90, 5], [15, 24], [55, 22], [84, 27]].map(([x, y], i) => (
+          <span key={i} className="absolute h-1 w-1 rounded-full bg-white anim-heat" style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${i * 0.3}s` }} />
+        ))}
+      </div>
+
       {/* escenario comprado en la tienda (piso, barda, sierra, invernadero) */}
       <div className="absolute inset-x-0 aspect-[400/320]" style={{ bottom: floorBottom }}>
         <BackgroundScene id={background} skyless className="h-full w-full" />
@@ -116,6 +123,8 @@ function GardenBackdropBase({ background, climate, floorBottom }: Props) {
             />
           ))}
       </div>
+      {/* tinte nocturno del modo oscuro */}
+      <div className="night-overlay absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(8,16,48,.55), rgba(8,16,40,.3) 60%, rgba(0,0,0,.25))" }} />
     </div>
   );
 }

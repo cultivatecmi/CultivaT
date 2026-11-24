@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, Cloud, CloudOff, Loader2, Smartphone, Clapperboard } from "lucide-react";
+import { Bell, Cloud, CloudOff, Loader2, Smartphone, Clapperboard, Settings } from "lucide-react";
 import { useGameState } from "@/components/GameProvider";
+import { SettingsPanel } from "@/components/settings/SettingsPanel";
 import { getStage } from "@/lib/stages";
 import { cn } from "@/lib/utils";
 import { NotificationsPanel } from "./NotificationsPanel";
@@ -10,6 +11,7 @@ import { NotificationsPanel } from "./NotificationsPanel";
 export function Header() {
   const { state, syncStatus, markAllRead } = useGameState();
   const [open, setOpen] = useState(false);
+  const [settings, setSettings] = useState(false);
   const close = () => {
     setOpen(false);
     markAllRead();
@@ -54,6 +56,19 @@ export function Header() {
             </span>
           )}
         </button>
+        <button
+          type="button"
+          onClick={() => setSettings(true)}
+          className="relative grid h-10 w-10 place-items-center overflow-hidden rounded-full border-2 border-stone-200 bg-white text-tinta active:scale-95"
+          aria-label="Configuración y perfil"
+        >
+          {state.profile.avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={state.profile.avatar} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <Settings size={20} />
+          )}
+        </button>
       </div>
 
       <div className="mt-2 flex items-center gap-2">
@@ -69,6 +84,7 @@ export function Header() {
       </div>
 
       {open && <NotificationsPanel onClose={close} />}
+      {settings && <SettingsPanel onClose={() => setSettings(false)} />}
     </header>
   );
 }

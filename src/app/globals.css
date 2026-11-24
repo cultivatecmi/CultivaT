@@ -332,6 +332,60 @@ button {
   background-image: repeating-linear-gradient(180deg, transparent 0 27px, rgba(141, 110, 99, 0.13) 27px 28px);
 }
 
+/* --------------------------------------------------------------------- */
+/* Modo oscuro (clase .dark en <html>)                                    */
+/* --------------------------------------------------------------------- */
+
+html.dark { --color-tinta: #eef3ec; }
+html.dark,
+html.dark body { background: #0d1511; color-scheme: dark; }
+html.dark body { color: #eef3ec; }
+.dark .bg-crema,
+.dark .bg-crema\/95 { background-color: #14201a; }
+.dark .bg-white,
+.dark .bg-white\/70,
+.dark .bg-white\/80,
+.dark .bg-white\/85,
+.dark .bg-white\/90,
+.dark .bg-white\/95 { background-color: rgba(31, 44, 37, 0.94); }
+.dark .bg-stone-50,
+.dark .bg-stone-100 { background-color: #26352d; }
+.dark .bg-stone-200,
+.dark .bg-stone-200\/70 { background-color: #2f3f36; }
+.dark .text-tinta { color: #eef3ec; }
+.dark .text-stone-400 { color: #94a39a; }
+.dark .text-stone-500 { color: #a9b6ae; }
+.dark .text-stone-600,
+.dark .text-stone-700 { color: #c5cfc8; }
+.dark .border-stone-100,
+.dark .border-stone-200,
+.dark .border-stone-300,
+.dark .border-b-stone-300,
+.dark .border-white { border-color: #3a4b41; }
+.dark .border-x { border-color: #26352d; }
+.dark .bg-hoja-light { background-color: #1f3a26; }
+.dark .bg-sol-light { background-color: #3a3118; }
+.dark .bg-cielo-light { background-color: #17303d; }
+.dark .bg-alerta-light { background-color: #3d2219; }
+.dark .bg-tierra-light { background-color: #2e2622; }
+.dark .text-hoja-dark { color: #81c784; }
+.dark .text-sol-dark { color: #ffca28; }
+.dark .text-cielo-dark { color: #4fc3f7; }
+.dark .text-alerta-dark { color: #ff8a65; }
+.dark .text-tierra-dark,
+.dark .text-tierra { color: #bcaaa4; }
+.dark .paper {
+  background-color: #1d2a23;
+  background-image: repeating-linear-gradient(180deg, transparent 0 27px, rgba(188, 170, 164, 0.12) 27px 28px);
+}
+.dark input,
+.dark textarea { color: #eef3ec; }
+.dark .from-sol-light { --tw-gradient-from: #3a3118; }
+.dark .to-hoja-light { --tw-gradient-to: #1f3a26; }
+/* noche en el jardín de "Mi Planta" */
+.night-overlay { opacity: 0; transition: opacity 1s; }
+.dark .night-overlay { opacity: 1; }
+
 /* Botón táctil 3D */
 .btn-3d {
   border-bottom-width: 4px;
