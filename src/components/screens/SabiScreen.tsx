@@ -140,6 +140,8 @@ export function SabiScreen() {
     setLoading(true);
     let reply: string;
     try {
+      // en GitHub Pages (sitio estático) no hay servidor: Sabi usa su libreta local
+      if (process.env.NEXT_PUBLIC_STATIC_EXPORT === "true") throw new Error("static");
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
