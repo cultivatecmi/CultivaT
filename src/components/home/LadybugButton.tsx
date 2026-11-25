@@ -65,7 +65,7 @@ export function LadybugButton({ aphidAlert }: { aphidAlert: boolean }) {
         </button>
         <span
           className={cn(
-            "hud-card -mt-1.5 flex items-center gap-0.5 rounded-full px-1.5 py-px font-display text-[10px] font-bold leading-tight shadow-sm",
+            "hud-card mt-1 flex items-center gap-0.5 rounded-full px-2 py-0.5 font-display text-[11px] font-bold leading-tight shadow-sm",
             active ? "bg-[#DCFCE7] text-[#15803D]" : "bg-[#FFEBEE] text-[#C62828]"
           )}
         >

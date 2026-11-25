@@ -172,8 +172,8 @@ export function HomeHud({ aphidAlert = false }: { aphidAlert?: boolean }) {
       </div>
 
       {/* Catarina Guardiana: botón circular justo debajo de "Agua" */}
-      <div className="pointer-events-none mt-2 grid grid-cols-4 gap-1.5">
-        <div className="pointer-events-auto flex justify-center justify-self-center">
+      <div className="pointer-events-none mt-2 flex">
+        <div className="pointer-events-auto">
           <LadybugButton aphidAlert={aphidAlert} />
         </div>
       </div>
