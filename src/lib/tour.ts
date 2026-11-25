@@ -17,7 +17,15 @@ export function setTourActive(v: boolean) {
 }
 
 /** Pistas que los juegos dejan para el tour (p. ej. hacia dónde volar con la abeja) */
-export const tourHint: { beeY: number | null } = { beeY: null };
+export const tourHint: {
+  beeRunning: boolean;
+  beeY: number | null;
+  beeBadY: number | null;
+  rainGoodX: number | null;
+  rainBadX: number | null;
+  rootGood: { x: number; y: number } | null;
+  rootBad: { x: number; y: number } | null;
+} = { beeRunning: false, beeY: null, beeBadY: null, rainGoodX: null, rainBadX: null, rootGood: null, rootBad: null };
 
 /** Órdenes del tour para pantallas que tienen su propio estado */
 export type TourEvent = "aphid" | "ladybugOpen" | "ladybugConfirm" | "splash";

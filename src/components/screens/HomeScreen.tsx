@@ -588,7 +588,11 @@ export function HomeScreen() {
     if (drag.current) return;
     noteToolUse(false);
     e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      /* toque simulado (tour) o navegador sin soporte */
+    }
     drag.current = {
       tool,
       pointerId: e.pointerId,

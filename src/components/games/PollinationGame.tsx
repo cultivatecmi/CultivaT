@@ -445,6 +445,7 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
     const finish = () => {
       if (finished) return;
       finished = true;
+      tourHint.beeRunning = false;
       runningRef.current = false;
       const reward = capReward(score);
       const { newBest, happy, coins, dailyDone, xp } = recordRef.current("polinizacion", { score, ...reward, label: "por Vuelo de Polinización", happy: HAPPY });
@@ -545,9 +546,12 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
       const d = diff();
       const speed = 160 + 240 * d;
       if (isTourActive()) {
+        tourHint.beeRunning = true;
         // el tour guía a la abeja hacia el siguiente polen o flor
         const next = objs.find((o) => !o.done && o.kind !== "pesticida" && o.x > BEE_X - 6);
         tourHint.beeY = next ? next.y : null;
+        const bad = objs.find((o) => !o.done && o.kind === "pesticida" && o.x > BEE_X - 10);
+        tourHint.beeBadY = bad ? bad.y : null;
       }
       scroll += speed * dt;
       spawnIn -= dt;
