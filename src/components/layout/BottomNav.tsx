@@ -3,6 +3,7 @@
 import { Camera, Gamepad2, MessageCircle, ShoppingBag, Sprout } from "lucide-react";
 import { useGame } from "@/components/GameProvider";
 import type { TabId } from "@/lib/types";
+import { playSound } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 
 const TABS: { id: TabId; label: string; icon: React.ElementType; color: string }[] = [
@@ -24,7 +25,10 @@ export function BottomNav() {
             <li key={id}>
               <button
                 type="button"
-                onClick={() => setTab(id)}
+                onClick={() => {
+                  if (id !== tab) playSound("tab");
+                  setTab(id);
+                }}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex w-full flex-col items-center gap-0.5 rounded-2xl py-1.5 transition-all active:scale-95",

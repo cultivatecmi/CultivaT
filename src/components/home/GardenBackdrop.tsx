@@ -62,7 +62,7 @@ function SunShape({ intense }: { intense: boolean }) {
           background: intense
             ? "radial-gradient(circle at 35% 35%, #FFF59D, #FFB300 55%, #FF7043)"
             : "radial-gradient(circle at 35% 35%, #FFFDE7, #FFD54F 55%, #FFB300)",
-          boxShadow: intense ? "0 0 60px 24px rgba(255,112,67,.55)" : "0 0 40px 14px rgba(255,213,79,.55)",
+          boxShadow: intense ? "0 0 50px 18px rgba(255,112,67,.42)" : "0 0 32px 10px rgba(255,213,79,.38)",
         }}
       />
     </div>

@@ -489,5 +489,10 @@ html.dark body { color: #eef3ec; }
 .no-scrollbar { scrollbar-width: none; }
 
 /* modo oscuro: el sol brilla por encima del tinte nocturno */
-.dark .garden-sun { z-index: 1; filter: brightness(1.2) saturate(1.15); }
-.dark .garden-sun .sun-core { box-shadow: 0 0 55px 22px rgba(255, 213, 79, 0.7) !important; }
+.garden-sun { filter: saturate(0.88); }
+.dark .garden-sun { z-index: 1; filter: brightness(1.08) saturate(0.95); }
+.dark .garden-sun .sun-core { box-shadow: 0 0 40px 14px rgba(255, 213, 79, 0.48) !important; }
+
+/* 1. clima Nublado: indicador nítido en claro y en oscuro (los demás climas no cambian) */
+.pill-nublado { background-color: rgba(241, 245, 249, 0.92) !important; color: #3e2c23 !important; }
+.dark .pill-nublado { background-color: rgba(71, 85, 105, 0.92) !important; color: #f1f5f9 !important; box-shadow: 0 0 0 1.5px rgba(226, 232, 240, 0.45); }
