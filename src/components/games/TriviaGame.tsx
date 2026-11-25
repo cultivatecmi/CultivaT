@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useGameState } from "@/components/GameProvider";
 import { TapButton } from "@/components/ui/TapButton";
-import { GameIntro, GameResult } from "./GameUi";
+import { GameIntro, GameResult, GAME_H } from "./GameUi";
 import { TRIVIA_QUESTIONS, TRIVIA_REWARD, TRIVIA_ROUND, TRIVIA_SECONDS, type TriviaQuestion } from "@/lib/trivia";
 import { playSound } from "@/lib/sound";
 import { InlineCoin } from "@/components/ui/CoinText";
@@ -142,7 +142,7 @@ export function TriviaGame({ onExit }: { onExit: () => void }) {
 
   const best = state.stats.best.trivia;
   const shell = "keep-light overflow-hidden rounded-3xl border-4 border-white shadow-lg";
-  const bg = { background: "linear-gradient(180deg, #FFF3E0, #FFCCBC)", minHeight: 430 };
+  const bg = { background: "linear-gradient(180deg, #FFF3E0, #FFCCBC)", minHeight: GAME_H };
 
   if (phase === "intro") {
     return (

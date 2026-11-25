@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useGameState } from "@/components/GameProvider";
-import { GameIntro, GameResult } from "./GameUi";
+import { GameIntro, GameResult, GAME_H } from "./GameUi";
 import { playSound } from "@/lib/sound";
 import { cn, shuffle } from "@/lib/utils";
 
@@ -162,7 +162,7 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
 
   if (phase !== "playing") {
     return (
-      <div className="keep-light overflow-hidden rounded-3xl border-4 border-white shadow-lg" style={{ background: "linear-gradient(180deg, #FFF8E1, #FFE082)", minHeight: 430 }}>
+      <div className="keep-light overflow-hidden rounded-3xl border-4 border-white shadow-lg" style={{ background: "linear-gradient(180deg, #FFF8E1, #FFE082)", minHeight: GAME_H }}>
         {phase === "over" && result ? (
           <GameResult
             medal={"⭐".repeat(starsFor(result.moves))}

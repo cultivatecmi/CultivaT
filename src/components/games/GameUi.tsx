@@ -8,6 +8,13 @@ import { InlineCoin } from "@/components/ui/CoinText";
 import { isTourActive } from "@/lib/tour";
 import { cn } from "@/lib/utils";
 
+/**
+ * Alto del área de juego: llena la pantalla del celular (los juegos se abren a pantalla completa).
+ * Se calcula una vez al cargar la app; deja espacio para el título y el marcador.
+ */
+export const GAME_H =
+  typeof window === "undefined" ? 430 : Math.round(Math.min(720, Math.max(430, window.innerHeight - 150)));
+
 /** Cuenta regresiva 3-2-1-¡Ya! que llama a onDone al terminar */
 export function Countdown({ onDone }: { onDone: () => void }) {
   const [n, setN] = useState(3);

@@ -6,12 +6,12 @@ import { PlantCharacter } from "@/components/plant/PlantCharacter";
 import { plantGeometry } from "@/components/plant/geometry";
 import { getStage } from "@/lib/stages";
 import { svgToImage } from "@/lib/svgImage";
-import { Countdown, GameIntro, GameResult } from "./GameUi";
+import { Countdown, GameIntro, GameResult, GAME_H } from "./GameUi";
 import { scoreReward } from "@/lib/games";
 import { playSound } from "@/lib/sound";
 
 const DURATION = 30;
-const HEIGHT = 430;
+const HEIGHT = GAME_H; // llena la pantalla del celular
 const POT_W = 78;
 const POT_H = 40;
 const GROUND = 30;
@@ -110,7 +110,7 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     let W = wrap.clientWidth;
     const resize = () => {
       W = wrap.clientWidth;
@@ -176,10 +176,7 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
       ctx.bezierCurveTo(x + s * 0.6, y - s * 0.4, x + s, y + s * 0.1, x + s, y + s * 0.45);
       ctx.arc(x, y + s * 0.45, s, 0, Math.PI, false);
       ctx.bezierCurveTo(x - s, y + s * 0.1, x - s * 0.6, y - s * 0.4, x, y - s * 1.3);
-      const g = ctx.createLinearGradient(x - s, y - s, x + s, y + s);
-      g.addColorStop(0, "#81D4FA");
-      g.addColorStop(1, "#0288D1");
-      ctx.fillStyle = g;
+      ctx.fillStyle = "#29B6F6";
       ctx.fill();
       ctx.fillStyle = "rgba(255,255,255,.8)";
       ctx.beginPath();
@@ -209,8 +206,11 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
 
     const drawUV = (x: number, y: number, s: number) => {
       ctx.save();
-      ctx.shadowColor = "#FF7043";
-      ctx.shadowBlur = 12 + Math.sin(clock * 10) * 4;
+      // halo dibujado (más ligero que una sombra difuminada)
+      ctx.fillStyle = `rgba(255,112,67,${0.28 + Math.sin(clock * 10) * 0.08})`;
+      ctx.beginPath();
+      ctx.arc(x, y, s * 1.6, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = "#7E57C2";
       ctx.beginPath();
       ctx.moveTo(x + s * 0.2, y - s * 1.3);
@@ -337,13 +337,42 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
       ctx.restore();
     };
 
-    const drawBackground = () => {
-      const sky = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+    // cielo, cerros y surcos: se pintan una sola vez y luego solo se copian
+    const BG = document.createElement("canvas");
+    BG.width = Math.round(W * dpr);
+    BG.height = Math.round(HEIGHT * dpr);
+    {
+      const c = BG.getContext("2d")!;
+      c.scale(dpr, dpr);
+      const sky = c.createLinearGradient(0, 0, 0, HEIGHT);
       sky.addColorStop(0, "#4FC3F7");
       sky.addColorStop(0.7, "#B3E5FC");
       sky.addColorStop(1, "#E1F5FE");
-      ctx.fillStyle = sky;
-      ctx.fillRect(0, 0, W, HEIGHT);
+      c.fillStyle = sky;
+      c.fillRect(0, 0, W, HEIGHT);
+      c.fillStyle = "#AED581";
+      c.beginPath();
+      c.moveTo(0, HEIGHT - GROUND - 40);
+      for (let x = 0; x <= W; x += 20) c.lineTo(x, HEIGHT - GROUND - 40 - Math.sin(x / 70) * 14);
+      c.lineTo(W, HEIGHT);
+      c.lineTo(0, HEIGHT);
+      c.fill();
+      c.fillStyle = "#8BC34A";
+      c.fillRect(0, HEIGHT - GROUND, W, GROUND);
+      c.fillStyle = "#7CB342";
+      c.fillRect(0, HEIGHT - GROUND, W, 5);
+      c.strokeStyle = "rgba(85,139,47,.5)";
+      c.lineWidth = 2;
+      c.beginPath();
+      for (let x = 10; x < W; x += 26) {
+        c.moveTo(x, HEIGHT - GROUND + 9);
+        c.lineTo(x + 10, HEIGHT - GROUND + 9);
+      }
+      c.stroke();
+    }
+
+    const drawBackground = () => {
+      ctx.drawImage(BG, 0, 0, W, HEIGHT);
       // sol con rayos
       ctx.save();
       ctx.translate(40, 70);
@@ -382,26 +411,6 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
         const ry = (i * 97 + clock * 380) % HEIGHT;
         ctx.moveTo(rx, ry);
         ctx.lineTo(rx - 3, ry + 12);
-      }
-      ctx.stroke();
-      // cerros y surcos
-      ctx.fillStyle = "#AED581";
-      ctx.beginPath();
-      ctx.moveTo(0, HEIGHT - GROUND - 40);
-      for (let x = 0; x <= W; x += 20) ctx.lineTo(x, HEIGHT - GROUND - 40 - Math.sin(x / 70) * 14);
-      ctx.lineTo(W, HEIGHT);
-      ctx.lineTo(0, HEIGHT);
-      ctx.fill();
-      ctx.fillStyle = "#8BC34A";
-      ctx.fillRect(0, HEIGHT - GROUND, W, GROUND);
-      ctx.fillStyle = "#7CB342";
-      ctx.fillRect(0, HEIGHT - GROUND, W, 5);
-      ctx.strokeStyle = "rgba(85,139,47,.5)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      for (let x = 10; x < W; x += 26) {
-        ctx.moveTo(x, HEIGHT - GROUND + 9);
-        ctx.lineTo(x + 10, HEIGHT - GROUND + 9);
       }
       ctx.stroke();
     };

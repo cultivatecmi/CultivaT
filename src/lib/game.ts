@@ -24,7 +24,7 @@ export const SHADE_MS = 15_000;
 export const MAX_DIRT = 3;
 /** Topes diarios: la planta virtual crece al ritmo de una planta real (~21 días) */
 export const DAILY_XP = 100;
-export const DAILY_COINS = 80;
+export const DAILY_COINS = 150;
 
 /** % por segundo expresado por minuto (las tasas de abajo son por minuto) */
 const PER_SEC = 60;
