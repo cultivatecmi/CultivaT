@@ -41,6 +41,15 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
 export interface StreakImageData {
   streak: number;
   plantName: string;
@@ -92,25 +101,32 @@ export async function buildStreakImage(d: StreakImageData): Promise<Blob> {
     }
   }
 
-  // logo
-  ctx.fillStyle = "rgba(255,255,255,.92)";
-  roundRect(ctx, 40, 40, 330, 96, 48);
-  ctx.fill();
-  ctx.font = font(58);
+  // logo oficial (public/logo-wordmark.png); si no carga, se escribe el nombre
   ctx.textBaseline = "middle";
-  ctx.fillStyle = "#4CAF50";
-  ctx.fillText("Cultiva", 78, 90);
-  const cw = ctx.measureText("Cultiva").width;
-  ctx.fillStyle = "#FFB300";
-  ctx.fillText("T", 78 + cw, 90);
-  ctx.font = font(46, 400);
-  ctx.fillText("🌱", 78 + cw + ctx.measureText("T").width + 12, 88);
+  try {
+    const logo = await loadImage(`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo-wordmark.png`);
+    const lw = 340;
+    const lh = (lw * 240) / 694;
+    ctx.fillStyle = "rgba(255,251,235,.92)";
+    roundRect(ctx, 36, 34, lw + 48, lh + 28, 40);
+    ctx.fill();
+    ctx.drawImage(logo, 60, 48, lw, lh);
+  } catch {
+    ctx.fillStyle = "rgba(255,255,255,.92)";
+    roundRect(ctx, 40, 40, 300, 96, 48);
+    ctx.fill();
+    ctx.font = font(58);
+    ctx.fillStyle = "#E0A800";
+    ctx.fillText("Cultiva", 78, 90);
+    ctx.fillStyle = "#7CB342";
+    ctx.fillText("T", 78 + ctx.measureText("Cultiva").width, 90);
+  }
 
   // tarjeta inferior
   ctx.shadowColor = "rgba(0,0,0,.18)";
   ctx.shadowBlur = 30;
   ctx.shadowOffsetY = 8;
-  ctx.fillStyle = "#FFFDF7";
+  ctx.fillStyle = "#FFFBEB";
   roundRect(ctx, 50, 830, W - 100, 470, 56);
   ctx.fill();
   ctx.shadowColor = "transparent";
@@ -126,7 +142,7 @@ export async function buildStreakImage(d: StreakImageData): Promise<Blob> {
   ctx.fillStyle = "#6D4C41";
   ctx.fillText(`cuidando a ${d.plantName} · ${d.stageLabel}`, W / 2, 1155);
 
-  ctx.fillStyle = "#E8F5E9";
+  ctx.fillStyle = "#DCFCE7";
   roundRect(ctx, 150, 1205, W - 300, 66, 33);
   ctx.fill();
   ctx.fillStyle = "#2E7D32";

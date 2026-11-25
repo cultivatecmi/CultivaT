@@ -27,13 +27,14 @@ export const metadata: Metadata = {
     "Mascota-planta virtual que acompaña a tu kit de cultivo real. Aprende a cuidar la naturaleza y descubre el campo de Sinaloa.",
   applicationName: "CultivaT",
   appleWebApp: { capable: true, title: "CultivaT", statusBarStyle: "default" },
-  // Archivos oficiales de marca en /public (logo.svg, icon.svg y PNG generados desde el mismo dibujo)
+  // Íconos sacados del logo oficial (public/logo.png) con scripts/brand-assets.cjs
   icons: {
     icon: [
-      { url: `${BASE}/icon.svg`, type: "image/svg+xml" },
+      { url: `${BASE}/favicon.ico`, sizes: "16x16 32x32 48x48" },
+      { url: `${BASE}/icon.png`, type: "image/png", sizes: "512x512" },
       { url: `${BASE}/icon-192.png`, type: "image/png", sizes: "192x192" },
     ],
-    shortcut: [{ url: `${BASE}/icon-192.png` }],
+    shortcut: [{ url: `${BASE}/favicon.ico` }],
     apple: [{ url: `${BASE}/apple-touch-icon.png`, sizes: "180x180" }],
   },
 };
@@ -43,7 +44,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#4CAF50",
+  themeColor: "#15803D",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

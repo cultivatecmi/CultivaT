@@ -5,9 +5,10 @@ import { cn } from "@/lib/utils";
 type Tone = "hoja" | "cielo" | "sol" | "tierra" | "alerta" | "blanco";
 
 const TONES: Record<Tone, string> = {
-  hoja: "bg-hoja border-hoja-dark text-white",
+  // verde un poco más profundo que #22C55E para que el texto blanco se lea bien
+  hoja: "bg-[#16A34A] border-hoja-dark text-white",
   cielo: "bg-cielo border-cielo-dark text-white",
-  sol: "bg-sol border-sol-dark text-white",
+  sol: "bg-sol border-sol-dark text-[#422006]",
   tierra: "bg-tierra border-tierra-dark text-white",
   alerta: "bg-alerta border-alerta-dark text-white",
   blanco: "bg-white border-stone-300 text-tinta",

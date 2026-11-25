@@ -13,6 +13,7 @@ import { getStage } from "@/lib/stages";
 import { playSound } from "@/lib/sound";
 import { CLIMATES } from "@/lib/weather";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/brand/Logo";
 
 /** anillo de progreso circular (nivel / etapa) */
 function Ring({ value, color, size, stroke = 4, children, label }: { value: number; color: string; size: number; stroke?: number; children: React.ReactNode; label: string }) {
@@ -108,7 +109,7 @@ export function HomeHud() {
             aria-label={`Ver etapas: ${st.stage.name}, ${Math.round(st.progress * 100)}%`}
             title="Ver progreso y etapas"
           >
-            <Ring value={st.progress * 100} color="#4CAF50" size={36} stroke={3.5} label={`${st.stage.name}: nivel`}>
+            <Ring value={st.progress * 100} color="#22C55E" size={36} stroke={3.5} label={`${st.stage.name}: nivel`}>
               <span className="text-base">{st.stage.emoji}</span>
             </Ring>
           </button>
@@ -165,9 +166,16 @@ export function HomeHud() {
       {/* fila 2: los 4 medidores */}
       <div className="pointer-events-auto mt-2 grid grid-cols-4 gap-1.5">
         <Meter emoji="💧" label="Agua" value={state.water} color="#29B6F6" />
-        <Meter emoji="🌱" label="Nutrientes" value={state.nutrients} color="#4CAF50" />
-        <Meter emoji="☀️" label="Frescura" value={state.fresh} color="#FFB300" />
+        <Meter emoji="🌱" label="Nutrientes" value={state.nutrients} color="#22C55E" />
+        <Meter emoji="☀️" label="Frescura" value={state.fresh} color="#F59E0B" />
         <Meter emoji="😊" label="Felicidad" value={state.happy} color="#F06292" />
+      </div>
+
+      {/* logo compacto, sin bloquear toques sobre la escena */}
+      <div className="pointer-events-none mt-1.5 flex justify-center">
+        <span className="hud-card rounded-full bg-[#FFFBEB]/85 px-3 py-1 shadow-sm backdrop-blur-sm">
+          <Logo variant="wordmark" className="block h-6 w-auto" />
+        </span>
       </div>
 
       {settings && <SettingsPanel onClose={() => setSettings(false)} />}

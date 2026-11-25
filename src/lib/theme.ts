@@ -17,7 +17,7 @@ export function setDark(value: boolean) {
     /* sin almacenamiento */
   }
   const meta = document.querySelector('meta[name="theme-color"]');
-  meta?.setAttribute("content", value ? "#14201A" : "#4CAF50");
+  meta?.setAttribute("content", value ? "#14201A" : "#15803D");
   listeners.forEach((l) => l());
 }
 

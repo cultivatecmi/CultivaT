@@ -24,8 +24,8 @@ type UiMessage =
   | { id: number; role: "assistant"; kind: "challenge"; content: string; challenge: SabiChallenge; picked: number | null };
 
 const STATUS_STYLE = {
-  ok: { bar: "#4CAF50", badge: "bg-hoja-light text-hoja-dark", icon: "✅" },
-  warn: { bar: "#FFB300", badge: "bg-sol-light text-sol-dark", icon: "⚠️" },
+  ok: { bar: "#22C55E", badge: "bg-hoja-light text-hoja-dark", icon: "✅" },
+  warn: { bar: "#F59E0B", badge: "bg-sol-light text-sol-dark", icon: "⚠️" },
   bad: { bar: "#FF7043", badge: "bg-alerta-light text-alerta-dark", icon: "🚨" },
 } as const;
 
