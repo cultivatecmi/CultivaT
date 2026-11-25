@@ -5,6 +5,7 @@ import { Bell, Cloud, CloudOff, Loader2, Smartphone, Clapperboard, Settings } fr
 import { useGameState } from "@/components/GameProvider";
 import { CoinIcon } from "@/components/ui/GameIcons";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
+import { ShareStreakPanel } from "@/components/share/ShareStreakPanel";
 import { getStage } from "@/lib/stages";
 import { cn } from "@/lib/utils";
 import { NotificationsPanel } from "./NotificationsPanel";
@@ -13,6 +14,7 @@ export function Header() {
   const { state, syncStatus, markAllRead } = useGameState();
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState(false);
+  const [share, setShare] = useState(false);
   const close = () => {
     setOpen(false);
     markAllRead();
@@ -31,11 +33,17 @@ export function Header() {
   return (
     <header className="sticky top-0 z-30 border-b border-stone-200/70 bg-crema px-4 pb-2.5 pt-3">
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 rounded-full border-2 border-sol/40 bg-sol-light px-3 py-1 font-display text-base font-semibold text-sol-dark" title="Racha diaria">
+        <button
+          type="button"
+          onClick={() => setShare(true)}
+          className="flex items-center gap-1.5 rounded-full border-2 border-sol/40 bg-sol-light px-3 py-1 font-display text-base font-semibold text-sol-dark active:scale-95"
+          title="Compartir mi racha"
+          aria-label={`Racha de ${state.streak} días: toca para compartir`}
+        >
           <span className={cn(state.streak > 0 && "anim-float")}>🔥</span>
           {state.streak}
           <span className="text-xs font-medium">{state.streak === 1 ? "día" : "días"}</span>
-        </div>
+        </button>
         <div className="flex items-center gap-1.5 rounded-full border-2 border-sol/40 bg-sol-light px-3 py-1 font-display text-base font-semibold text-sol-dark" title="Monedas">
           <CoinIcon size={20} /> {state.coins}
         </div>
@@ -86,6 +94,7 @@ export function Header() {
 
       {open && <NotificationsPanel onClose={close} />}
       {settings && <SettingsPanel onClose={() => setSettings(false)} />}
+      {share && <ShareStreakPanel onClose={() => setShare(false)} />}
     </header>
   );
 }
