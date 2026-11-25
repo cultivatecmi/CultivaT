@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useGameState } from "@/components/GameProvider";
-import { TapButton } from "@/components/ui/TapButton";
 import { PlantCharacter } from "@/components/plant/PlantCharacter";
 import { plantGeometry } from "@/components/plant/geometry";
 import { getStage } from "@/lib/stages";
@@ -611,15 +609,6 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
     targetRef.current = e.clientX - rect.left;
   };
 
-  const hold = (dir: number) => ({
-    onPointerDown: (e: React.PointerEvent) => {
-      e.preventDefault();
-      dirRef.current = dir;
-    },
-    onPointerUp: () => (dirRef.current = 0),
-    onPointerLeave: () => (dirRef.current = 0),
-    onPointerCancel: () => (dirRef.current = 0),
-  });
 
   const best = state.stats.best.lluvia ?? (state.stats.bestScore || undefined);
 
@@ -657,12 +646,6 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
             className="bg-gradient-to-b from-[#81D4FA] to-[#E1F5FE]"
             medal={result.score >= 300 ? "🏆" : result.score >= 150 ? "🥈" : "🌱"}
             title={`${result.score} puntos`}
-            stats={[
-              { label: "gotas", value: `💧 ${result.drops}` },
-              { label: "abono", value: `🍂 ${result.abono}` },
-              { label: "golpes", value: `⚡ ${result.hits}` },
-              { label: "mejor combo", value: `🔥 ${result.bestCombo}` },
-            ]}
             coins={result.coins}
             newBest={result.newBest}
             happy={result.happy}
@@ -683,21 +666,11 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
             <p>
               Atrapa <b>gotas 💧 (+10)</b> y <b>abono 🍂 (+20)</b>. ¡Esquiva <b>rayos UV ⚡</b> y <b>plagas 🐛 (-15)</b>!
             </p>
-            <p className="mt-1 text-xs text-stone-600">Cada 5 seguidas = combo +5. Desliza el dedo, usa los botones o las flechas.</p>
+            <p className="mt-1 text-xs text-stone-600">Desliza el dedo para mover tu planta.</p>
           </GameIntro>
         )}
       </div>
 
-      {active && (
-        <div className="grid grid-cols-2 gap-3">
-          <TapButton tone="tierra" size="lg" className="touch-none py-4" {...hold(-1)} aria-label="Mover a la izquierda">
-            <ChevronLeft size={32} />
-          </TapButton>
-          <TapButton tone="tierra" size="lg" className="touch-none py-4" {...hold(1)} aria-label="Mover a la derecha">
-            <ChevronRight size={32} />
-          </TapButton>
-        </div>
-      )}
     </div>
   );
 }

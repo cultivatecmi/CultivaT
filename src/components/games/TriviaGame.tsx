@@ -138,11 +138,7 @@ export function TriviaGame({ onExit }: { onExit: () => void }) {
       <div className={shell} style={bg}>
         <GameResult
           medal={perfect ? "🏆" : result.correct >= 3 ? "🥈" : "🌱"}
-          title={perfect ? "¡Experto del campo!" : result.correct >= 3 ? "¡Muy bien, agricultor!" : "¡Sigue aprendiendo!"}
-          stats={[
-            { label: "aciertos", value: `✅ ${result.correct}/${TRIVIA_ROUND}` },
-            { label: "mejor racha", value: `🔥 ${result.bestStreak}` },
-          ]}
+          title={`${result.correct}/${TRIVIA_ROUND} aciertos`}
           coins={result.coins}
           newBest={result.newBest && result.correct > 0}
           happy={result.happy}
