@@ -102,8 +102,7 @@ export function LadybugButton({ aphidAlert }: { aphidAlert: boolean }) {
               </div>
               <h3 className="mt-3 font-display text-xl font-semibold text-[#3E2C23]">🐞 Catarina Guardiana (3 min)</h3>
               <p className="mt-2 text-[15px] leading-snug text-[#5D4037]">
-                Aliada natural del campo: patrulla tu planta durante 3 minutos y se come automáticamente a los pulgones para evitar que roben
-                nutrientes, sin usar químicos.
+                Cuida tu planta 3 minutos y se come a los pulgones por ti.
               </p>
               <TapButton
                 tone="hoja"
