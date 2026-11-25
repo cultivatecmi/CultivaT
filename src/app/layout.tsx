@@ -25,6 +25,10 @@ export const metadata: Metadata = {
     "Mascota-planta virtual que acompaña a tu kit de cultivo real. Aprende a cuidar la naturaleza y descubre el campo de Sinaloa.",
   applicationName: "CultivaT",
   appleWebApp: { capable: true, title: "CultivaT", statusBarStyle: "default" },
+  icons: {
+    icon: [{ url: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/icon.svg`, type: "image/svg+xml" }],
+    apple: [{ url: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/apple-touch-icon.png`, sizes: "180x180" }],
+  },
 };
 
 export const viewport: Viewport = {
