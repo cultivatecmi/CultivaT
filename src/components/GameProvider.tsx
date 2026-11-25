@@ -12,6 +12,9 @@ import {
   cleanDirt as cleanDirtOf,
   createDemoState,
   createInitialState,
+  isLadybugActive,
+  LADYBUG_MS,
+  LADYBUG_PRICE,
   currentWeek,
   deriveAlerts,
   makeNotification,
@@ -80,6 +83,8 @@ interface GameContextValue {
   drain: (stat: BoostStat, amount: number, floor: number) => void;
   recordTriviaRound: (correct: number) => void;
   buyItem: (id: string) => boolean;
+  /** Compra la Catarina Guardiana (3 min); false si no alcanza o ya hay una */
+  buyLadybug: () => boolean;
   equipItem: (id: string) => void;
   /** Guarda la foto del kit; la primera de cada semana da +50 🪙 y +30 XP */
   addPhoto: (image: string, note: string) => { coins: number; xp: number; first: boolean; week: number };
@@ -567,6 +572,25 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return { ...s, equipped: { ...s.equipped, [cat]: id } };
   };
 
+  const buyLadybug = useCallback(() => {
+    const s = current();
+    if (!s) return false;
+    const now = Date.now();
+    if (isLadybugActive(s, now)) {
+      pushToast("🐞 Ya tienes una catarina cuidando tu planta", "info");
+      return false;
+    }
+    if (s.coins < LADYBUG_PRICE) {
+      pushToast(`Te faltan ${LADYBUG_PRICE - s.coins} 🪙. ¡Juega para ganar más!`, "warning");
+      return false;
+    }
+    commit({ ...s, coins: s.coins - LADYBUG_PRICE, ladybugUntil: now + LADYBUG_MS });
+    setNow(now);
+    playSound("coin");
+    pushToast("🐞 ¡Catarina Guardiana activada por 3 minutos!", "success");
+    return true;
+  }, [current, commit, pushToast]);
+
   const buyItem = useCallback(
     (id: string) => {
       const s = current();
@@ -713,6 +737,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       recordTriviaRound,
       drain,
       buyItem,
+      buyLadybug,
       equipItem,
       addPhoto,
       deletePhoto,
@@ -724,7 +749,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       hydrated, session, state, now, syncStatus, tab, toasts, pushToast, login, startDemo, logout,
-      care, boost, openUmbrella, cleanDirt, addDirt, setClimate, cycleClimate, growStage, reward, recordGame, recordTriviaRound, drain, buyItem, equipItem, addPhoto, deletePhoto,
+      care, boost, openUmbrella, cleanDirt, addDirt, setClimate, cycleClimate, growStage, reward, recordGame, recordTriviaRound, drain, buyItem, buyLadybug, equipItem, addPhoto, deletePhoto,
       markAllRead, clearNotifications, setPlantName, updateProfile, enableBrowserNotifications,
     ]
   );

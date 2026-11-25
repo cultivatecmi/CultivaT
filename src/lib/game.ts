@@ -97,6 +97,7 @@ export function createInitialState(nickname: string, now = Date.now()): GameStat
     dirt: 0,
     climate: "soleado",
     shadeUntil: 0,
+    ladybugUntil: 0,
     xp: 0,
     coins: 50,
     streak: 0,
@@ -209,6 +210,7 @@ export function sanitizeState(raw: unknown, nickname: string): GameState {
     dirt: Math.round(clamp(num(r.dirt, 0), 0, MAX_DIRT)),
     climate: isClimate(r.climate) ? r.climate : "soleado",
     shadeUntil: num(r.shadeUntil, 0),
+    ladybugUntil: num(r.ladybugUntil, 0),
     xp: Math.max(0, num(r.xp, 0)),
     coins: Math.max(0, num(r.coins, base.coins)),
     streak: Math.max(0, num(r.streak, 0)),
@@ -433,6 +435,14 @@ export function openUmbrella(s: GameState, now = Date.now()): BoostResult {
   const reg = registerCare({ ...s, shadeUntil: now + SHADE_MS, fresh: clamp(s.fresh + 10) }, now);
   const x = withXp(reg.state, 5, now);
   return { state: x.state, ok: true, full: false, streakUp: reg.streakUp, stageUp: x.stageUp };
+}
+
+/** Catarina Guardiana: control biológico que se come los pulgones */
+export const LADYBUG_PRICE = 35;
+export const LADYBUG_MS = 180_000;
+
+export function isLadybugActive(s: GameState, now = Date.now()) {
+  return (s.ladybugUntil ?? 0) > now;
 }
 
 export function cleanDirt(s: GameState, now = Date.now()): BoostResult {

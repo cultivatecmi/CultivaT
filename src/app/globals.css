@@ -496,3 +496,19 @@ html.dark body { color: #eef3ec; }
 /* 1. clima Nublado: indicador nítido en claro y en oscuro (los demás climas no cambian) */
 .pill-nublado { background-color: rgba(241, 245, 249, 0.92) !important; color: #3e2c23 !important; }
 .dark .pill-nublado { background-color: rgba(71, 85, 105, 0.92) !important; color: #f1f5f9 !important; box-shadow: 0 0 0 1.5px rgba(226, 232, 240, 0.45); }
+
+/* Catarina Guardiana */
+@keyframes ladybug-walk {
+  0%, 100% { transform: rotate(-8deg) translateY(0); }
+  50% { transform: rotate(8deg) translateY(-2px); }
+}
+@keyframes ladybug-fly {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  30% { transform: translate(-10px, -24px) scale(1.05) rotate(-12deg); opacity: 1; }
+  100% { transform: translate(90px, -220px) scale(0.5) rotate(20deg); opacity: 0; }
+}
+.ladybug-walk { animation: ladybug-walk 0.9s ease-in-out infinite; }
+.ladybug-fly { animation: ladybug-fly 1.25s ease-in forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .ladybug-walk { animation: none; }
+}
