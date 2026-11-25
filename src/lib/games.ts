@@ -1,6 +1,6 @@
 /** Catálogo de la Sala de Juegos */
 
-export type GameId = "lluvia" | "plagas" | "memorama" | "trivia";
+export type GameId = "lluvia" | "plagas" | "memorama" | "trivia" | "raices" | "polinizacion";
 
 export interface GameInfo {
   id: GameId;
@@ -58,6 +58,26 @@ export const GAMES: GameInfo[] = [
     from: "#FF8A65",
     to: "#E64A19",
     bestLabel: (v) => `${v}/5 aciertos`,
+  },
+  {
+    id: "raices",
+    name: "Laberinto de Raíces",
+    emoji: "🌱",
+    tagline: "Guía la raíz hacia el agua y los minerales",
+    reward: "Hasta 40 🪙",
+    from: "#D97706",
+    to: "#78350F",
+    bestLabel: (v) => `${v} pts`,
+  },
+  {
+    id: "polinizacion",
+    name: "Vuelo de Polinización",
+    emoji: "🐝",
+    tagline: "Vuela de flor en flor y esquiva el pesticida",
+    reward: "Hasta 40 🪙",
+    from: "#22C55E",
+    to: "#15803D",
+    bestLabel: (v) => `${v} pts`,
   },
 ];
 
