@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGameState } from "@/components/GameProvider";
 import { AphidSvg } from "@/components/home/SceneProps";
+import { Pot } from "@/components/plant/Pot";
 import { Countdown, GameIntro, GameResult } from "./GameUi";
 import { scoreReward } from "@/lib/games";
 import { playSound } from "@/lib/sound";
@@ -93,14 +94,13 @@ function LadybugSvg() {
   );
 }
 
-function PotSvg() {
+/** Maceta del hoyo: la misma que el jugador tiene equipada en su planta */
+function PotSvg({ potId, uid }: { potId: string; uid: string }) {
   return (
-    <svg viewBox="0 0 100 58" preserveAspectRatio="none" className="h-full w-full" aria-hidden>
-      <path d="M12 12 H88 L80 56 H20 Z" fill="#8D6E63" />
-      <path d="M70 14 H86 L79 54 H66 Z" fill="#000" opacity={0.13} />
-      <rect x="4" y="2" width="92" height="14" rx="5" fill="#A1887F" />
-      <ellipse cx="50" cy="7" rx="40" ry="5" fill="#4E342E" />
-      <rect x="10" y="4" width="34" height="2.5" rx="1" fill="#fff" opacity={0.25} />
+    <svg viewBox="54 178 132 80" preserveAspectRatio="none" className="h-full w-full" aria-hidden>
+      <Pot id={potId} uid={uid} />
+      {/* hoyo de tierra por donde salen las plagas */}
+      <ellipse cx="120" cy="190" rx="54" ry="6" fill="#4E342E" />
     </svg>
   );
 }
@@ -346,7 +346,7 @@ export function WhackPestGame({ onExit }: { onExit: () => void }) {
                 </div>
               </div>
               <div className="absolute inset-x-0 bottom-0 h-[58px]">
-                <PotSvg />
+                <PotSvg potId={state.equipped.pot} uid={`whack-${i}`} />
               </div>
               {h.fx && (
                 <span
