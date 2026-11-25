@@ -39,7 +39,7 @@ export function AppShell() {
 }
 
 function AppContent() {
-  const { hydrated, session, state, tab } = useGame();
+  const { hydrated, session, state, tab, inGame } = useGame();
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -71,16 +71,20 @@ function AppContent() {
     );
   }
 
+  // minijuego abierto: pantalla completa, sin cabecera ni barra de pestañas
+  // (mismo árbol para que el juego no se reinicie al cambiar de modo)
+  const gameMode = tab === "jugar" && inGame;
+
   return (
     <Frame>
-      <Header />
-      <main className="px-4 pb-32 pt-3">
+      {!gameMode && <Header />}
+      <main className={gameMode ? "px-3 pb-4 pt-[max(env(safe-area-inset-top),10px)]" : "px-4 pb-32 pt-3"}>
         {tab === "jugar" && <PlayScreen />}
         {tab === "kit" && <KitScreen />}
         {tab === "tienda" && <ShopScreen />}
         {tab === "sabi" && <SabiScreen />}
       </main>
-      <BottomNav />
+      {!gameMode && <BottomNav />}
     </Frame>
   );
 }

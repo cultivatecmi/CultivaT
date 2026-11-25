@@ -30,6 +30,26 @@ interface Result {
   dailyDone: boolean;
 }
 
+const RECENT_KEY = "cultivat:v1:trivia-recent";
+const RECENT_MAX = 25;
+
+function readRecent(): string[] {
+  try {
+    const v = JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]");
+    return Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecent(ids: string[]) {
+  try {
+    window.localStorage.setItem(RECENT_KEY, JSON.stringify(Array.from(new Set(ids)).slice(0, RECENT_MAX)));
+  } catch {
+    /* sin almacenamiento: no pasa nada */
+  }
+}
+
 export function TriviaGame({ onExit }: { onExit: () => void }) {
   const { reward, recordGame, recordTriviaRound, state } = useGameState();
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
@@ -49,7 +69,12 @@ export function TriviaGame({ onExit }: { onExit: () => void }) {
   const answered = selected !== null || timedOut;
 
   const start = () => {
-    setQuestions(shuffle(TRIVIA_QUESTIONS).slice(0, TRIVIA_ROUND).map(prepare));
+    // primero las preguntas que no salieron en las últimas rondas
+    const recent = readRecent();
+    const fresh = shuffle(TRIVIA_QUESTIONS.filter((q) => !recent.includes(q.id)));
+    const pickList = [...fresh, ...shuffle(TRIVIA_QUESTIONS.filter((q) => recent.includes(q.id)))].slice(0, TRIVIA_ROUND);
+    saveRecent([...pickList.map((q) => q.id), ...recent]);
+    setQuestions(pickList.map(prepare));
     setIdx(0);
     setSelected(null);
     setTimedOut(false);

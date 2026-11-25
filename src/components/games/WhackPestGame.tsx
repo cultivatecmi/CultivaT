@@ -98,7 +98,6 @@ export function WhackPestGame({ onExit }: { onExit: () => void }) {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(DURATION);
   const [shake, setShake] = useState(0);
-  const [warning, setWarning] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
 
   const holesRef = useRef<Hole[]>(holes);
@@ -136,19 +135,19 @@ export function WhackPestGame({ onExit }: { onExit: () => void }) {
     const t = elapsed();
     const free = holesRef.current.map((h, i) => (h.up ? -1 : i)).filter((i) => i >= 0);
     const upCount = HOLES - free.length;
-    if (free.length && upCount < 4) {
+    if (free.length && upCount < 3) {
       const i = free[Math.floor(Math.random() * free.length)];
       const r = Math.random();
-      const kind: Critter = r < 0.28 ? "catarina" : r < 0.58 ? "pulgon" : "gusano";
+      const kind: Critter = r < 0.24 ? "catarina" : r < 0.55 ? "pulgon" : "gusano";
       const key = ++keyRef.current;
-      const base = Math.max(480, 1050 - t * 22);
+      const base = Math.max(600, 1250 - t * 20);
       const upMs = kind === "pulgon" ? base * 0.8 : kind === "catarina" ? base * 1.15 : base;
       setHolesBoth((hs) => hs.map((h, j) => (j === i ? { key, kind, up: true, hit: false, fx: null } : h)));
       later(() => {
         setHolesBoth((hs) => hs.map((h, j) => (j === i && h.key === key && !h.hit ? { ...h, up: false } : h)));
       }, upMs);
     }
-    const next = Math.max(300, 700 - t * 16) * (0.7 + Math.random() * 0.5);
+    const next = Math.max(380, 800 - t * 14) * (0.7 + Math.random() * 0.5);
     later(spawn, next);
   };
 
@@ -211,8 +210,6 @@ export function WhackPestGame({ onExit }: { onExit: () => void }) {
       counts.current.catarinas++;
       playSound("wrong");
       setShake((s) => s + 1);
-      setWarning(true);
-      later(() => setWarning(false), 1600);
       if (navigator.vibrate) navigator.vibrate(80);
     } else {
       if (h.kind === "gusano") counts.current.gusanos++;
@@ -330,11 +327,6 @@ export function WhackPestGame({ onExit }: { onExit: () => void }) {
           ))}
         </div>
 
-        {warning && (
-          <div className="anim-pop pointer-events-none absolute inset-x-4 top-3 rounded-2xl bg-alerta px-3 py-2 text-center font-display text-sm font-semibold text-white shadow-lg">
-            🐞 ¡Las catarinas son buenas! Se comen a los pulgones.
-          </div>
-        )}
         {phase === "countdown" && <Countdown onDone={onCountdownDone} />}
       </div>
 

@@ -6,6 +6,9 @@ import { Countdown, GameIntro, GameResult } from "./GameUi";
 import { scoreReward } from "@/lib/games";
 import { playSound } from "@/lib/sound";
 import { cn } from "@/lib/utils";
+import { PlantCharacter } from "@/components/plant/PlantCharacter";
+import { getStage } from "@/lib/stages";
+import { svgToImage } from "@/lib/svgImage";
 
 /**
  * 🌱 Laberinto de Raíces: vista bajo la tierra de una maceta. El niño desliza el dedo
@@ -14,7 +17,9 @@ import { cn } from "@/lib/utils";
 
 const DURATION = 30;
 const HEIGHT = 430;
-const SURFACE = 74; // donde empieza la tierra
+const SURFACE = 128; // donde empieza la tierra (arriba se ve tu planta)
+/** en el dibujo de la planta (240×262) la tierra empieza en y=184 */
+const PLANT_SOIL_Y = 184;
 const ROOT_SPEED = 120; // px/s
 const HAPPY = 20;
 
@@ -63,6 +68,24 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
   const recordRef = useRef(recordGame);
   recordRef.current = recordGame;
 
+  // tu planta de "Mi Planta": su etapa real con maceta y accesorio
+  const stage = getStage(state.xp).index;
+  const plantBoxRef = useRef<HTMLDivElement>(null);
+  const plantImgRef = useRef<HTMLImageElement | null>(null);
+  useEffect(() => {
+    let alive = true;
+    const svg = plantBoxRef.current?.querySelector("svg");
+    if (!svg) return;
+    svgToImage(svg, 480)
+      .then((img) => {
+        if (alive) plantImgRef.current = img;
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [stage, state.equipped.pot, state.equipped.accessory]);
+
   const active = phase === "countdown" || phase === "playing";
 
   useEffect(() => {
@@ -91,6 +114,14 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
     const items: Item[] = [];
     const floats: Float[] = [];
     const specks = Array.from({ length: 70 }, () => ({ x: rand(0, W), y: rand(SURFACE + 6, HEIGHT), r: rand(1, 2.6), a: rand(0.15, 0.35) }));
+    // lombrices: se arrastran despacio por la tierra (solo decoración)
+    const worms = [0, 1].map((i) => ({
+      x: rand(0, W),
+      y: SURFACE + 70 + i * ((HEIGHT - SURFACE - 110) / 1.4),
+      dir: i === 0 ? 1 : -1,
+      speed: rand(14, 20),
+      phase: rand(0, 6),
+    }));
     let nextId = 0;
     let score = 0;
     let left = DURATION;
@@ -118,7 +149,7 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
         }
       }
     };
-    (["seca", "seca", "seca", "piedra", "piedra", "piedra", "piedra", "piedra", "piedra", "piedra"] as Kind[]).forEach(spawn);
+    (["seca", "seca", "piedra", "piedra", "piedra", "piedra", "piedra"] as Kind[]).forEach(spawn);
     for (let i = 0; i < 4; i++) spawn("agua");
     for (let i = 0; i < 2; i++) spawn("mineral");
 
@@ -134,6 +165,13 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
 
     const step = (dt: number) => {
       clock += dt;
+      for (const w of worms) {
+        // avanza a tirones, como una lombriz de verdad
+        const push = 0.55 + 0.45 * Math.max(0, Math.sin(clock * 3 + w.phase));
+        w.x += w.dir * w.speed * push * dt;
+        if (w.x > W + 60) w.x = -60;
+        if (w.x < -60) w.x = W + 60;
+      }
       hitCool = Math.max(0, hitCool - dt);
       shake = Math.max(0, shake - dt);
       branches.forEach((b) => (b.grow = Math.min(1, b.grow + dt * 2.5)));
@@ -280,7 +318,37 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
       ctx.fillStyle = "rgba(255,255,255,.25)";
       ctx.fillRect(6, SURFACE - 8, W * 0.35, 3);
 
-      // brote en la superficie
+      // lombrices (detrás de la raíz)
+      for (const w of worms) {
+        const n = 14;
+        for (let i = n - 1; i >= 0; i--) {
+          const squeeze = 4.2 + Math.sin(clock * 6 - i * 0.7 + w.phase) * 0.9;
+          const x = w.x - w.dir * i * squeeze;
+          const y = w.y + Math.sin(i * 0.5 + clock * 1.5 + w.phase) * 4;
+          const rr = i === 0 ? 5.2 : i < 3 ? 4.8 : 4.4 - i * 0.08;
+          ctx.fillStyle = i === 3 || i === 4 ? "#D97A7A" : "#EFA6A0";
+          ctx.beginPath();
+          ctx.arc(x, y, rr, 0, Math.PI * 2);
+          ctx.fill();
+          if (i % 2 === 0) {
+            ctx.fillStyle = "rgba(120,40,40,.18)";
+            ctx.fillRect(x - 0.6, y - rr, 1.2, rr * 2);
+          }
+        }
+      }
+
+      // tu planta arriba de la tierra
+      const pimg = plantImgRef.current;
+      if (pimg) {
+        const dh = SURFACE - 6;
+        const dw = dh * (240 / PLANT_SOIL_Y);
+        ctx.save();
+        ctx.translate(W / 2, SURFACE - 4);
+        ctx.rotate(Math.sin(clock * 1.6) * 0.025);
+        ctx.drawImage(pimg, 0, 0, pimg.width, pimg.height * (PLANT_SOIL_Y / 262), -dw / 2, -dh, dw, dh);
+        ctx.restore();
+      } else {
+      // brote en la superficie (mientras carga tu planta)
       const sx = W / 2;
       ctx.strokeStyle = "#15803D";
       ctx.lineWidth = 5;
@@ -300,6 +368,7 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
         ctx.fill();
         ctx.restore();
       });
+      }
 
       // zonas secas
       items
@@ -423,6 +492,9 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
 
   return (
     <div className="space-y-3">
+      <div ref={plantBoxRef} className="pointer-events-none fixed -left-[9999px] top-0 w-[240px]" aria-hidden="true">
+        <PlantCharacter mood="feliz" stage={stage} pot={state.equipped.pot} accessory={state.equipped.accessory} />
+      </div>
       {active && (
         <div className="flex items-center gap-2">
           <div className="rounded-2xl bg-white px-3 py-1.5 font-display text-xl font-bold shadow-sm">⭐ {hud.score}</div>
@@ -440,7 +512,7 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
       <div
         ref={wrapRef}
         className="keep-light relative overflow-hidden rounded-3xl border-4 border-white shadow-lg"
-        style={{ height: HEIGHT, background: "linear-gradient(180deg, #FEF3C7, #FDE68A)" }}
+        style={{ height: active ? HEIGHT : undefined, minHeight: HEIGHT, background: "linear-gradient(180deg, #FEF3C7, #FDE68A)" }}
       >
         {active ? (
           <>
