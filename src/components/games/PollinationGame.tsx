@@ -24,7 +24,7 @@ const HAPPY = 20;
 const GUST_WARN = 1.5; // segundos de aviso antes de la ráfaga
 const GUST_H = 46; // alto de la franja de viento
 const LEVEL_SECONDS = 12; // cada cuánto sube de nivel
-const MAX_LEVEL = 8; // a partir de aquí ya no se pone más difícil
+const MAX_LEVEL = 15; // a partir de aquí ya no se pone más difícil
 const MAX_COINS = 40;
 const MAX_HP = 100;
 const HP_PEST = 30; // nube de pesticida
@@ -424,7 +424,7 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
 
     const spawnWave = () => {
       const x = W + 40;
-      if (Math.random() < 0.68 - 0.18 * diff()) {
+      if (Math.random() < 0.66 - 0.24 * diff()) {
         const types: FlowerType[] = ["tomate", "chile", "girasol"];
         const flower = types[Math.floor(Math.random() * 3)];
         const fy = rand(GROUND - 190, GROUND - 70);
@@ -438,7 +438,7 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
 
     const spawnGust = () => {
       const y = Math.max(40, Math.min(GROUND - 40, bee.y + rand(-70, 70)));
-      gusts.push({ y, warn: GUST_WARN, x: W + 20, len: W * 0.9, hit: false, speed: 720 + 200 * diff() });
+      gusts.push({ y, warn: GUST_WARN, x: W + 20, len: W * 0.9, hit: false, speed: 740 + 280 * diff() });
       playSound("beep", 0.35);
     };
 
@@ -543,7 +543,7 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
       }
 
       const d = diff();
-      const speed = 150 + 170 * d;
+      const speed = 160 + 240 * d;
       if (isTourActive()) {
         // el tour guía a la abeja hacia el siguiente polen o flor
         const next = objs.find((o) => !o.done && o.kind !== "pesticida" && o.x > BEE_X - 6);
@@ -553,12 +553,12 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
       spawnIn -= dt;
       if (spawnIn <= 0) {
         spawnWave();
-        spawnIn = rand(0.85, 1.35) * (1 - 0.3 * d);
+        spawnIn = rand(0.8, 1.3) * (1 - 0.4 * d);
       }
       gustIn -= dt;
       if (gustIn <= 0) {
         spawnGust();
-        gustIn = rand(6.5, 9) - 3 * d;
+        gustIn = rand(6, 8.5) - 3.5 * d;
       }
 
       for (let i = gusts.length - 1; i >= 0; i--) {
