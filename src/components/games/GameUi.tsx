@@ -52,7 +52,7 @@ interface IntroProps {
 
 export function GameIntro({ emoji, title, color, children, best, buttonTone, onStart, className }: IntroProps) {
   return (
-    <div className={cn("flex h-full flex-col items-center justify-center gap-3 p-6 text-center", className)}>
+    <div className={cn("flex h-full w-full flex-1 flex-col items-center justify-center gap-3 p-6 text-center", className)}>
       <div className="anim-card-float text-7xl drop-shadow-md">{emoji}</div>
       <h3 className="text-3xl font-bold" style={{ color }}>
         {title}
@@ -87,7 +87,7 @@ interface ResultProps {
 
 export function GameResult({ medal, title, stats, coins, happy = 0, xp, dailyDone = false, newBest, buttonTone, onRetry, onExit, className, children }: ResultProps) {
   return (
-    <div className={cn("flex min-h-full flex-col items-center justify-center gap-2.5 px-5 py-5 text-center", className)}>
+    <div className={cn("flex h-full w-full flex-1 flex-col items-center justify-center gap-3 p-6 text-center", className)}>
       <div className="anim-pop text-6xl leading-none">{medal}</div>
       <h3 className="text-[28px] font-bold leading-tight text-tinta">{title}</h3>
       {newBest && <span className="anim-streak rounded-full bg-sol px-3 py-1 font-display text-sm font-bold text-white">⭐ ¡Nuevo récord!</span>}

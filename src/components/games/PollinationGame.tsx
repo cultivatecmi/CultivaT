@@ -872,7 +872,7 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
       )}
       <div
         ref={wrapRef}
-        className="keep-light relative overflow-hidden rounded-3xl border-4 border-white shadow-lg"
+        className="keep-light relative flex flex-col overflow-hidden rounded-3xl border-4 border-white shadow-lg"
         style={{ height: active ? HEIGHT : undefined, minHeight: HEIGHT, background: "linear-gradient(180deg, #DCFCE7, #BBF7D0)" }}
       >
         {active ? (
