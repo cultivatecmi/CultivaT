@@ -141,7 +141,7 @@ export function TriviaGame({ onExit }: { onExit: () => void }) {
   };
 
   const best = state.stats.best.trivia;
-  const shell = "keep-light overflow-hidden rounded-3xl border-4 border-white shadow-lg";
+  const shell = "keep-light flex flex-col overflow-hidden rounded-3xl border-4 border-white shadow-lg";
   const bg = { background: "linear-gradient(180deg, #FFF3E0, #FFCCBC)", minHeight: GAME_H };
 
   if (phase === "intro") {

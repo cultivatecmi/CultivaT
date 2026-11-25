@@ -633,7 +633,7 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
           <PlantCharacter mood="acalorada" stage={stage} pot={state.equipped.pot} accessory={state.equipped.accessory} reaction="incomoda" />
         </div>
       </div>
-      <div ref={wrapRef} className="keep-light relative overflow-hidden rounded-3xl border-4 border-white bg-cielo-light shadow-lg" style={{ height: active ? HEIGHT : undefined, minHeight: HEIGHT }}>
+      <div ref={wrapRef} className="keep-light relative flex flex-col overflow-hidden rounded-3xl border-4 border-white bg-cielo-light shadow-lg" style={{ height: active ? HEIGHT : undefined, minHeight: HEIGHT }}>
         {active ? (
           <>
             <canvas

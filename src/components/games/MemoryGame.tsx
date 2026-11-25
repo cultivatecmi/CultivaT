@@ -162,7 +162,7 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
 
   if (phase !== "playing") {
     return (
-      <div className="keep-light overflow-hidden rounded-3xl border-4 border-white shadow-lg" style={{ background: "linear-gradient(180deg, #FFF8E1, #FFE082)", minHeight: GAME_H }}>
+      <div className="keep-light flex flex-col overflow-hidden rounded-3xl border-4 border-white shadow-lg" style={{ background: "linear-gradient(180deg, #FFF8E1, #FFE082)", minHeight: GAME_H }}>
         {phase === "over" && result ? (
           <GameResult
             medal={"⭐".repeat(starsFor(result.moves))}
