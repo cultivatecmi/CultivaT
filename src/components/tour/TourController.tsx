@@ -347,11 +347,15 @@ export function TourController() {
       g().tourPatch({ fresh: 55 });
       g().setClimate("calor");
       say("🔥 El clima de Culiacán cambia solo: ¡ola de calor de 42 °C!");
-      await at(39.5);
+      await at(38.5);
       g().openUmbrella();
       say("☂️ Hay que protegerla con la sombrilla, como en el campo");
-      await at(44);
-      g().tourPatch({ water: 35, fresh: 45 });
+      await at(42);
+      g().setClimate("nublado");
+      say("⛅ Nublado, 23 °C: la frescura se recupera sola");
+      await at(45.5);
+      // al llover ya no hace falta la sombrilla: se cierra
+      g().tourPatch({ water: 35, fresh: 45, shadeUntil: 0 });
       g().setClimate("lluvia");
       say("🌧️ Con lluvia la planta se riega y se refresca sola");
 
@@ -378,7 +382,7 @@ export function TourController() {
       await clipRain(6000, 3500);
       backToGames();
       await at(85);
-      await clipRoots(6000, 3500);
+      await clipTrivia(6000, 3500);
       backToGames();
       await at(97);
       g().tourPatch({ happy: 70 });
