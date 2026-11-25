@@ -9,6 +9,7 @@ import { currentWeek } from "@/lib/game";
 import { compressImage } from "@/lib/image";
 import { tipsForWeek } from "@/lib/kit-tips";
 import { playSound } from "@/lib/sound";
+import { CoinText, InlineCoin } from "@/components/ui/CoinText";
 import { cn, formatShortDate, pick } from "@/lib/utils";
 
 const KIT_WEEKS = 8;
@@ -126,7 +127,7 @@ export function KitScreen() {
             );
           })}
         </div>
-        <p className="mt-2 text-sm text-white/90">{doneThisWeek ? "¡Ya registraste esta semana! Vuelve la próxima 📅" : `Te falta la foto de la semana ${week}: ¡gana +50 🪙 y +30 XP!`}</p>
+        <p className="mt-2 text-sm text-white/90"><CoinText text={doneThisWeek ? "¡Ya registraste esta semana! Vuelve la próxima 📅" : `Te falta la foto de la semana ${week}: ¡gana +50 🪙 y +30 XP!`} /></p>
       </section>
 
       {/* antes vs hoy */}
@@ -201,7 +202,7 @@ export function KitScreen() {
             </div>
             <p className="font-display text-lg font-semibold text-hoja-dark">{outcome.message}</p>
             <div className="flex justify-center gap-2">
-              <span className="rounded-2xl border-b-4 border-sol-dark bg-sol px-4 py-1.5 font-display text-lg font-bold text-white">+{outcome.coins} 🪙</span>
+              <span className="rounded-2xl border-b-4 border-sol-dark bg-sol px-4 py-1.5 font-display text-lg font-bold text-white">+{outcome.coins} <InlineCoin /></span>
               <span className="rounded-2xl border-b-4 border-hoja-dark bg-hoja px-4 py-1.5 font-display text-lg font-bold text-white">+{outcome.xp} XP</span>
             </div>
             {!outcome.first && <p className="text-xs text-stone-500">Ya tenías la foto de esta semana: las fotos extra dan un premio menor.</p>}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BellRing, LogOut, Trash2, X } from "lucide-react";
 import { useGameState } from "@/components/GameProvider";
+import { CoinText } from "@/components/ui/CoinText";
 import { cn, timeAgo } from "@/lib/utils";
 
 export function NotificationsPanel({ onClose, extra }: { onClose: () => void; extra?: React.ReactNode }) {
@@ -30,10 +31,10 @@ export function NotificationsPanel({ onClose, extra }: { onClose: () => void; ex
           {state.notifications.map((n) => (
             <div key={n.id} className={cn("mb-1 rounded-2xl px-3 py-2.5", n.read ? "bg-white" : "bg-hoja-light")}>
               <div className="flex items-start justify-between gap-2">
-                <p className="font-display text-[15px] font-semibold leading-tight">{n.title}</p>
+                <p className="font-display text-[15px] font-semibold leading-tight"><CoinText text={n.title} /></p>
                 <span className="shrink-0 text-[11px] text-stone-400">{timeAgo(n.createdAt, now)}</span>
               </div>
-              <p className="mt-0.5 text-sm leading-snug text-stone-600">{n.body}</p>
+              <p className="mt-0.5 text-sm leading-snug text-stone-600"><CoinText text={n.body} /></p>
             </div>
           ))}
         </div>

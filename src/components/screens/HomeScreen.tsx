@@ -14,6 +14,7 @@ import { playSound } from "@/lib/sound";
 import { CLIMATES } from "@/lib/weather";
 import type { Mood, ToolId } from "@/lib/types";
 import { takeJoy } from "@/lib/joy";
+import { CoinText } from "@/components/ui/CoinText";
 import { cn, pick } from "@/lib/utils";
 
 // Distribución vertical (desde abajo): menú → bandeja de herramientas → maceta
@@ -821,7 +822,7 @@ export function HomeScreen() {
         {bubble && (
           <div key={bubble} className="anim-pop pointer-events-none absolute bottom-full left-1/2 z-20 mb-1 w-max max-w-[260px] -translate-x-1/2">
             <div className="relative rounded-2xl border-2 border-stone-200 bg-white px-3.5 py-2 text-center font-display text-[15px] font-medium leading-snug text-tinta shadow-lg">
-              {bubble}
+              <CoinText text={bubble} />
               <span className="absolute -bottom-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-stone-200 bg-white" />
             </div>
           </div>
