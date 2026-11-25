@@ -55,7 +55,7 @@ export function DragHint({ tool, homeRef, plantRef }: Props) {
         className="anim-pop pointer-events-none absolute left-1/2 z-40 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/95 px-3.5 py-1.5 font-display text-sm font-semibold text-tinta shadow-lg"
         style={{ bottom: "calc(var(--tray-b) + 92px)" }}
       >
-        👆 ¡Arrastra {tool === "water" ? "la regadera" : tool === "feed" ? "el abono" : tool === "shade" ? "la sombrilla" : "la esponja"} hasta tu planta!
+        Arrastra {tool === "water" ? "la regadera" : tool === "feed" ? "el abono" : tool === "shade" ? "la sombrilla" : "la esponja"} 👆
         <span className="sr-only">{label}</span>
       </div>
     </>
