@@ -12,12 +12,18 @@ import { CoinText } from "@/components/ui/CoinText";
 import { playSound } from "@/lib/sound";
 
 export function PlayScreen() {
-  const { state } = useGameState();
+  const { state, setInGame } = useGameState();
   const [game, setGame] = useState<GameId | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [game]);
+
+  // dentro de un minijuego: sin avisos emergentes ni sus sonidos
+  useEffect(() => {
+    setInGame(game !== null);
+    return () => setInGame(false);
+  }, [game, setInGame]);
 
   const exit = () => setGame(null);
 

@@ -85,6 +85,8 @@ interface GameContextValue {
   buyItem: (id: string) => boolean;
   /** Compra la Catarina Guardiana (3 min); false si no alcanza o ya hay una */
   buyLadybug: () => boolean;
+  /** Avisa que se está jugando un minijuego (silencia avisos emergentes) */
+  setInGame: (v: boolean) => void;
   equipItem: (id: string) => void;
   /** Guarda la foto del kit; la primera de cada semana da +50 🪙 y +30 XP */
   addPhoto: (image: string, note: string) => { coins: number; xp: number; first: boolean; week: number };
@@ -144,7 +146,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // Utilidades internas
   // -------------------------------------------------------------------------
 
+  // mientras se juega un minijuego no salen avisos emergentes ni sus sonidos
+  const inGameRef = useRef(false);
+  const setInGame = useCallback((v: boolean) => {
+    inGameRef.current = v;
+    if (v) setToasts([]);
+  }, []);
+
   const pushToast = useCallback((text: string, tone: Toast["tone"] = "info") => {
+    if (inGameRef.current) return;
     const id = uid();
     setToasts((t) => [...t.slice(-2), { id, text, tone }]);
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2600);
@@ -157,7 +167,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (streakUp) pushToast(`🔥 ¡Racha de ${streakUp} ${streakUp === 1 ? "día" : "días"}! +10 🪙`, "coins");
       if (stageUp) {
         pushToast(`🎉 ¡Tu planta ahora es ${stageUp}!`, "success");
-        playSound("levelup");
+        if (!inGameRef.current) playSound("levelup");
       }
     },
     [pushToast]
@@ -259,10 +269,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           setNow(now);
           if (c === "calor") {
             pushToast(`🔥 ¡Ola de calor en Culiacán! ${CLIMATES.calor.temp} °C · ¡Sombrilla ☂️ y agua 💧!`, "warning");
-            playSound("whoosh");
+            if (!inGameRef.current) playSound("whoosh");
           } else if (c === "lluvia") {
             pushToast(`🌧️ ¡Lluvia fresca! ${CLIMATES.lluvia.temp} °C · tu planta se riega sola`, "info");
-            playSound("rain");
+            if (!inGameRef.current) playSound("rain");
           } else if (c === "nublado") {
             pushToast(`⛅ Se nubló · ${CLIMATES.nublado.temp} °C · tu planta se refresca sola`, "info");
           }
@@ -738,6 +748,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       drain,
       buyItem,
       buyLadybug,
+      setInGame,
       equipItem,
       addPhoto,
       deletePhoto,
@@ -749,7 +760,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       hydrated, session, state, now, syncStatus, tab, toasts, pushToast, login, startDemo, logout,
-      care, boost, openUmbrella, cleanDirt, addDirt, setClimate, cycleClimate, growStage, reward, recordGame, recordTriviaRound, drain, buyItem, buyLadybug, equipItem, addPhoto, deletePhoto,
+      care, boost, openUmbrella, cleanDirt, addDirt, setClimate, cycleClimate, growStage, reward, recordGame, recordTriviaRound, drain, buyItem, buyLadybug, setInGame, equipItem, addPhoto, deletePhoto,
       markAllRead, clearNotifications, setPlantName, updateProfile, enableBrowserNotifications,
     ]
   );
