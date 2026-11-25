@@ -255,7 +255,7 @@ export function WhackPestGame({ onExit }: { onExit: () => void }) {
 
   if (phase === "intro" || (phase === "over" && result)) {
     return (
-      <div className="overflow-hidden rounded-3xl border-4 border-white shadow-lg" style={{ background: "linear-gradient(180deg, #DCEDC8, #AED581)", minHeight: 430 }}>
+      <div className="keep-light overflow-hidden rounded-3xl border-4 border-white shadow-lg" style={{ background: "linear-gradient(180deg, #DCEDC8, #AED581)", minHeight: 430 }}>
         {phase === "over" && result ? (
           <GameResult
             medal={result.score >= 250 ? "🏆" : result.score >= 120 ? "🥈" : "🌱"}

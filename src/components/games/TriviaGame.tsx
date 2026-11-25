@@ -112,7 +112,7 @@ export function TriviaGame({ onExit }: { onExit: () => void }) {
   };
 
   const best = state.stats.best.trivia;
-  const shell = "overflow-hidden rounded-3xl border-4 border-white shadow-lg";
+  const shell = "keep-light overflow-hidden rounded-3xl border-4 border-white shadow-lg";
   const bg = { background: "linear-gradient(180deg, #FFF3E0, #FFCCBC)", minHeight: 430 };
 
   if (phase === "intro") {
