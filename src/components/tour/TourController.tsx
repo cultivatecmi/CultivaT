@@ -200,14 +200,14 @@ export function TourController() {
       const b = canvasBox();
       if (!b) return;
       const cx = b.r.left + b.r.width / 2;
-      pointer(b.c, "pointerdown", cx, b.r.top + 90);
+      pointer(b.c, "pointerdown", cx, b.r.top + 150);
       await playFor(ms, (t) => {
         const k = (t % 6000) / 6000;
         const x = cx + Math.sin(k * Math.PI * 4) * b.r.width * 0.3;
-        const y = b.r.top + 110 + k * (b.r.height - 150);
+        const y = b.r.top + 160 + k * (b.r.height - 190);
         pointer(b.c, "pointermove", x, y);
       });
-      pointer(b.c, "pointerup", cx, b.r.top + 90);
+      pointer(b.c, "pointerup", cx, b.r.top + 150);
     };
     const clipBee = async (ms: number) => {
       await openGame("Vuelo de Polinización");

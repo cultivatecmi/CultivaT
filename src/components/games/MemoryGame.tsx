@@ -23,8 +23,6 @@ const CARDS: CardDef[] = [
   { id: "sol", emoji: "☀️", name: "Sol", bg: "#FFFDE7", fact: "Con la luz del sol las plantas fabrican su comida: ¡fotosíntesis!" },
   { id: "abeja", emoji: "🐝", name: "Abeja", bg: "#FFF8E1", fact: "Las abejas llevan polen de flor en flor para que nazcan los frutos." },
   { id: "catarina", emoji: "🐞", name: "Catarina", bg: "#FCE4EC", fact: "Las catarinas se comen a los pulgones: ¡son guardianas del cultivo!" },
-  { id: "girasol", emoji: "🌻", name: "Girasol", bg: "#FFFDE7", fact: "Cuando es joven, el girasol gira para seguir al sol durante el día." },
-  { id: "pepino", emoji: "🥒", name: "Pepino", bg: "#F1F8E9", fact: "En Sinaloa se cultiva mucho pepino en invernaderos." },
 ];
 
 interface Card {
@@ -42,7 +40,7 @@ function coinsFor(moves: number) {
 }
 
 function starsFor(moves: number) {
-  return moves <= 15 ? 3 : moves <= 22 ? 2 : 1;
+  return moves <= 12 ? 3 : moves <= 18 ? 2 : 1;
 }
 
 interface Result {

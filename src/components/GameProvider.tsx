@@ -97,6 +97,8 @@ interface GameContextValue {
   buyLadybug: () => boolean;
   /** Avisa que se está jugando un minijuego (silencia avisos emergentes) */
   setInGame: (v: boolean) => void;
+  /** hay un minijuego abierto: se muestra a pantalla completa */
+  inGame: boolean;
   equipItem: (id: string) => void;
   /** Guarda la foto del kit; la primera de cada semana da +50 🪙 y +30 XP */
   addPhoto: (image: string, note: string) => { coins: number; xp: number; first: boolean; week: number };
@@ -158,8 +160,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   // mientras se juega un minijuego no salen avisos emergentes ni sus sonidos
   const inGameRef = useRef(false);
+  const [inGame, setInGameState] = useState(false);
   const setInGame = useCallback((v: boolean) => {
     inGameRef.current = v;
+    setInGameState(v);
     if (v) setToasts([]);
   }, []);
 
@@ -777,6 +781,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       buyItem,
       buyLadybug,
       setInGame,
+      inGame,
       equipItem,
       addPhoto,
       deletePhoto,
@@ -788,7 +793,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       hydrated, session, state, now, syncStatus, tab, toasts, pushToast, login, startDemo, logout,
-      care, boost, openUmbrella, cleanDirt, addDirt, setClimate, cycleClimate, growStage, reward, recordGame, recordTriviaRound, drain, tourPatch, buyItem, buyLadybug, setInGame, equipItem, addPhoto, deletePhoto,
+      care, boost, openUmbrella, cleanDirt, addDirt, setClimate, cycleClimate, growStage, reward, recordGame, recordTriviaRound, drain, tourPatch, buyItem, buyLadybug, setInGame, inGame, equipItem, addPhoto, deletePhoto,
       markAllRead, clearNotifications, setPlantName, updateProfile, enableBrowserNotifications,
     ]
   );

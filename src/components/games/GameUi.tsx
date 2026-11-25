@@ -80,9 +80,9 @@ interface ResultProps {
 
 export function GameResult({ medal, title, stats, coins, happy = 0, xp, dailyDone = false, newBest, buttonTone, onRetry, onExit, className, children }: ResultProps) {
   return (
-    <div className={cn("flex h-full flex-col items-center justify-center gap-3 p-6 text-center", className)}>
-      <div className="anim-pop text-7xl">{medal}</div>
-      <h3 className="text-3xl font-bold text-tinta">{title}</h3>
+    <div className={cn("flex min-h-full flex-col items-center justify-center gap-2.5 px-5 py-5 text-center", className)}>
+      <div className="anim-pop text-6xl leading-none">{medal}</div>
+      <h3 className="text-[28px] font-bold leading-tight text-tinta">{title}</h3>
       {newBest && <span className="anim-streak rounded-full bg-sol px-3 py-1 font-display text-sm font-bold text-white">⭐ ¡Nuevo récord!</span>}
       <div className="flex flex-wrap justify-center gap-2">
         {(stats ?? []).map((s) => (
