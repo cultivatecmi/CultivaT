@@ -10,11 +10,14 @@ import { TriviaGame } from "@/components/games/TriviaGame";
 import { RootMazeGame } from "@/components/games/RootMazeGame";
 import { PollinationGame } from "@/components/games/PollinationGame";
 import { GAMES, getGame, type GameId } from "@/lib/games";
-import { CoinText } from "@/components/ui/CoinText";
+import { CoinText, InlineCoin } from "@/components/ui/CoinText";
+import { DAILY_COINS, DAILY_XP, dailyOf } from "@/lib/game";
 import { playSound } from "@/lib/sound";
 
 export function PlayScreen() {
-  const { state, setInGame } = useGameState();
+  const { state, now, setInGame } = useGameState();
+  const today = dailyOf(state, now);
+  const dailyDone = today.xp >= DAILY_XP || today.coins >= DAILY_COINS;
   const [game, setGame] = useState<GameId | null>(null);
 
   useEffect(() => {
@@ -70,6 +73,39 @@ export function PlayScreen() {
           <div className="text-[10px] font-semibold text-stone-500">partidas</div>
         </div>
       </div>
+
+      {/* progreso del día: la planta crece al ritmo de una planta real */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-2xl bg-white px-3 py-2 shadow-sm">
+          <div className="flex items-center justify-between font-display text-sm font-semibold">
+            <span>✨ XP hoy</span>
+            <span>
+              {today.xp}/{DAILY_XP}
+            </span>
+          </div>
+          <div className="mt-1 h-2 overflow-hidden rounded-full bg-stone-200">
+            <div className="h-full rounded-full bg-[#22C55E]" style={{ width: `${Math.min(100, (today.xp / DAILY_XP) * 100)}%` }} />
+          </div>
+        </div>
+        <div className="rounded-2xl bg-white px-3 py-2 shadow-sm">
+          <div className="flex items-center justify-between font-display text-sm font-semibold">
+            <span className="flex items-center gap-1">
+              <InlineCoin /> Monedas hoy
+            </span>
+            <span>
+              {today.coins}/{DAILY_COINS}
+            </span>
+          </div>
+          <div className="mt-1 h-2 overflow-hidden rounded-full bg-stone-200">
+            <div className="h-full rounded-full bg-[#F59E0B]" style={{ width: `${Math.min(100, (today.coins / DAILY_COINS) * 100)}%` }} />
+          </div>
+        </div>
+      </div>
+      {dailyDone && (
+        <p className="rounded-2xl bg-[#DCFCE7] px-3 py-2 text-center text-sm font-semibold text-[#15803D]">
+          ¡Meta diaria completada! 🌱 Sigue jugando para subir la felicidad; mañana ganas más XP y monedas.
+        </p>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         {GAMES.map((g, i) => {

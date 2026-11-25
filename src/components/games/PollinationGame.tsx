@@ -75,6 +75,7 @@ interface Result {
   coins: number;
   newBest: boolean;
   happy: number;
+  dailyDone: boolean;
   level: number;
   reason: "suelo" | "vida";
 }
@@ -444,8 +445,8 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
       finished = true;
       runningRef.current = false;
       const reward = capReward(score);
-      const { newBest, happy } = recordRef.current("polinizacion", { score, ...reward, label: "por Vuelo de Polinización", happy: HAPPY });
-      setResult({ score, coins: reward.coins, newBest, happy, level, reason });
+      const { newBest, happy, coins, dailyDone } = recordRef.current("polinizacion", { score, ...reward, label: "por Vuelo de Polinización", happy: HAPPY });
+      setResult({ score, coins, newBest, happy, level, reason, dailyDone });
       setPhase("over");
     };
 
@@ -915,6 +916,7 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
             coins={result.coins}
             newBest={result.newBest}
             happy={result.happy}
+            dailyDone={result.dailyDone}
             buttonTone="hoja"
             onRetry={start}
             onExit={onExit}

@@ -45,6 +45,7 @@ interface Result {
   coins: number;
   newBest: boolean;
   happy: number;
+  dailyDone: boolean;
 }
 
 const POINTS: Record<"agua" | "mineral", number> = { agua: 10, mineral: 15 };
@@ -126,8 +127,8 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
       finished = true;
       runningRef.current = false;
       const reward = scoreReward(score);
-      const { newBest, happy } = recordRef.current("raices", { score, ...reward, label: "por Laberinto de Raíces", happy: HAPPY });
-      setResult({ score, coins: reward.coins, newBest, happy });
+      const { newBest, happy, coins, dailyDone } = recordRef.current("raices", { score, ...reward, label: "por Laberinto de Raíces", happy: HAPPY });
+      setResult({ score, coins, newBest, happy, dailyDone });
       setPhase("over");
     };
 
@@ -479,6 +480,7 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
             coins={result.coins}
             newBest={result.newBest}
             happy={result.happy}
+            dailyDone={result.dailyDone}
             buttonTone="sol"
             onRetry={start}
             onExit={onExit}
