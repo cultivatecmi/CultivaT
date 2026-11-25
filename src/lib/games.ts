@@ -73,7 +73,7 @@ export const GAMES: GameInfo[] = [
     id: "polinizacion",
     name: "Vuelo de Polinización",
     emoji: "🐝",
-    tagline: "Vuela de flor en flor y esquiva el pesticida",
+    tagline: "Vuela sin parar de flor en flor",
     reward: "Hasta 40 🪙",
     from: "#22C55E",
     to: "#15803D",
