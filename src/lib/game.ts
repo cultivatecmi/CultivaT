@@ -493,7 +493,7 @@ export function deriveAlerts(s: GameState, now = Date.now()): GameState {
   if (s.water < 30) add("water", "💧 ¡Tengo sed!", `${s.plantName} tiene poca agua. Riégala un poquito.`, 20);
   if (s.fresh < 30 && !isHeatActive(s, now)) add("heat", "☀️ ¡Mucho calor!", "Dale sombra o aire a tu planta.", 20);
   if (s.nutrients < 30) add("nutrients", "🌱 Tengo hambre", "Ponle abono natural para que crezca fuerte.", 20);
-  if (s.happy < 25) add("happy", "😢 Me siento solita", "¡Juega conmigo en la pestaña Jugar! 🎮", 30);
+  if (s.happy < 25) add("happy", "😢 Me siento solita", "Acaríciame o juega conmigo en la pestaña Jugar 🎮", 30);
   if (s.dirt >= 2) add("dirt", "🧽 Tengo manchitas", "Frótame con el dedo para limpiarme.", 30);
   const today = dateKey(new Date(now));
   if (s.streak > 0 && s.lastCareDate !== today && new Date(now).getHours() >= 8)

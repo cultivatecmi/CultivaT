@@ -274,11 +274,19 @@ export function HomeScreen() {
   // -------------------------------------------------------------------------
 
   const pet = useRef<{ id: number; x: number; y: number; t: number; dist: number; acc: number; scrub: number } | null>(null);
-  // la felicidad ya NO sube con caricias: solo jugando minijuegos (pestaña Jugar)
+  // caricias: tocar (+3 %) y frotar (+2 %) suben la felicidad; jugar minijuegos sube más
+  const lastHappy = useRef(0);
+  const addHappy = useCallback((amount: number) => {
+    const t = performance.now();
+    if (t - lastHappy.current < 250) return;
+    lastHappy.current = t;
+    latest.current.ctx.boost("happy", amount, false);
+  }, []);
 
   const tapPlant = (cx: number, cy: number) => {
     kick(6);
     playSound("bounce");
+    addHappy(3);
     const p = toLocal(cx, cy);
     emit(
       ["💖", "💚", "⭐", "💛", "✨"].map((c, i) => ({
@@ -348,6 +356,7 @@ export function HomeScreen() {
         return;
       }
       playSound("pop", 0.7);
+      addHappy(2);
       emit([{ x: l.x, y: l.y, kind: "rise", content: pick(["💖", "💕", "💗", "✨"]), dx: (Math.random() - 0.5) * 40, size: 20 }]);
       if (mood === "feliz") {
         setReaction("risa");

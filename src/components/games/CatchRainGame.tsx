@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useGameState } from "@/components/GameProvider";
 import { TapButton } from "@/components/ui/TapButton";
+import { PlantCharacter } from "@/components/plant/PlantCharacter";
+import { plantGeometry } from "@/components/plant/geometry";
+import { getStage } from "@/lib/stages";
+import { svgToImage } from "@/lib/svgImage";
 import { Countdown, GameIntro, GameResult } from "./GameUi";
 import { scoreReward } from "@/lib/games";
 import { playSound } from "@/lib/sound";
@@ -13,6 +17,11 @@ const HEIGHT = 430;
 const POT_W = 78;
 const POT_H = 40;
 const GROUND = 30;
+/** la planta del jugador se dibuja desde su SVG (240×262): el borde de la maceta (y=182) mide 124 */
+const POT_RIM_Y = 182;
+const PLANT_SCALE = POT_W / 124;
+const PLANT_IMG_W = 240 * PLANT_SCALE;
+const PLANT_IMG_H = 262 * PLANT_SCALE;
 
 type Kind = "drop" | "abono" | "uv" | "plaga";
 interface Item {
@@ -66,6 +75,32 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
   const recordRef = useRef(recordGame);
   recordRef.current = recordGame;
 
+  // la planta del jugador: su etapa real con la maceta y el accesorio equipados
+  const stage = getStage(state.xp).index;
+  const stageRef = useRef(stage);
+  stageRef.current = stage;
+  const happySvgRef = useRef<HTMLDivElement>(null);
+  const hurtSvgRef = useRef<HTMLDivElement>(null);
+  const plantImgs = useRef<{ happy: HTMLImageElement | null; hurt: HTMLImageElement | null }>({ happy: null, hurt: null });
+  useEffect(() => {
+    let alive = true;
+    const load = async (box: HTMLDivElement | null) => {
+      const svg = box?.querySelector("svg");
+      if (!svg) return null;
+      try {
+        return await svgToImage(svg, PLANT_IMG_W * 2);
+      } catch {
+        return null;
+      }
+    };
+    void Promise.all([load(happySvgRef.current), load(hurtSvgRef.current)]).then(([happy, hurt]) => {
+      if (alive) plantImgs.current = { happy, hurt };
+    });
+    return () => {
+      alive = false;
+    };
+  }, [stage, state.equipped.pot, state.equipped.accessory]);
+
   const active = phase === "countdown" || phase === "playing";
 
   useEffect(() => {
@@ -105,6 +140,8 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
     const sparks: Spark[] = [];
     const floats: Float[] = [];
     const potTop = HEIGHT - GROUND - POT_H;
+    // se atrapa desde la cabeza de la planta hasta el borde de la maceta
+    const catchTop = potTop - (POT_RIM_Y - plantGeometry(stageRef.current).top) * PLANT_SCALE;
     let last = performance.now();
     let raf = 0;
     let finished = false;
@@ -226,6 +263,21 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
     };
 
     const drawPot = (x: number) => {
+      const img = hurt > 0 ? plantImgs.current.hurt ?? plantImgs.current.happy : plantImgs.current.happy;
+      if (img) {
+        // planta real dibujada desde su SVG (el borde de la maceta queda en potTop)
+        ctx.save();
+        ctx.translate(x, potTop + POT_H);
+        ctx.scale(1 + squash * 0.5, 1 - squash * 0.5);
+        ctx.fillStyle = "rgba(0,0,0,.18)";
+        ctx.beginPath();
+        ctx.ellipse(0, 4, POT_W * 0.5, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        const top = -POT_H - POT_RIM_Y * PLANT_SCALE;
+        ctx.drawImage(img, -PLANT_IMG_W / 2, top, PLANT_IMG_W, PLANT_IMG_H);
+        ctx.restore();
+        return;
+      }
       ctx.save();
       ctx.translate(x, potTop + POT_H);
       ctx.scale(1 + squash * 0.5, 1 - squash * 0.5);
@@ -404,7 +456,7 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
         it.y += it.vy * dt;
         it.wobble += dt * 4;
         const ix = it.x + Math.sin(it.wobble) * (it.kind === "uv" ? 10 : it.kind === "plaga" ? 6 : 3);
-        const caught = it.y + it.size >= potTop - 20 && it.y - it.size <= potTop + 14 && Math.abs(ix - potX) < POT_W / 2 + it.size * 0.4;
+        const caught = it.y + it.size >= (plantImgs.current.happy ? catchTop : potTop - 20) && it.y - it.size <= potTop + 14 && Math.abs(ix - potX) < POT_W / 2 + it.size * 0.4;
         if (caught) {
           const pts = POINTS[it.kind];
           let bonus = 0;
@@ -573,6 +625,15 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
 
   return (
     <div className="space-y-3">
+      {/* plantas ocultas: se copian como imagen para el canvas */}
+      <div className="pointer-events-none fixed -left-[9999px] top-0 w-[240px]" aria-hidden="true">
+        <div ref={happySvgRef}>
+          <PlantCharacter mood="feliz" stage={stage} pot={state.equipped.pot} accessory={state.equipped.accessory} />
+        </div>
+        <div ref={hurtSvgRef}>
+          <PlantCharacter mood="acalorada" stage={stage} pot={state.equipped.pot} accessory={state.equipped.accessory} reaction="incomoda" />
+        </div>
+      </div>
       <div ref={wrapRef} className="keep-light relative overflow-hidden rounded-3xl border-4 border-white bg-cielo-light shadow-lg" style={{ height: HEIGHT }}>
         {active ? (
           <>
