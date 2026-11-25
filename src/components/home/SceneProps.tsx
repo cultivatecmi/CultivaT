@@ -2,6 +2,7 @@
 
 import type { ToolId } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { FertilizerIcon, WateringCanIcon } from "@/components/ui/GameIcons";
 
 // ---------------------------------------------------------------------------
 // Pulgón
@@ -81,6 +82,14 @@ export const TOOLS: { id: ToolId; emoji: string; ghost: string; label: string; c
   { id: "sponge", emoji: "🧽", ghost: "🧽", label: "Limpiar", color: "#FFCA28", dark: "#F9A825" },
 ];
 
+/** Ícono de cada herramienta: regadera y saco de abono dibujados; sombrilla y esponja como emoji */
+export function ToolIcon({ id, size }: { id: ToolId; size: number }) {
+  if (id === "water") return <WateringCanIcon size={size} />;
+  if (id === "feed") return <FertilizerIcon size={size} />;
+  const t = TOOLS.find((x) => x.id === id);
+  return <span style={{ fontSize: size * 0.82, lineHeight: 1 }}>{t?.emoji}</span>;
+}
+
 interface BarProps {
   activeTool: ToolId | null;
   alerts: Partial<Record<ToolId, boolean>>;
@@ -100,6 +109,7 @@ export function ActionBar({ activeTool, alerts, onToolPointerDown, onToolPointer
           <div key={t.id} className="flex flex-col items-center gap-1">
             <button
               type="button"
+              data-tool={t.id}
               onPointerDown={(e) => onToolPointerDown(t.id, e)}
               onPointerMove={onToolPointerMove}
               onPointerUp={onToolPointerUp}
@@ -113,7 +123,9 @@ export function ActionBar({ activeTool, alerts, onToolPointerDown, onToolPointer
               style={{ background: `radial-gradient(circle at 35% 30%, #fff8, transparent 55%), ${t.color}`, borderColor: t.dark }}
               aria-label={`${t.label}: tócalo o arrástralo hacia la planta`}
             >
-              <span className={cn("text-[30px] leading-none drop-shadow", active && "opacity-30")}>{t.emoji}</span>
+              <span className={cn("grid place-items-center drop-shadow", active && "opacity-30")}>
+                <ToolIcon id={t.id} size={38} />
+              </span>
               {alert && <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 animate-pulse rounded-full border-2 border-white bg-alerta" />}
             </button>
             <span className="font-display text-xs font-bold text-white [text-shadow:0_1px_3px_rgba(0,0,0,.55)]">{t.label}</span>

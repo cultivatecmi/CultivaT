@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, Lock } from "lucide-react";
 import { useGameState } from "@/components/GameProvider";
+import { CoinIcon } from "@/components/ui/GameIcons";
 import { PlantScene } from "@/components/plant/PlantScene";
 import { PlantCharacter } from "@/components/plant/PlantCharacter";
 import { BackgroundScene } from "@/components/plant/BackgroundScene";
@@ -48,7 +49,7 @@ export function ShopScreen() {
           <h2 className="text-2xl font-semibold">Tienda y Estilo 🛍️</h2>
           <p className="text-sm text-stone-500">Toca un artículo para probártelo.</p>
         </div>
-        <div className="rounded-2xl bg-sol px-3 py-1.5 font-display text-lg font-semibold text-white shadow">🪙 {state.coins}</div>
+        <div className="rounded-2xl bg-sol px-3 py-1.5 font-display text-lg font-semibold text-white shadow flex items-center gap-1"><CoinIcon size={20} /> {state.coins}</div>
       </div>
 
       <PlantScene className="h-[230px]" plantWidth="min(60%, 196px)" mood={mood === "marchita" ? "marchita" : "feliz"} stage={stage} equipped={shownEquipped}>

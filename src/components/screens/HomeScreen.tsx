@@ -5,7 +5,8 @@ import { useGameState } from "@/components/GameProvider";
 import { PlantCharacter, type Reaction } from "@/components/plant/PlantCharacter";
 import { GardenBackdrop } from "@/components/home/GardenBackdrop";
 import { HomeHud } from "@/components/home/HomeHud";
-import { ActionBar, AphidSvg, ParticleLayer, TOOLS, UmbrellaSvg, type Particle } from "@/components/home/SceneProps";
+import { DragHint } from "@/components/home/DragHint";
+import { ActionBar, AphidSvg, ParticleLayer, ToolIcon, UmbrellaSvg, type Particle } from "@/components/home/SceneProps";
 import { computeMood, isHeatActive, isShaded, TAP_MESSAGES } from "@/lib/game";
 import { leafSpots, plantGeometry, VIEW_H } from "@/components/plant/geometry";
 import { getStage } from "@/lib/stages";
@@ -30,6 +31,20 @@ const POSTURE: Record<Mood, string> = {
 };
 
 const TICK_MS = 260;
+
+/** Mano guía: se muestra hasta que el niño arrastre 3 veces, y otra vez tras 30 s sin usar herramientas */
+const DRAG_COUNT_KEY = "cultivat:v1:drags";
+const HINT_FIRST_MS = 2500;
+const HINT_IDLE_MS = 30_000;
+const HINT_TOOLS: ToolId[] = ["water", "feed", "shade", "sponge"];
+
+function readDragCount() {
+  try {
+    return Number(window.localStorage.getItem(DRAG_COUNT_KEY) || 0);
+  } catch {
+    return 0;
+  }
+}
 
 /** Lugares (en % de la caja de la planta) donde puede aparecer el pulgón: sus hojas */
 const bugSpots = leafSpots;
@@ -298,7 +313,7 @@ export function HomeScreen() {
     p.acc += d;
     p.x = e.clientX;
     p.y = e.clientY;
-    if (p.acc > 45) {
+    if (p.acc > (latest.current.ctx.state.dirt > 0 ? 28 : 45)) {
       p.acc = 0;
       kick(1.6);
       const l = toLocal(e.clientX, e.clientY);
@@ -318,7 +333,7 @@ export function HomeScreen() {
           })),
           1300
         );
-        if (p.scrub >= 4) {
+        if (p.scrub >= 2) {
           p.scrub = 0;
           const res = L.ctx.cleanDirt();
           if (res.ok) {
@@ -353,6 +368,48 @@ export function HomeScreen() {
   // -------------------------------------------------------------------------
   // Herramientas táctiles (arrastrar hacia la planta, mantener o tocar)
   // -------------------------------------------------------------------------
+
+  // ---- mano guía ----
+  const [hintTool, setHintTool] = useState<ToolId | null>(null);
+  const lastToolUse = useRef(Date.now());
+  const dragCount = useRef(0);
+
+  useEffect(() => {
+    dragCount.current = readDragCount();
+    let cycle = 0;
+    const id = setInterval(() => {
+      const idle = Date.now() - lastToolUse.current;
+      const firstTimes = dragCount.current < 3;
+      const show = !drag.current && idle > (firstTimes ? HINT_FIRST_MS : HINT_IDLE_MS);
+      if (!show) {
+        setHintTool((t) => (t ? null : t));
+        return;
+      }
+      // cambia de herramienta en cada vuelta de la animación (2.6 s)
+      cycle += 1;
+      if (cycle % 3 === 1) {
+        const L = latest.current.ctx.state;
+        // primero la que más se necesita
+        const urgent: ToolId | null =
+          L.climate === "calor" ? "shade" : L.water < 40 && L.climate !== "lluvia" ? "water" : L.nutrients < 40 ? "feed" : L.dirt > 0 ? "sponge" : null;
+        setHintTool((t) => urgent ?? HINT_TOOLS[(HINT_TOOLS.indexOf(t ?? "sponge") + 1) % HINT_TOOLS.length]);
+      }
+    }, 900);
+    return () => clearInterval(id);
+  }, []);
+
+  const noteToolUse = (dragged: boolean) => {
+    lastToolUse.current = Date.now();
+    setHintTool(null);
+    if (dragged) {
+      dragCount.current += 1;
+      try {
+        window.localStorage.setItem(DRAG_COUNT_KEY, String(dragCount.current));
+      } catch {
+        /* sin almacenamiento */
+      }
+    }
+  };
 
   const drag = useRef<Drag | null>(null);
   const tickTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -474,7 +531,7 @@ export function HomeScreen() {
       );
       playSound("scrub");
       d.rub += 1;
-      if (d.rub >= 4) {
+      if (d.rub >= 2) {
         d.rub = 0;
         if (L.ctx.state.dirt > 0) {
           const res = L.ctx.cleanDirt();
@@ -511,6 +568,7 @@ export function HomeScreen() {
 
   const onToolPointerDown = (tool: ToolId, e: React.PointerEvent<HTMLButtonElement>) => {
     if (drag.current) return;
+    noteToolUse(false);
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     drag.current = {
@@ -550,6 +608,8 @@ export function HomeScreen() {
   const onToolPointerUp = (e: React.PointerEvent<HTMLButtonElement>) => {
     const d = drag.current;
     if (!d || d.pointerId !== e.pointerId || d.autoLeft >= 0) return;
+    if (d.moved && d.ticks > 0) noteToolUse(true);
+    else lastToolUse.current = Date.now();
     if (!d.moved && performance.now() - d.t0 < 400) {
       // toque rápido: la herramienta vuela sola hasta Brotín
       const r = plantRef.current?.getBoundingClientRect();
@@ -665,7 +725,6 @@ export function HomeScreen() {
 
   // -------------------------------------------------------------------------
 
-  const toolEmoji = TOOLS.find((t) => t.id === activeTool)?.ghost ?? "";
   const umbrellaLeft = state.shadeUntil - now;
   // la felicidad se ve en el brillo de la planta (sin medidor aparte)
   const happyGlow =
@@ -748,6 +807,8 @@ export function HomeScreen() {
 
       <ParticleLayer particles={particles} />
 
+      {hintTool && !activeTool && <DragHint tool={hintTool} homeRef={homeRef} plantRef={plantRef} />}
+
       <ActionBar
         activeTool={activeTool}
         alerts={{ water: state.water < 30 && state.climate !== "lluvia", feed: state.nutrients < 30, shade: heat, sponge: state.dirt > 0 }}
@@ -760,12 +821,12 @@ export function HomeScreen() {
       <div ref={ghostRef} className="pointer-events-none fixed left-0 top-0 z-50 h-[68px] w-[68px]" style={{ opacity: activeTool ? 1 : 0 }}>
         <span
           className={cn(
-            "block text-center text-[56px] leading-[68px] drop-shadow-lg",
+            "grid h-[68px] w-[68px] place-items-center drop-shadow-lg",
             pouring && (activeTool === "water" || activeTool === "feed") && "tool-pour",
             pouring && activeTool === "sponge" && "tool-scrub"
           )}
         >
-          {toolEmoji}
+          {activeTool && <ToolIcon id={activeTool} size={60} />}
         </span>
       </div>
     </div>

@@ -73,6 +73,8 @@ export function StagesPanel({ onClose }: { onClose: () => void }) {
                 const done = i < st.index;
                 const current = i === st.index;
                 const locked = i > st.index;
+                // progreso dentro de cada etapa: superadas 100 %, la actual su avance, las siguientes 0 %
+                const stagePct = done ? 100 : current ? (st.next ? pct : 100) : 0;
                 return (
                   <li
                     key={s.id}
@@ -96,8 +98,12 @@ export function StagesPanel({ onClose }: { onClose: () => void }) {
                         {i + 1}. {s.emoji} {s.name}
                       </p>
                       <p className="text-[13px] leading-snug text-stone-600">{DESCRIPTIONS[i]}</p>
-                      <p className={cn("mt-1 font-display text-xs font-bold", current ? "text-hoja-dark" : done ? "text-hoja-dark" : "text-stone-400")}>
-                        {current ? "⭐ Aquí está tu planta" : done ? "✅ Superada" : `🔒 Desde ${s.minXp} XP`}
+                      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-stone-200" role="progressbar" aria-label={`Progreso de ${s.name}`} aria-valuenow={stagePct} aria-valuemin={0} aria-valuemax={100}>
+                        <div className="h-full rounded-full bg-hoja transition-[width] duration-700" style={{ width: `${stagePct}%` }} />
+                      </div>
+                      <p className={cn("mt-1 flex justify-between font-display text-xs font-bold", current || done ? "text-hoja-dark" : "text-stone-400")}>
+                        <span>{current ? "⭐ Aquí está tu planta" : done ? "✅ Superada" : `🔒 Desde ${s.minXp} XP`}</span>
+                        <span>{stagePct}%</span>
                       </p>
                     </div>
                   </li>
