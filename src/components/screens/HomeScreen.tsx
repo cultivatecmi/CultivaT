@@ -835,7 +835,7 @@ export function HomeScreen() {
     >
       <GardenBackdrop background={state.equipped.background} climate={state.climate} floorBottom={SCENE_B} />
 
-      <HomeHud />
+      <HomeHud aphidAlert={bugActive && !ladyActive} />
 
       {/* Brotín */}
       <div
