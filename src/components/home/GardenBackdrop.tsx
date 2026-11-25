@@ -50,14 +50,14 @@ function CloudShape({ dark }: { dark: boolean }) {
 
 function SunShape({ intense }: { intense: boolean }) {
   return (
-    <div className={cn("absolute right-[6%] top-[13%] transition-transform duration-[2000ms]", intense ? "scale-[1.45]" : "scale-100")} aria-hidden>
+    <div className={cn("garden-sun absolute right-[6%] top-[13%] transition-transform duration-[2000ms]", intense ? "scale-[1.45]" : "scale-100")} aria-hidden>
       <svg viewBox="0 0 120 120" className="sun-rays h-[110px] w-[110px]">
         {Array.from({ length: 12 }).map((_, i) => (
           <path key={i} d="M60 4 L66 24 L54 24 Z" fill={intense ? "#FF7043" : "#FFD54F"} transform={`rotate(${i * 30} 60 60)`} />
         ))}
       </svg>
       <div
-        className={cn("absolute inset-[22%] rounded-full", intense ? "anim-sun" : "")}
+        className={cn("sun-core absolute inset-[22%] rounded-full", intense ? "anim-sun" : "")}
         style={{
           background: intense
             ? "radial-gradient(circle at 35% 35%, #FFF59D, #FFB300 55%, #FF7043)"

@@ -13,6 +13,7 @@ import { getStage } from "@/lib/stages";
 import { playSound } from "@/lib/sound";
 import { CLIMATES } from "@/lib/weather";
 import type { Mood, ToolId } from "@/lib/types";
+import { takeJoy } from "@/lib/joy";
 import { cn, pick } from "@/lib/utils";
 
 // Distribución vertical (desde abajo): menú → bandeja de herramientas → maceta
@@ -70,7 +71,7 @@ interface Drag {
 
 export function HomeScreen() {
   const ctx = useGameState();
-  const { state, now, boost, openUmbrella, cleanDirt, addDirt, reward } = ctx;
+  const { state, now, openUmbrella, cleanDirt, addDirt, reward } = ctx;
   const mood = computeMood(state, now);
   const heat = isHeatActive(state, now);
   const shaded = isShaded(state, now);
@@ -266,19 +267,11 @@ export function HomeScreen() {
   // -------------------------------------------------------------------------
 
   const pet = useRef<{ id: number; x: number; y: number; t: number; dist: number; acc: number; scrub: number } | null>(null);
-  const lastHappy = useRef(0);
-
-  const addHappy = useCallback((amount: number) => {
-    const t = performance.now();
-    if (t - lastHappy.current < 250) return;
-    lastHappy.current = t;
-    latest.current.ctx.boost("happy", amount, false);
-  }, []);
+  // la felicidad ya NO sube con caricias: solo jugando minijuegos (pestaña Jugar)
 
   const tapPlant = (cx: number, cy: number) => {
     kick(6);
     playSound("bounce");
-    addHappy(3);
     const p = toLocal(cx, cy);
     emit(
       ["💖", "💚", "⭐", "💛", "✨"].map((c, i) => ({
@@ -348,7 +341,6 @@ export function HomeScreen() {
         return;
       }
       playSound("pop", 0.7);
-      addHappy(2);
       emit([{ x: l.x, y: l.y, kind: "rise", content: pick(["💖", "💕", "💗", "✨"]), dx: (Math.random() - 0.5) * 40, size: 20 }]);
       if (mood === "feliz") {
         setReaction("risa");
@@ -663,6 +655,15 @@ export function HomeScreen() {
     }
   }, [bug, say]);
 
+  // pulgón activo: chupa la savia (-2 % de nutrientes por segundo, sin bajar de 15 %)
+  const bugActive = !!bug && !bug.squashed;
+  useEffect(() => {
+    if (!bugActive) return;
+    say("¡Ay! Un pulgón me está chupando la savia 🪲 ¡Aplástalo!", 3200);
+    const t = setInterval(() => latest.current.ctx.drain("nutrients", 2, 15), 1000);
+    return () => clearInterval(t);
+  }, [bugActive, say]);
+
   const squashBug = (e: React.PointerEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     e.preventDefault();
@@ -672,11 +673,11 @@ export function HomeScreen() {
     const p = toLocal(e.clientX, e.clientY);
     emit([
       { x: p.x, y: p.y, kind: "burst", content: "💥", dy: 0, size: 34 },
-      { x: p.x, y: p.y - 14, kind: "text", content: "+3 🪙", size: 24 },
+      { x: p.x, y: p.y - 14, kind: "text", content: "+5 🪙", size: 24 },
     ]);
-    reward(3, 2, "¡Pulgón atrapado!");
-    boost("happy", 4, false);
-    say("¡Gracias! Ese pulgón se comía mis hojas 🐛");
+    playSound("coin");
+    reward(5, 2, "¡Pulgón aplastado!");
+    say("¡Salvada! Los pulgones chupan la savia y roban nutrientes 🪲", 4200);
     later(() => setBug(null), 650);
   };
 
@@ -730,6 +731,21 @@ export function HomeScreen() {
     return () => clearTimeout(t);
   }, []);
 
+  // volvió de jugar: la felicidad ganada se celebra al instante (risa, baile y corazones)
+  useEffect(() => {
+    const joy = takeJoy();
+    if (joy <= 0) return;
+    later(() => {
+      setDancing(true);
+      playSound("coin");
+      say(`¡Jugar contigo me pone muy feliz! +${joy}% 😊`, 3600);
+      const c = plantPoint(0.5, 0.3);
+      emit(["💖", "😊", "💚", "✨", "💛", "💕"].map((e, i) => ({ x: c.x, y: c.y, kind: "burst" as const, content: e, dx: (i - 2.5) * 38, dy: -70 - (i % 2) * 30, size: 26 })), 900);
+      later(() => setDancing(false), 1800);
+    }, 500);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // -------------------------------------------------------------------------
 
   const umbrellaLeft = state.shadeUntil - now;
@@ -776,7 +792,7 @@ export function HomeScreen() {
               stage={stage}
               pot={state.equipped.pot}
               accessory={state.equipped.accessory}
-              reaction={dancing ? "risa" : reaction}
+              reaction={dancing ? "risa" : (reaction ?? (bugActive ? "incomoda" : null))}
               dirt={state.dirt}
               wet={wet || state.climate === "lluvia"}
               className="w-full drop-shadow-[0_10px_8px_rgba(0,0,0,0.18)]"

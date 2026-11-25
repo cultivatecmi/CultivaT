@@ -1,7 +1,7 @@
 import type { Mood } from "@/lib/types";
 import { CX, Drop, INK } from "./parts";
 
-export type FaceKind = Mood | "risa" | "comiendo";
+export type FaceKind = Mood | "risa" | "comiendo" | "incomoda";
 
 interface Props {
   face: FaceKind;
@@ -155,6 +155,35 @@ export function PlantFace({ face, r, rx, cy, eyeDX, eyeY, eyeRx, eyeRy, mouthY, 
       );
       break;
 
+    // un pulgón le chupa la savia: cejas preocupadas, boca ondulada y gotita de sudor
+    case "incomoda":
+      eyeEls = eyes.map((x, i) => {
+        const d = i === 0 ? 1 : -1;
+        return (
+          <g key={x}>
+            <OpenEye x={x} y={eyeY} rx={eyeRx} ry={eyeRy} />
+            <path
+              d={`M ${x - d * eyeRx * 1.4} ${eyeY - eyeRy * 1.55} L ${x + d * eyeRx * 0.9} ${eyeY - eyeRy * 2.05}`}
+              stroke={INK}
+              strokeWidth={sw * 0.85}
+              strokeLinecap="round"
+            />
+          </g>
+        );
+      });
+      mouth = (
+        <path
+          d={`M ${CX - r * 0.24} ${mouthY + r * 0.06} q ${r * 0.06} ${-r * 0.1} ${r * 0.12} 0 t ${r * 0.12} 0 t ${r * 0.12} 0 t ${r * 0.12} 0`}
+          stroke={INK}
+          strokeWidth={sw * 0.85}
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      );
+      extra = <Drop x={CX + rx * 0.7} y={cy - r * 0.55} size={0.8} color="#81D4FA" fallDur="1.3s" />;
+      break;
+
     case "marchita":
       eyeEls = eyes.map((x, i) => (
         <path key={x} d={`M ${x - eyeRx * 1.2} ${eyeY + (i === 0 ? -2 : 2)} Q ${x} ${eyeY + eyeRy} ${x + eyeRx * 1.2} ${eyeY + (i === 0 ? 2 : -2)}`} stroke={INK} strokeWidth={sw} fill="none" strokeLinecap="round" />
@@ -176,7 +205,7 @@ export function PlantFace({ face, r, rx, cy, eyeDX, eyeY, eyeRx, eyeRy, mouthY, 
   }
 
   const blush =
-    face === "acalorada" ? { fill: "#FF7043", op: 0.7, k: 1.4 } : face === "marchita" || face === "sedienta" ? null : { fill: "#FF8A80", op: 0.55, k: 1 };
+    face === "acalorada" ? { fill: "#FF7043", op: 0.7, k: 1.4 } : face === "marchita" || face === "sedienta" || face === "incomoda" ? null : { fill: "#FF8A80", op: 0.55, k: 1 };
 
   return (
     <g>

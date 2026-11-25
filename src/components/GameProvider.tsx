@@ -36,6 +36,7 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 import { getItem } from "@/lib/shop";
 import { getGame, type GameId } from "@/lib/games";
 import { CLIMATES, pickNextClimate, randomClimateDelay, type Climate } from "@/lib/weather";
+import { gameJoyBonus, markJoy } from "@/lib/joy";
 import { getStage } from "@/lib/stages";
 import { playSound, unlockAudio } from "@/lib/sound";
 import { uid } from "@/lib/utils";
@@ -74,7 +75,9 @@ interface GameContextValue {
   growStage: () => void;
   reward: (coins: number, xp: number, reason: string) => void;
   /** Guarda el resultado de un minijuego, entrega monedas/XP y dice si es récord */
-  recordGame: (game: GameId, result: { score: number; coins: number; xp: number; label: string }) => { newBest: boolean };
+  recordGame: (game: GameId, result: { score: number; coins: number; xp: number; label: string }) => { newBest: boolean; happy: number };
+  /** Baja un medidor sin pasar de un piso (p. ej. el pulgón chupando nutrientes) */
+  drain: (stat: BoostStat, amount: number, floor: number) => void;
   recordTriviaRound: (correct: number) => void;
   buyItem: (id: string) => boolean;
   equipItem: (id: string) => void;
@@ -503,12 +506,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const recordGame = useCallback(
     (game: GameId, r: { score: number; coins: number; xp: number; label: string }) => {
       const s = current();
-      if (!s) return { newBest: false };
+      if (!s) return { newBest: false, happy: 0 };
       const lower = getGame(game).lowerIsBetter;
+      // jugar es lo único que sube la felicidad de la planta
+      const before = s.happy;
+      const happyAfter = Math.min(100, before + gameJoyBonus());
+      const happy = Math.round(happyAfter - before);
       const prev = s.stats.best[game];
       const newBest = prev === undefined || (lower ? r.score < prev : r.score > prev);
       const base: GameState = {
         ...s,
+        happy: happyAfter,
         coins: s.coins + Math.max(0, r.coins),
         stats: {
           ...s.stats,
@@ -521,9 +529,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       commit(x.state);
       if (r.coins > 0) pushToast(`+${r.coins} 🪙 ${r.label}`, "coins");
       celebrate(x.stageUp);
-      return { newBest };
+      if (happy > 0) markJoy(happy);
+      return { newBest, happy };
     },
     [current, commit, pushToast, celebrate]
+  );
+
+  const drain = useCallback(
+    (stat: BoostStat, amount: number, floor: number) => {
+      const s = current();
+      if (!s || s[stat] <= floor) return;
+      commit({ ...s, [stat]: Math.max(floor, s[stat] - amount) }, false);
+      setNow(Date.now());
+    },
+    [current, commit]
   );
 
   const recordTriviaRound = useCallback(
@@ -692,6 +711,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       reward,
       recordGame,
       recordTriviaRound,
+      drain,
       buyItem,
       equipItem,
       addPhoto,
@@ -704,7 +724,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       hydrated, session, state, now, syncStatus, tab, toasts, pushToast, login, startDemo, logout,
-      care, boost, openUmbrella, cleanDirt, addDirt, setClimate, cycleClimate, growStage, reward, recordGame, recordTriviaRound, buyItem, equipItem, addPhoto, deletePhoto,
+      care, boost, openUmbrella, cleanDirt, addDirt, setClimate, cycleClimate, growStage, reward, recordGame, recordTriviaRound, drain, buyItem, equipItem, addPhoto, deletePhoto,
       markAllRead, clearNotifications, setPlantName, updateProfile, enableBrowserNotifications,
     ]
   );

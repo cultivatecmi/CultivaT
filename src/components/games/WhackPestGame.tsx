@@ -114,6 +114,7 @@ interface Result {
   pulgones: number;
   catarinas: number;
   newBest: boolean;
+  happy: number;
 }
 
 export function WhackPestGame({ onExit }: { onExit: () => void }) {
@@ -183,8 +184,8 @@ export function WhackPestGame({ onExit }: { onExit: () => void }) {
     setHolesBoth(() => emptyHoles());
     const s = scoreRef.current;
     const reward = scoreReward(s);
-    const { newBest } = recordGame("plagas", { score: s, ...reward, label: "por Aplasta Plagas" });
-    setResult({ score: s, coins: reward.coins, ...counts.current, newBest });
+    const { newBest, happy } = recordGame("plagas", { score: s, ...reward, label: "por Aplasta Plagas" });
+    setResult({ score: s, coins: reward.coins, ...counts.current, newBest, happy });
     setPhase("over");
   }, [recordGame]);
 
@@ -267,6 +268,7 @@ export function WhackPestGame({ onExit }: { onExit: () => void }) {
             ]}
             coins={result.coins}
             newBest={result.newBest}
+            happy={result.happy}
             buttonTone="hoja"
             onRetry={start}
             onExit={onExit}

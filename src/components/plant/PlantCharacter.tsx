@@ -7,7 +7,7 @@ import { PlantFace } from "./PlantFace";
 import { PlantAccessory } from "./PlantAccessory";
 import { CX, SOIL_Y, STEM_BASE_Y, bezierAt, plantGeometry, type LeafDef, type PlantGeo } from "./geometry";
 
-export type Reaction = "risa" | "comiendo" | null;
+export type Reaction = "risa" | "comiendo" | "incomoda" | null;
 
 interface Props {
   mood: Mood;

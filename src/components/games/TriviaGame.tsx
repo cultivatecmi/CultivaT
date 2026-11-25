@@ -24,6 +24,7 @@ interface Result {
   bestStreak: number;
   coins: number;
   newBest: boolean;
+  happy: number;
 }
 
 export function TriviaGame({ onExit }: { onExit: () => void }) {
@@ -99,8 +100,8 @@ export function TriviaGame({ onExit }: { onExit: () => void }) {
   const next = () => {
     if (idx + 1 >= questions.length) {
       recordTriviaRound(correct);
-      const { newBest } = recordGame("trivia", { score: correct, coins: 0, xp: 5, label: "" });
-      setResult({ correct, bestStreak, coins: earned, newBest });
+      const { newBest, happy } = recordGame("trivia", { score: correct, coins: 0, xp: 5, label: "" });
+      setResult({ correct, bestStreak, coins: earned, newBest, happy });
       if (correct >= 4) playSound("levelup");
       setPhase("done");
     } else {
@@ -143,6 +144,7 @@ export function TriviaGame({ onExit }: { onExit: () => void }) {
           ]}
           coins={result.coins}
           newBest={result.newBest && result.correct > 0}
+          happy={result.happy}
           buttonTone="alerta"
           onRetry={start}
           onExit={onExit}

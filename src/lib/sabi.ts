@@ -164,8 +164,8 @@ const TIPS: Record<"water" | "nutrients" | "fresh" | "happy", Record<DiagStatus,
   },
   happy: {
     ok: "¡Está muy feliz contigo! 😊",
-    warn: "Le encantaría un cariño: acaríciala frotándola con el dedo 💚.",
-    bad: "Se siente solita 😢. Acaríciala con el dedo o atrapa pulgones con ella.",
+    warn: "Le encantaría jugar contigo: entra a Jugar 🎮 y termina un minijuego.",
+    bad: "Se siente solita 😢. Juega una partida en Jugar 🎮: cada juego le sube la felicidad.",
   },
 };
 

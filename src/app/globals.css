@@ -487,3 +487,8 @@ html.dark body { color: #eef3ec; }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
+
+/* modo oscuro: de noche el sol casi no brilla */
+.dark .garden-sun { opacity: 0.4; filter: saturate(0.7) brightness(0.8); }
+.dark .garden-sun .sun-core { box-shadow: 0 0 12px 3px rgba(255, 213, 79, 0.2) !important; animation: none; }
+.dark .heat-haze { opacity: 0.3; }

@@ -13,7 +13,6 @@ import { getStage } from "@/lib/stages";
 import { playSound } from "@/lib/sound";
 import { CLIMATES } from "@/lib/weather";
 import { cn } from "@/lib/utils";
-import { Logo } from "@/components/brand/Logo";
 
 /** anillo de progreso circular (nivel / etapa) */
 function Ring({ value, color, size, stroke = 4, children, label }: { value: number; color: string; size: number; stroke?: number; children: React.ReactNode; label: string }) {
@@ -169,13 +168,6 @@ export function HomeHud() {
         <Meter emoji="🌱" label="Nutrientes" value={state.nutrients} color="#22C55E" />
         <Meter emoji="☀️" label="Frescura" value={state.fresh} color="#F59E0B" />
         <Meter emoji="😊" label="Felicidad" value={state.happy} color="#F06292" />
-      </div>
-
-      {/* logo compacto, sin bloquear toques sobre la escena */}
-      <div className="pointer-events-none mt-1.5 flex justify-center">
-        <span className="hud-card rounded-full bg-[#FFFBEB]/85 px-3 py-1 shadow-sm backdrop-blur-sm">
-          <Logo variant="wordmark" className="block h-6 w-auto" />
-        </span>
       </div>
 
       {settings && <SettingsPanel onClose={() => setSettings(false)} />}
