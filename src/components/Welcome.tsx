@@ -6,7 +6,6 @@ import { useGame } from "@/components/GameProvider";
 import { ProfileAvatar } from "@/components/settings/SettingsPanel";
 import { listLocalProfiles, type SavedProfile } from "@/lib/storage";
 import { cn } from "@/lib/utils";
-import { PlantScene } from "@/components/plant/PlantScene";
 import { TapButton } from "@/components/ui/TapButton";
 import { Logo } from "@/components/brand/Logo";
 
@@ -16,7 +15,6 @@ export function Welcome() {
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [bounce, setBounce] = useState(0);
   const [saved, setSaved] = useState<SavedProfile[]>([]);
   const pinRef = useRef<HTMLInputElement>(null);
 
@@ -35,24 +33,11 @@ export function Welcome() {
 
   return (
     <div className="flex min-h-screen flex-col px-5 pb-8 pt-8">
-      <div className="text-center">
-        <h1 className="flex justify-center">
-          <Logo priority className="h-auto w-[min(62%,220px)]" />
-        </h1>
-        <p className="mt-1 font-display text-lg text-tierra">Cuida tu planta, cultiva tu futuro 🌱</p>
-      </div>
+      <h1 className="flex justify-center pt-4">
+        <Logo priority className="h-auto w-[min(64%,230px)]" />
+      </h1>
 
-      <PlantScene
-        className="mt-5 h-[250px]"
-        plantWidth="min(62%, 215px)"
-        mood="feliz"
-        stage={2}
-        equipped={{ pot: "pot-barro", accessory: "acc-sombrero", background: "bg-valle" }}
-        bounceKey={bounce}
-        onTap={() => setBounce((b) => b + 1)}
-      />
-
-      <form onSubmit={submit} className="mt-6 space-y-3 rounded-3xl border-2 border-stone-200 bg-white p-5 shadow-sm">
+      <form onSubmit={submit} className="mt-8 space-y-3 rounded-3xl border-2 border-stone-200 bg-white p-5 shadow-sm">
         <h2 className="text-xl font-semibold">¡Entra a tu jardín!</h2>
         {saved.length > 0 && (
           <div>

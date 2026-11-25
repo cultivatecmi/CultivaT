@@ -261,6 +261,8 @@ button {
 }
 
 .cloud-drift { animation: drift linear infinite; }
+@keyframes cloud-bob { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-10px); } }
+.cloud-bob { animation: cloud-bob 7s ease-in-out infinite; }
 .sun-rays { animation: rays-spin 24s linear infinite; }
 .rain-drop { animation: rain-fall linear infinite; }
 .heat-haze { animation: haze 2.4s ease-in-out infinite; }

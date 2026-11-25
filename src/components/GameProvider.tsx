@@ -255,6 +255,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           } else if (c === "lluvia") {
             pushToast(`🌧️ ¡Lluvia fresca! ${CLIMATES.lluvia.temp} °C · tu planta se riega sola`, "info");
             playSound("rain");
+          } else if (c === "nublado") {
+            pushToast(`⛅ Se nubló · ${CLIMATES.nublado.temp} °C · tu planta se refresca sola`, "info");
           }
         }
         schedule();

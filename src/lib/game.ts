@@ -21,9 +21,14 @@ export const WEEK_MS = 7 * DAY;
 export const SHADE_MS = 40_000;
 export const MAX_DIRT = 3;
 
+/** % por segundo expresado por minuto (las tasas de abajo son por minuto) */
+const PER_SEC = 60;
+
 /**
  * Cambio por minuto de cada medidor según el clima (positivo = baja, negativo = sube).
  * "shaded" se usa mientras la sombrilla está abierta.
+ * Como en la vida real: el agua y la frescura solo se pierden con sol (lento a 26 °C,
+ * rápido a 42 °C); la lluvia riega y refresca, y las nubes dan sombra natural.
  */
 const CLIMATE_RATES: Record<Climate, { open: Record<BoostStat, number>; shaded: Record<BoostStat, number> }> = {
   soleado: {
@@ -35,9 +40,15 @@ const CLIMATE_RATES: Record<Climate, { open: Record<BoostStat, number>; shaded: 
     open: { water: 15, fresh: 30, nutrients: 0.3, happy: 1.5 },
     shaded: { water: 3, fresh: -22, nutrients: 0.3, happy: 0.5 },
   },
+  // nublado (23 °C): la frescura se recupera sola (+4 %/s) y el agua se mantiene
+  nublado: {
+    open: { water: 0, fresh: -4 * PER_SEC, nutrients: 0.3, happy: 0.5 },
+    shaded: { water: 0, fresh: -4 * PER_SEC, nutrients: 0.3, happy: 0.5 },
+  },
+  // lluvia (19 °C): el agua sube muy rápido (+12 %/s) y la frescura también (+8 %/s)
   lluvia: {
-    open: { water: -8, fresh: -10, nutrients: 0.3, happy: 0.5 },
-    shaded: { water: -2, fresh: -10, nutrients: 0.3, happy: 0.5 },
+    open: { water: -12 * PER_SEC, fresh: -8 * PER_SEC, nutrients: 0.3, happy: 0.5 },
+    shaded: { water: -12 * PER_SEC, fresh: -8 * PER_SEC, nutrients: 0.3, happy: 0.5 },
   },
 };
 

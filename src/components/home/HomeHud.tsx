@@ -136,7 +136,7 @@ export function HomeHud() {
           className={cn(
             pill,
             "text-sm transition-colors duration-1000",
-            state.climate === "calor" ? "badge-pulse !bg-alerta/90 text-white" : state.climate === "lluvia" ? "!bg-slate-600/85 text-white" : "text-tinta"
+            state.climate === "calor" ? "badge-pulse !bg-alerta/90 text-white" : state.climate === "lluvia" ? "!bg-slate-600/85 text-white" : state.climate === "nublado" ? "!bg-slate-100/90 text-tinta" : "text-tinta"
           )}
           aria-label={`Clima en Culiacán: ${climate.label}, ${climate.temp} grados`}
         >
