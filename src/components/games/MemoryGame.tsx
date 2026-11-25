@@ -23,6 +23,8 @@ const CARDS: CardDef[] = [
   { id: "sol", emoji: "☀️", name: "Sol", bg: "#FFFDE7", fact: "Con la luz del sol las plantas fabrican su comida: ¡fotosíntesis!" },
   { id: "abeja", emoji: "🐝", name: "Abeja", bg: "#FFF8E1", fact: "Las abejas llevan polen de flor en flor para que nazcan los frutos." },
   { id: "catarina", emoji: "🐞", name: "Catarina", bg: "#FCE4EC", fact: "Las catarinas se comen a los pulgones: ¡son guardianas del cultivo!" },
+  { id: "girasol", emoji: "🌻", name: "Girasol", bg: "#FFFDE7", fact: "Cuando es joven, el girasol gira para seguir al sol durante el día." },
+  { id: "pepino", emoji: "🥒", name: "Pepino", bg: "#F1F8E9", fact: "En Sinaloa se cultiva mucho pepino en invernaderos." },
 ];
 
 interface Card {
@@ -36,11 +38,11 @@ const newDeck = (): Card[] =>
   shuffle([...CARDS, ...CARDS]).map((def, i) => ({ uid: i, def, flipped: false, matched: false }));
 
 function coinsFor(moves: number) {
-  return Math.max(10, 45 - Math.max(0, moves - 8) * 2);
+  return Math.max(10, 45 - Math.max(0, moves - CARDS.length) * 3);
 }
 
 function starsFor(moves: number) {
-  return moves <= 12 ? 3 : moves <= 18 ? 2 : 1;
+  return moves <= 15 ? 3 : moves <= 22 ? 2 : 1;
 }
 
 interface Result {
@@ -151,7 +153,7 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
         update((d) => d.map((c, j) => (j === i || j === open ? { ...c, flipped: false } : c)));
         playSound("flip", 0.5);
         lockRef.current = false;
-      }, 850);
+      }, 650);
     }
   };
 
@@ -183,7 +185,7 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
             onStart={start}
           >
             <p>
-              Voltea las cartas y encuentra los <b>8 pares</b>: cultivos de Sinaloa 🍅🌽🌶️🥭, agua, sol y bichitos amigos 🐝🐞.
+              Voltea las cartas y encuentra los <b>{CARDS.length} pares</b>: cultivos de Sinaloa 🍅🌽🌶️🥭, agua, sol y bichitos amigos 🐝🐞.
             </p>
             <p className="mt-1 text-xs text-stone-600">Con cada par descubres un dato curioso.</p>
           </GameIntro>
@@ -197,7 +199,7 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
       <div className="grid grid-cols-3 gap-2 text-center">
         {[
           { label: "movimientos", value: moves },
-          { label: "pares", value: `${pairs}/8` },
+          { label: "pares", value: `${pairs}/${CARDS.length}` },
           { label: "tiempo", value: mmss(seconds) },
         ].map((s) => (
           <div key={s.label} className="rounded-2xl bg-white px-2 py-1.5 shadow-sm">

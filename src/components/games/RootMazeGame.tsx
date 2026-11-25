@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 const DURATION = 30;
 const HEIGHT = 430;
 const SURFACE = 74; // donde empieza la tierra
-const ROOT_SPEED = 150; // px/s
+const ROOT_SPEED = 120; // px/s
 const HAPPY = 20;
 
 type Kind = "agua" | "mineral" | "piedra" | "seca";
@@ -116,9 +116,9 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
         }
       }
     };
-    (["seca", "seca", "piedra", "piedra", "piedra", "piedra"] as Kind[]).forEach(spawn);
-    for (let i = 0; i < 5; i++) spawn("agua");
-    for (let i = 0; i < 3; i++) spawn("mineral");
+    (["seca", "seca", "seca", "piedra", "piedra", "piedra", "piedra", "piedra", "piedra", "piedra"] as Kind[]).forEach(spawn);
+    for (let i = 0; i < 4; i++) spawn("agua");
+    for (let i = 0; i < 2; i++) spawn("mineral");
 
     const finish = () => {
       if (finished) return;

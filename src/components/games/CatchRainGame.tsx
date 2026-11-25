@@ -154,13 +154,13 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
 
     const spawn = () => {
       const r = Math.random();
-      const bad = 0.2 + Math.min(0.16, elapsed * 0.006);
+      const bad = 0.28 + Math.min(0.2, elapsed * 0.008);
       const kind: Kind = r < bad * 0.55 ? "uv" : r < bad ? "plaga" : r < bad + 0.17 ? "abono" : "drop";
       const size = kind === "abono" ? 17 : kind === "uv" ? 16 : kind === "plaga" ? 15 : 13;
       items.push({
         x: 22 + Math.random() * (W - 44),
         y: -24,
-        vy: 150 + elapsed * 7 + Math.random() * 60 + (kind === "uv" ? 50 : kind === "plaga" ? 10 : 0),
+        vy: 190 + elapsed * 9 + Math.random() * 70 + (kind === "uv" ? 50 : kind === "plaga" ? 10 : 0),
         kind,
         size,
         wobble: Math.random() * Math.PI * 2,
@@ -440,7 +440,7 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
         spawnIn -= dt;
         if (spawnIn <= 0 && timeLeft > 0.5) {
           spawn();
-          spawnIn = Math.max(0.26, 0.6 - elapsed * 0.012) * (0.7 + Math.random() * 0.6);
+          spawnIn = Math.max(0.22, 0.5 - elapsed * 0.012) * (0.7 + Math.random() * 0.6);
         }
         const sec = Math.ceil(timeLeft);
         if (sec <= 5 && sec > 0 && sec < lastBeep) {
@@ -454,7 +454,7 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
         it.y += it.vy * dt;
         it.wobble += dt * 4;
         const ix = it.x + Math.sin(it.wobble) * (it.kind === "uv" ? 10 : it.kind === "plaga" ? 6 : 3);
-        const caught = it.y + it.size >= (plantImgs.current.happy ? catchTop : potTop - 20) && it.y - it.size <= potTop + 14 && Math.abs(ix - potX) < POT_W / 2 + it.size * 0.4;
+        const caught = it.y + it.size >= (plantImgs.current.happy ? catchTop : potTop - 20) && it.y - it.size <= potTop + 14 && Math.abs(ix - potX) < POT_W / 2 - 4;
         if (caught) {
           const pts = POINTS[it.kind];
           let bonus = 0;

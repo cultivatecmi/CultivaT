@@ -12,7 +12,7 @@ export interface TriviaQuestion {
 
 export const TRIVIA_REWARD = 15;
 export const TRIVIA_ROUND = 5;
-export const TRIVIA_SECONDS = 20;
+export const TRIVIA_SECONDS = 12;
 
 export const TRIVIA_QUESTIONS: TriviaQuestion[] = [
   {
