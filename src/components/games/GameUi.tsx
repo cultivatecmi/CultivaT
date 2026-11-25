@@ -62,6 +62,8 @@ interface ResultProps {
   title: string;
   stats: { label: string; value: string }[];
   coins: number;
+  /** felicidad que ganó la planta por jugar (+15 a +25 %) */
+  happy?: number;
   newBest: boolean;
   buttonTone: "cielo" | "hoja" | "sol" | "alerta";
   onRetry: () => void;
@@ -70,7 +72,7 @@ interface ResultProps {
   children?: React.ReactNode;
 }
 
-export function GameResult({ medal, title, stats, coins, newBest, buttonTone, onRetry, onExit, className, children }: ResultProps) {
+export function GameResult({ medal, title, stats, coins, happy = 0, newBest, buttonTone, onRetry, onExit, className, children }: ResultProps) {
   return (
     <div className={cn("flex h-full flex-col items-center justify-center gap-3 p-6 text-center", className)}>
       <div className="anim-pop text-7xl">{medal}</div>
@@ -85,7 +87,14 @@ export function GameResult({ medal, title, stats, coins, newBest, buttonTone, on
         ))}
       </div>
       {children}
-      <div className="rounded-2xl border-b-4 border-sol-dark bg-sol px-5 py-2 font-display text-xl font-semibold text-white shadow">+{coins} 🪙 ganadas</div>
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <div className="rounded-2xl border-b-4 border-sol-dark bg-sol px-5 py-2 font-display text-xl font-semibold text-[#422006] shadow">+{coins} 🪙 ganadas</div>
+        {happy > 0 && (
+          <div className="anim-pop rounded-2xl border-b-4 border-[#C2185B] bg-[#F06292] px-4 py-2 font-display text-xl font-semibold text-white shadow">
+            +{happy}% 😊 Felicidad
+          </div>
+        )}
+      </div>
       <div className="flex gap-2">
         <TapButton tone="blanco" onClick={onExit}>
           Otros juegos

@@ -33,12 +33,14 @@ const PER_SEC = 60;
 const CLIMATE_RATES: Record<Climate, { open: Record<BoostStat, number>; shaded: Record<BoostStat, number> }> = {
   soleado: {
     open: { water: 0.6, fresh: 0.45, nutrients: 0.3, happy: 0.5 },
-    shaded: { water: 0.5, fresh: -12, nutrients: 0.3, happy: 0.5 },
+    // con sombrilla la frescura sube +1.5 %/s
+    shaded: { water: 0.5, fresh: -1.5 * PER_SEC, nutrients: 0.3, happy: 0.5 },
   },
   // ola de calor: agua y frescura bajan MUY rápido (≈ -10 y -20 en 40 s) si no hay sombrilla
   calor: {
     open: { water: 15, fresh: 30, nutrients: 0.3, happy: 1.5 },
-    shaded: { water: 3, fresh: -22, nutrients: 0.3, happy: 0.5 },
+    // con sombrilla en la ola de calor la frescura sube +1.2 %/s
+    shaded: { water: 3, fresh: -1.2 * PER_SEC, nutrients: 0.3, happy: 0.5 },
   },
   // nublado (23 °C): la frescura se recupera sola (+4 %/s) y el agua se mantiene
   nublado: {
@@ -435,7 +437,7 @@ export function openUmbrella(s: GameState, now = Date.now()): BoostResult {
 
 export function cleanDirt(s: GameState, now = Date.now()): BoostResult {
   if (s.dirt <= 0) return { state: s, ok: false, full: true };
-  const reg = registerCare({ ...s, dirt: s.dirt - 1, happy: clamp(s.happy + 6), coins: s.coins + 1 }, now);
+  const reg = registerCare({ ...s, dirt: s.dirt - 1, coins: s.coins + 1 }, now);
   const x = withXp(reg.state, 3, now);
   return { state: x.state, ok: true, full: x.state.dirt === 0, streakUp: reg.streakUp, stageUp: x.stageUp };
 }
@@ -491,7 +493,7 @@ export function deriveAlerts(s: GameState, now = Date.now()): GameState {
   if (s.water < 30) add("water", "💧 ¡Tengo sed!", `${s.plantName} tiene poca agua. Riégala un poquito.`, 20);
   if (s.fresh < 30 && !isHeatActive(s, now)) add("heat", "☀️ ¡Mucho calor!", "Dale sombra o aire a tu planta.", 20);
   if (s.nutrients < 30) add("nutrients", "🌱 Tengo hambre", "Ponle abono natural para que crezca fuerte.", 20);
-  if (s.happy < 25) add("happy", "😢 Me siento solita", "Acaríciame frotándome con el dedo 💚", 30);
+  if (s.happy < 25) add("happy", "😢 Me siento solita", "¡Juega conmigo en la pestaña Jugar! 🎮", 30);
   if (s.dirt >= 2) add("dirt", "🧽 Tengo manchitas", "Frótame con el dedo para limpiarme.", 30);
   const today = dateKey(new Date(now));
   if (s.streak > 0 && s.lastCareDate !== today && new Date(now).getHours() >= 8)

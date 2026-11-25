@@ -50,6 +50,7 @@ interface Result {
   hits: number;
   bestCombo: number;
   newBest: boolean;
+  happy: number;
 }
 
 export function CatchRainGame({ onExit }: { onExit: () => void }) {
@@ -520,8 +521,8 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
         finished = true;
         runningRef.current = false;
         const reward = scoreReward(score);
-        const { newBest } = recordRef.current("lluvia", { score, ...reward, label: "por Atrapa la Lluvia" });
-        setResult({ score, coins: reward.coins, ...counts, bestCombo, newBest });
+        const { newBest, happy } = recordRef.current("lluvia", { score, ...reward, label: "por Atrapa la Lluvia" });
+        setResult({ score, coins: reward.coins, ...counts, bestCombo, newBest, happy });
         setPhase("over");
         return;
       }
@@ -603,6 +604,7 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
             ]}
             coins={result.coins}
             newBest={result.newBest}
+            happy={result.happy}
             buttonTone="cielo"
             onRetry={() => setPhase("countdown")}
             onExit={onExit}
