@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useGameState } from "@/components/GameProvider";
 import { GameIntro, GameResult } from "./GameUi";
 import { playSound } from "@/lib/sound";
+import { InlineCoin } from "@/components/ui/CoinText";
 import { cn, shuffle } from "@/lib/utils";
 
 interface CardDef {
@@ -177,7 +178,7 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
             onRetry={start}
             onExit={onExit}
           >
-            <p className="text-sm text-stone-700">Menos movimientos = más monedas (máximo 45 🪙 con 8 movimientos).</p>
+            <p className="text-sm text-stone-700">Menos movimientos = más monedas (máximo 45 <InlineCoin /> con 8 movimientos).</p>
           </GameResult>
         ) : (
           <GameIntro

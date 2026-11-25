@@ -8,6 +8,7 @@ import { WhackPestGame } from "@/components/games/WhackPestGame";
 import { MemoryGame } from "@/components/games/MemoryGame";
 import { TriviaGame } from "@/components/games/TriviaGame";
 import { GAMES, getGame, type GameId } from "@/lib/games";
+import { CoinText } from "@/components/ui/CoinText";
 import { playSound } from "@/lib/sound";
 
 export function PlayScreen() {
@@ -84,7 +85,7 @@ export function PlayScreen() {
               <span className="relative mt-2 font-display text-lg font-bold leading-tight [text-shadow:0_2px_0_rgba(0,0,0,.18)]">{g.name}</span>
               <span className="relative mt-0.5 flex-1 text-[12px] font-semibold leading-snug text-white/90">{g.tagline}</span>
               <span className="relative mt-2 flex flex-wrap gap-1">
-                <span className="rounded-full bg-white/25 px-2 py-0.5 font-display text-[11px] font-semibold">{g.reward}</span>
+                <span className="rounded-full bg-white/25 px-2 py-0.5 font-display text-[11px] font-semibold"><CoinText text={g.reward} /></span>
                 {best !== undefined && (
                   <span className="rounded-full bg-black/20 px-2 py-0.5 font-display text-[11px] font-semibold">🏆 {g.bestLabel(best)}</span>
                 )}

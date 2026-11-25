@@ -16,6 +16,7 @@ import {
   type SabiChallenge,
 } from "@/lib/sabi";
 import { playSound } from "@/lib/sound";
+import { CoinText, InlineCoin } from "@/components/ui/CoinText";
 import { cn, shuffle } from "@/lib/utils";
 
 type UiMessage =
@@ -67,7 +68,7 @@ function ChallengeCard({ msg, onPick }: { msg: Extract<UiMessage, { kind: "chall
   return (
     <div className="w-full max-w-[300px] rounded-3xl rounded-bl-md border-2 border-sol/50 bg-sol-light p-3 shadow-sm">
       <p className="font-display text-xs font-bold uppercase tracking-wide text-sol-dark">
-        🎯 Mini-reto · {c.kind === "vf" ? "¿Verdadero o falso?" : "Adivinanza"} · +{CHALLENGE_REWARD} 🪙
+        🎯 Mini-reto · {c.kind === "vf" ? "¿Verdadero o falso?" : "Adivinanza"} · +{CHALLENGE_REWARD} <InlineCoin />
       </p>
       <p className="mt-1.5 text-[15px] font-semibold leading-snug">{c.question}</p>
       <div className={cn("mt-2.5 grid gap-2", c.options.length === 2 ? "grid-cols-2" : "grid-cols-1")}>
@@ -229,7 +230,7 @@ export function SabiScreen() {
                   m.role === "user" ? "rounded-br-md bg-cielo text-white" : "rounded-bl-md border-2 border-stone-100 bg-white"
                 )}
               >
-                {m.content}
+                <CoinText text={m.content} />
               </div>
             )}
           </div>
@@ -264,7 +265,7 @@ export function SabiScreen() {
             disabled={loading}
             className="btn-3d rounded-2xl border-sol-dark bg-sol px-2 py-2.5 font-display text-[14px] font-semibold leading-tight text-white"
           >
-            🎯 Mini-reto de Sabi (+{CHALLENGE_REWARD} 🪙)
+            🎯 Mini-reto de Sabi (+{CHALLENGE_REWARD} <InlineCoin />)
           </button>
         </div>
         {chips.length > 0 && (

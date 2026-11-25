@@ -3,6 +3,7 @@
 import type { Equipped, Mood } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { BackgroundScene } from "./BackgroundScene";
+import { CoinText } from "@/components/ui/CoinText";
 import { PlantCharacter, type Reaction } from "./PlantCharacter";
 
 export type SceneEffect = { type: "water" | "shade" | "fertilize" | "love"; key: number } | null;
@@ -57,7 +58,7 @@ export function PlantScene({
       {bubble && (
         <div key={bubble} className="anim-pop pointer-events-none absolute left-1/2 top-4 z-10 max-w-[78%] -translate-x-1/2">
           <div className="relative rounded-2xl border-2 border-stone-200 bg-white px-4 py-2 text-center font-display text-[15px] font-medium leading-snug text-tinta shadow-md">
-            {bubble}
+            <CoinText text={bubble} />
             <span className="absolute -bottom-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-stone-200 bg-white" />
           </div>
         </div>

@@ -18,7 +18,7 @@ const MIN = 60_000;
 const DAY = 24 * 60 * MIN;
 export const WEEK_MS = 7 * DAY;
 /** cuánto dura abierta la sombrilla */
-export const SHADE_MS = 40_000;
+export const SHADE_MS = 15_000;
 export const MAX_DIRT = 3;
 
 /** % por segundo expresado por minuto (las tasas de abajo son por minuto) */

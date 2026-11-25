@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Play, RotateCcw } from "lucide-react";
 import { TapButton } from "@/components/ui/TapButton";
 import { playSound } from "@/lib/sound";
+import { InlineCoin } from "@/components/ui/CoinText";
 import { cn } from "@/lib/utils";
 
 /** Cuenta regresiva 3-2-1-¡Ya! que llama a onDone al terminar */
@@ -88,7 +89,7 @@ export function GameResult({ medal, title, stats, coins, happy = 0, newBest, but
       </div>
       {children}
       <div className="flex flex-wrap items-center justify-center gap-2">
-        <div className="rounded-2xl border-b-4 border-sol-dark bg-sol px-5 py-2 font-display text-xl font-semibold text-[#422006] shadow">+{coins} 🪙 ganadas</div>
+        <div className="rounded-2xl border-b-4 border-sol-dark bg-sol px-5 py-2 font-display text-xl font-semibold text-[#422006] shadow">+{coins} <InlineCoin /> ganadas</div>
         {happy > 0 && (
           <div className="anim-pop rounded-2xl border-b-4 border-[#C2185B] bg-[#F06292] px-4 py-2 font-display text-xl font-semibold text-white shadow">
             +{happy}% 😊 Felicidad

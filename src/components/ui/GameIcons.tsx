@@ -1,3 +1,4 @@
+import { useId } from "react";
 /** Íconos dibujados del juego (se ven igual en cualquier celular, sin depender de emojis) */
 
 interface IconProps {
@@ -35,17 +36,19 @@ export function WateringCanIcon({ size = 32, className }: IconProps) {
 
 /** Moneda dorada */
 export function CoinIcon({ size = 20, className }: IconProps) {
+  // id único por moneda: si una moneda está oculta, las demás no pierden su color
+  const gid = `coin-g-${useId().replace(/:/g, "")}`;
   return (
     <svg viewBox="0 0 40 40" width={size} height={size} className={className} aria-hidden>
       <defs>
-        <radialGradient id="coin-g" cx="0.35" cy="0.3" r="0.85">
+        <radialGradient id={gid} cx="0.35" cy="0.3" r="0.85">
           <stop offset="0" stopColor="#FFF59D" />
           <stop offset="0.5" stopColor="#FFC107" />
           <stop offset="1" stopColor="#E65100" />
         </radialGradient>
       </defs>
       <circle cx="20" cy="21.5" r="17" fill="#BF6A00" />
-      <circle cx="20" cy="19.5" r="17" fill="url(#coin-g)" stroke="#E65100" strokeWidth={1.5} />
+      <circle cx="20" cy="19.5" r="17" fill={`url(#${gid})`} stroke="#E65100" strokeWidth={1.5} />
       <circle cx="20" cy="19.5" r="12.5" fill="none" stroke="#FFE082" strokeWidth={1.6} opacity={0.9} />
       <text x="20" y="26" textAnchor="middle" fontSize="18" fontWeight={900} fontFamily="sans-serif" fill="#B26A00">
         $

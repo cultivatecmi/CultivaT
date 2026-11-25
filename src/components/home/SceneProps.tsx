@@ -2,6 +2,7 @@
 
 import type { ToolId } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { CoinText } from "@/components/ui/CoinText";
 import { FertilizerIcon, WateringCanIcon } from "@/components/ui/GameIcons";
 
 // ---------------------------------------------------------------------------
@@ -196,7 +197,7 @@ export function ParticleLayer({ particles }: { particles: Particle[] }) {
         }
         return (
           <span key={p.id} className={cls} style={{ ...style, opacity: 0 }}>
-            {p.content}
+            <CoinText text={p.content} />
           </span>
         );
       })}

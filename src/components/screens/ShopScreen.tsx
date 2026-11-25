@@ -12,6 +12,7 @@ import { computeMood } from "@/lib/game";
 import { CATEGORY_LABELS, SHOP_ITEMS, type ShopItem } from "@/lib/shop";
 import { getStage } from "@/lib/stages";
 import type { Equipped, ItemCategory } from "@/lib/types";
+import { InlineCoin } from "@/components/ui/CoinText";
 import { cn } from "@/lib/utils";
 
 const CATS: ItemCategory[] = ["pot", "accessory", "background"];
@@ -130,9 +131,9 @@ export function ShopScreen() {
                       if (buyItem(item.id)) setPreviewId(null);
                     }}
                   >
-                    {affordable ? `Comprar · ${item.price} 🪙` : (
+                    {affordable ? <>Comprar · {item.price} <InlineCoin /></> : (
                       <>
-                        <Lock size={14} /> {item.price} 🪙
+                        <Lock size={14} /> {item.price} <InlineCoin />
                       </>
                     )}
                   </TapButton>

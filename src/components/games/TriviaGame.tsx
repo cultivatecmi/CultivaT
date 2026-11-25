@@ -6,6 +6,7 @@ import { TapButton } from "@/components/ui/TapButton";
 import { GameIntro, GameResult } from "./GameUi";
 import { TRIVIA_QUESTIONS, TRIVIA_REWARD, TRIVIA_ROUND, TRIVIA_SECONDS, type TriviaQuestion } from "@/lib/trivia";
 import { playSound } from "@/lib/sound";
+import { InlineCoin } from "@/components/ui/CoinText";
 import { cn, shuffle } from "@/lib/utils";
 
 const LETTERS = ["A", "B", "C", "D"];
@@ -124,7 +125,7 @@ export function TriviaGame({ onExit }: { onExit: () => void }) {
             {TRIVIA_ROUND} preguntas relámpago de <b>{TRIVIA_SECONDS} segundos</b> sobre plantas, agua y el campo de Culiacán.
           </p>
           <p className="mt-2 rounded-2xl bg-white/70 px-3 py-2 text-sm">
-            🪙 <b>{TRIVIA_REWARD}</b> por acierto · 🔥 Racha de 3 = <b>+5</b> · Racha de 5 = <b>+10</b>
+            <InlineCoin /> <b>{TRIVIA_REWARD}</b> por acierto · 🔥 Racha de 3 = <b>+5</b> · Racha de 5 = <b>+10</b>
           </p>
         </GameIntro>
       </div>
@@ -218,7 +219,7 @@ export function TriviaGame({ onExit }: { onExit: () => void }) {
         <div className="anim-pop space-y-2">
           <div className={cn("rounded-2xl p-4", isRight ? "bg-hoja-light" : "bg-alerta-light")}>
             <p className="font-display text-lg font-semibold">
-              {timedOut ? "⏰ ¡Se acabó el tiempo!" : isRight ? `¡Correcto! +${TRIVIA_REWARD} 🪙` : "¡Casi! 💪"}
+              {timedOut ? "⏰ ¡Se acabó el tiempo!" : isRight ? <>¡Correcto! +{TRIVIA_REWARD} <InlineCoin /></> : "¡Casi! 💪"}
               {bonus ? <span className="ml-1 text-sol-dark">🔥 +{bonus} bonus</span> : null}
             </p>
             <p className="text-[15px] leading-snug">{q.explanation}</p>
