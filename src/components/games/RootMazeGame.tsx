@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useGameState } from "@/components/GameProvider";
-import { Countdown, GameIntro, GameResult } from "./GameUi";
+import { Countdown, GameIntro, GameResult, GAME_H } from "./GameUi";
 import { scoreReward } from "@/lib/games";
 import { playSound } from "@/lib/sound";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,7 @@ import { svgToImage } from "@/lib/svgImage";
  */
 
 const DURATION = 30;
-const HEIGHT = 430;
+const HEIGHT = GAME_H; // llena la pantalla del celular
 const SURFACE = 128; // donde empieza la tierra (arriba se ve tu planta)
 /** en el dibujo de la planta (240×262) la tierra empieza en y=184 */
 const PLANT_SOIL_Y = 184;
@@ -114,14 +114,29 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
     const items: Item[] = [];
     const floats: Float[] = [];
     const specks = Array.from({ length: 70 }, () => ({ x: rand(0, W), y: rand(SURFACE + 6, HEIGHT), r: rand(1, 2.6), a: rand(0.15, 0.35) }));
-    // lombrices: se arrastran despacio por la tierra (solo decoración)
-    const worms = [0, 1].map((i) => ({
+    // larvas de gallina ciega: plaga real que se come las raíces; se arrastran y estorban
+    const GRUBS = 3;
+    const grubs = Array.from({ length: GRUBS }, (_, i) => ({
       x: rand(0, W),
-      y: SURFACE + 70 + i * ((HEIGHT - SURFACE - 110) / 1.4),
-      dir: i === 0 ? 1 : -1,
-      speed: rand(14, 20),
+      y: SURFACE + 60 + ((i + 0.5) * (HEIGHT - SURFACE - 90)) / GRUBS,
+      dir: i % 2 === 0 ? 1 : -1,
+      speed: rand(16, 24),
       phase: rand(0, 6),
     }));
+    type Grub = (typeof grubs)[number];
+    /** puntos del cuerpo (cabeza primero) para dibujar y para chocar */
+    const grubBody = (w: Grub) => {
+      const pts: { x: number; y: number; r: number }[] = [];
+      for (let i = 0; i < 9; i++) {
+        const squeeze = 5.6 + Math.sin(clock * 6 - i * 0.7 + w.phase) * 1.1;
+        pts.push({
+          x: w.x - w.dir * i * squeeze,
+          y: w.y + Math.sin(i * 0.55 + clock * 1.4 + w.phase) * 4,
+          r: i === 0 ? 6.4 : 6.2 - i * 0.25,
+        });
+      }
+      return pts;
+    };
     let nextId = 0;
     let score = 0;
     let left = DURATION;
@@ -165,8 +180,8 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
 
     const step = (dt: number) => {
       clock += dt;
-      for (const w of worms) {
-        // avanza a tirones, como una lombriz de verdad
+      for (const w of grubs) {
+        // avanza a tirones, como una larva de verdad
         const push = 0.55 + 0.45 * Math.max(0, Math.sin(clock * 3 + w.phase));
         w.x += w.dir * w.speed * push * dt;
         if (w.x > W + 60) w.x = -60;
@@ -217,6 +232,20 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
           playSound("wrong");
           if (navigator.vibrate) navigator.vibrate(60);
           floats.push({ x: stone.x, y: stone.y - stone.r - 6, text: "-2 s", color: "#B91C1C", life: 1 });
+        }
+        return;
+      }
+
+      // larva: no deja pasar a la raíz y le quita puntos
+      const grubHit = grubs.find((w) => grubBody(w).some((b) => (b.x - nx) ** 2 + (b.y - ny) ** 2 < (b.r + 6) ** 2));
+      if (grubHit) {
+        if (hitCool <= 0) {
+          hitCool = 1;
+          shake = 0.35;
+          score = Math.max(0, score - 10);
+          playSound("squash", 0.7);
+          if (navigator.vibrate) navigator.vibrate(60);
+          floats.push({ x: nx, y: ny - 16, text: "-10", color: "#B91C1C", life: 1 });
         }
         return;
       }
@@ -280,61 +309,125 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
       ctx.restore();
     };
 
-    // degradados creados una sola vez
-    const sky = ctx.createLinearGradient(0, 0, 0, SURFACE);
-    sky.addColorStop(0, "#BAE6FD");
-    sky.addColorStop(1, "#E0F2FE");
-    const soil = ctx.createLinearGradient(0, SURFACE, 0, HEIGHT);
-    soil.addColorStop(0, "#D97706");
-    soil.addColorStop(0.35, "#B45309");
-    soil.addColorStop(1, "#78350F");
+    // ---------------- imágenes preparadas una sola vez ----------------
+    const layer = () => {
+      const cv = document.createElement("canvas");
+      cv.width = Math.round(W * dpr);
+      cv.height = Math.round(HEIGHT * dpr);
+      const c = cv.getContext("2d")!;
+      c.scale(dpr, dpr);
+      return { cv, c };
+    };
+
+    // fondo fijo: cielo, maceta, tierra, piedras y zonas secas (no se mueven)
+    const bg = layer();
+    {
+      const c = bg.c;
+      const sky = c.createLinearGradient(0, 0, 0, SURFACE);
+      sky.addColorStop(0, "#BAE6FD");
+      sky.addColorStop(1, "#E0F2FE");
+      c.fillStyle = sky;
+      c.fillRect(0, 0, W, SURFACE);
+      c.fillStyle = "#9A3412";
+      c.fillRect(0, SURFACE - 6, W, HEIGHT - SURFACE + 6);
+      const soil = c.createLinearGradient(0, SURFACE, 0, HEIGHT);
+      soil.addColorStop(0, "#D97706");
+      soil.addColorStop(0.35, "#B45309");
+      soil.addColorStop(1, "#78350F");
+      c.fillStyle = soil;
+      c.beginPath();
+      c.moveTo(inset(SURFACE), SURFACE);
+      c.lineTo(W - inset(SURFACE), SURFACE);
+      c.lineTo(W - inset(HEIGHT), HEIGHT);
+      c.lineTo(inset(HEIGHT), HEIGHT);
+      c.closePath();
+      c.fill();
+      for (const sp of specks) {
+        c.fillStyle = `rgba(41,20,5,${sp.a})`;
+        c.beginPath();
+        c.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.fillStyle = "#C2410C";
+      c.fillRect(0, SURFACE - 10, W, 10);
+      c.fillStyle = "rgba(255,255,255,.25)";
+      c.fillRect(6, SURFACE - 8, W * 0.35, 3);
+      for (const it of items) {
+        if (it.kind === "seca") {
+          c.fillStyle = "rgba(253,230,190,.55)";
+          c.beginPath();
+          c.ellipse(it.x, it.y, it.r, it.r * 0.7, 0, 0, Math.PI * 2);
+          c.fill();
+          c.strokeStyle = "rgba(120,53,15,.45)";
+          c.lineWidth = 1.5;
+          c.beginPath();
+          c.moveTo(it.x - it.r * 0.6, it.y - 3);
+          c.lineTo(it.x - it.r * 0.15, it.y + 4);
+          c.lineTo(it.x + it.r * 0.2, it.y - 5);
+          c.lineTo(it.x + it.r * 0.6, it.y + 2);
+          c.stroke();
+        } else if (it.kind === "piedra") {
+          c.fillStyle = "#57534E";
+          c.beginPath();
+          c.ellipse(it.x, it.y + 2, it.r, it.r * 0.82, 0.2, 0, Math.PI * 2);
+          c.fill();
+          c.fillStyle = "#A8A29E";
+          c.beginPath();
+          c.ellipse(it.x, it.y, it.r, it.r * 0.78, 0.2, 0, Math.PI * 2);
+          c.fill();
+          c.fillStyle = "rgba(255,255,255,.35)";
+          c.beginPath();
+          c.ellipse(it.x - it.r * 0.35, it.y - it.r * 0.3, it.r * 0.3, it.r * 0.15, -0.4, 0, Math.PI * 2);
+          c.fill();
+        }
+      }
+    }
+
+    // la raíz se pinta por partes en dos capas (borde y centro), sin redibujarla completa
+    const rootOuter = layer();
+    const rootInner = layer();
+    for (const L of [rootOuter.c, rootInner.c]) {
+      L.lineCap = "round";
+      L.lineJoin = "round";
+    }
+    rootOuter.c.strokeStyle = "#7C2D12";
+    rootOuter.c.lineWidth = 10;
+    rootInner.c.strokeStyle = "#FDE7C3";
+    rootInner.c.lineWidth = 6.5;
+    let drawn = { ...root[0] };
+    const paintSeg = (x0: number, y0: number, x1: number, y1: number, scale = 1) => {
+      for (const [L, wdt] of [
+        [rootOuter.c, 10],
+        [rootInner.c, 6.5],
+      ] as const) {
+        L.lineWidth = wdt * scale;
+        L.beginPath();
+        L.moveTo(x0, y0);
+        L.lineTo(x1, y1);
+        L.stroke();
+      }
+    };
+    paintSeg(drawn.x, drawn.y, drawn.x, drawn.y + 0.1);
+    const committed = new Set<Branch>();
 
     const draw = () => {
-      ctx.clearRect(0, 0, W, HEIGHT);
-      // cielo y pasto
-      ctx.fillStyle = sky;
-      ctx.fillRect(0, 0, W, SURFACE);
-      // maceta (paredes de barro)
-      ctx.fillStyle = "#9A3412";
-      ctx.fillRect(0, SURFACE - 6, W, HEIGHT - SURFACE + 6);
-      // tierra
-      ctx.fillStyle = soil;
-      ctx.beginPath();
-      ctx.moveTo(inset(SURFACE), SURFACE);
-      ctx.lineTo(W - inset(SURFACE), SURFACE);
-      ctx.lineTo(W - inset(HEIGHT), HEIGHT);
-      ctx.lineTo(inset(HEIGHT), HEIGHT);
-      ctx.closePath();
-      ctx.fill();
-      specks.forEach((s) => {
-        ctx.fillStyle = `rgba(41,20,5,${s.a})`;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      // borde de la maceta
-      ctx.fillStyle = "#C2410C";
-      ctx.fillRect(0, SURFACE - 10, W, 10);
-      ctx.fillStyle = "rgba(255,255,255,.25)";
-      ctx.fillRect(6, SURFACE - 8, W * 0.35, 3);
+      ctx.drawImage(bg.cv, 0, 0, W, HEIGHT);
 
-      // lombrices (detrás de la raíz)
-      for (const w of worms) {
-        const n = 14;
-        for (let i = n - 1; i >= 0; i--) {
-          const squeeze = 4.2 + Math.sin(clock * 6 - i * 0.7 + w.phase) * 0.9;
-          const x = w.x - w.dir * i * squeeze;
-          const y = w.y + Math.sin(i * 0.5 + clock * 1.5 + w.phase) * 4;
-          const rr = i === 0 ? 5.2 : i < 3 ? 4.8 : 4.4 - i * 0.08;
-          ctx.fillStyle = i === 3 || i === 4 ? "#D97A7A" : "#EFA6A0";
+      // larvas de gallina ciega (cuerpo blanco con anillos, cabeza café)
+      for (const w of grubs) {
+        const body = grubBody(w);
+        for (let i = body.length - 1; i >= 0; i--) {
+          const b = body[i];
+          ctx.fillStyle = i === 0 ? "#B45309" : i % 2 ? "#F5EBDD" : "#EADBC6";
           ctx.beginPath();
-          ctx.arc(x, y, rr, 0, Math.PI * 2);
+          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
           ctx.fill();
-          if (i % 2 === 0) {
-            ctx.fillStyle = "rgba(120,40,40,.18)";
-            ctx.fillRect(x - 0.6, y - rr, 1.2, rr * 2);
-          }
         }
+        const h = body[0];
+        ctx.fillStyle = "#3F1D0B";
+        ctx.beginPath();
+        ctx.arc(h.x + w.dir * 2.5, h.y - 1.5, 1.4, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       // tu planta arriba de la tierra
@@ -348,73 +441,54 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
         ctx.drawImage(pimg, 0, 0, pimg.width, pimg.height * (PLANT_SOIL_Y / 262), -dw / 2, -dh, dw, dh);
         ctx.restore();
       } else {
-      // brote en la superficie (mientras carga tu planta)
-      const sx = W / 2;
-      ctx.strokeStyle = "#15803D";
-      ctx.lineWidth = 5;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(sx, SURFACE - 8);
-      ctx.quadraticCurveTo(sx - 3, SURFACE - 28, sx, SURFACE - 44);
-      ctx.stroke();
-      const sway = Math.sin(clock * 2) * 0.08;
-      [-1, 1].forEach((d) => {
-        ctx.save();
-        ctx.translate(sx, SURFACE - 40);
-        ctx.rotate(d * (0.5 + sway));
-        ctx.fillStyle = d < 0 ? "#22C55E" : "#4ADE80";
+        ctx.strokeStyle = "#15803D";
+        ctx.lineWidth = 5;
+        ctx.lineCap = "round";
         ctx.beginPath();
-        ctx.ellipse(d * 14, 0, 15, 7, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      });
+        ctx.moveTo(W / 2, SURFACE - 8);
+        ctx.lineTo(W / 2, SURFACE - 44);
+        ctx.stroke();
       }
 
-      // zonas secas
-      items
-        .filter((it) => it.kind === "seca")
-        .forEach((it) => {
-          ctx.fillStyle = "rgba(253,230,190,.55)";
-          ctx.beginPath();
-          ctx.ellipse(it.x, it.y, it.r, it.r * 0.7, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = "rgba(120,53,15,.45)";
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(it.x - it.r * 0.6, it.y - 3);
-          ctx.lineTo(it.x - it.r * 0.15, it.y + 4);
-          ctx.lineTo(it.x + it.r * 0.2, it.y - 5);
-          ctx.lineTo(it.x + it.r * 0.6, it.y + 2);
-          ctx.stroke();
-        });
-
-      // raíz principal y ramitas
+      // raíz: solo se agrega el tramo nuevo
+      const t = tip();
+      if (t.x !== drawn.x || t.y !== drawn.y) {
+        paintSeg(drawn.x, drawn.y, t.x, t.y);
+        drawn = { ...t };
+      }
+      for (const b of branches) {
+        if (b.grow >= 1 && !committed.has(b)) {
+          committed.add(b);
+          paintSeg(b.x, b.y, b.x + Math.cos(b.a) * b.len, b.y + Math.sin(b.a) * b.len, 0.45);
+        }
+      }
       ctx.save();
       if (shake > 0) ctx.translate(Math.sin(clock * 90) * 3, 0);
-      const strokeRoot = (width: number, color: string) => {
-        ctx.strokeStyle = color;
-        ctx.lineWidth = width;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
+      ctx.drawImage(rootOuter.cv, 0, 0, W, HEIGHT);
+      ctx.drawImage(rootInner.cv, 0, 0, W, HEIGHT);
+      // ramitas que todavía están creciendo
+      ctx.lineCap = "round";
+      for (const b of branches) {
+        if (committed.has(b)) continue;
+        const ex = b.x + Math.cos(b.a) * b.len * b.grow;
+        const ey = b.y + Math.sin(b.a) * b.len * b.grow;
+        ctx.strokeStyle = "#7C2D12";
+        ctx.lineWidth = 4.5;
         ctx.beginPath();
-        root.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+        ctx.moveTo(b.x, b.y);
+        ctx.lineTo(ex, ey);
         ctx.stroke();
-        branches.forEach((b) => {
-          ctx.lineWidth = width * 0.45;
-          ctx.beginPath();
-          ctx.moveTo(b.x, b.y);
-          ctx.lineTo(b.x + Math.cos(b.a) * b.len * b.grow, b.y + Math.sin(b.a) * b.len * b.grow);
-          ctx.stroke();
-        });
-      };
-      strokeRoot(10, "#7C2D12");
-      strokeRoot(6.5, "#FDE7C3");
-      const t = tip();
+        ctx.strokeStyle = "#FDE7C3";
+        ctx.lineWidth = 2.9;
+        ctx.beginPath();
+        ctx.moveTo(b.x, b.y);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+      }
       ctx.fillStyle = "#FFF7ED";
       ctx.beginPath();
       ctx.arc(t.x, t.y, 5, 0, Math.PI * 2);
       ctx.fill();
-      // aro que indica desde dónde guiar la raíz
       if (!pointerRef.current && runningRef.current) {
         const k = (clock * 1.4) % 1;
         ctx.strokeStyle = `rgba(255,255,255,${0.8 - k * 0.8})`;
@@ -425,39 +499,23 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
       }
       ctx.restore();
 
-      // piedras, agua y minerales
-      items.forEach((it) => {
-        if (it.kind === "piedra") {
-          ctx.fillStyle = "#57534E";
-          ctx.beginPath();
-          ctx.ellipse(it.x, it.y + 2, it.r, it.r * 0.82, 0.2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#A8A29E";
-          ctx.beginPath();
-          ctx.ellipse(it.x, it.y, it.r, it.r * 0.78, 0.2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "rgba(255,255,255,.35)";
-          ctx.beginPath();
-          ctx.ellipse(it.x - it.r * 0.35, it.y - it.r * 0.3, it.r * 0.3, it.r * 0.15, -0.4, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (it.kind === "agua") {
-          drawDrop(it.x, it.y + Math.sin(clock * 3 + it.id) * 2, 1);
-        } else if (it.kind === "mineral") {
-          drawSpark(it.x, it.y, 1);
-        }
-      });
+      // agua y minerales
+      for (const it of items) {
+        if (it.kind === "agua") drawDrop(it.x, it.y + Math.sin(clock * 3 + it.id) * 2, 1);
+        else if (it.kind === "mineral") drawSpark(it.x, it.y, 1);
+      }
 
-      floats.forEach((f) => {
+      ctx.textAlign = "center";
+      ctx.font = "bold 18px Fredoka, system-ui, sans-serif";
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "#fff";
+      for (const f of floats) {
         ctx.globalAlpha = Math.max(0, Math.min(1, f.life * 1.4));
-        ctx.font = "bold 18px Fredoka, system-ui, sans-serif";
-        ctx.textAlign = "center";
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = "#fff";
         ctx.strokeText(f.text, f.x, f.y);
         ctx.fillStyle = f.color;
         ctx.fillText(f.text, f.x, f.y);
-        ctx.globalAlpha = 1;
-      });
+      }
+      ctx.globalAlpha = 1;
     };
 
     const loop = (now: number) => {
@@ -574,7 +632,7 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
               Desliza el dedo para que la raíz crezca. Atrapa <b>agua 💧</b> y <b>minerales ✨</b>.
             </p>
             <p className="mt-2 rounded-2xl bg-white/70 px-3 py-2 text-sm">
-              Rodea las <b>piedras 🪨</b> (te quitan 2 s) y las zonas secas.
+              Rodea las <b>piedras 🪨</b> (te quitan 2 s) y las <b>larvas de gallina ciega 🐛</b>, que se comen las raíces (-10).
             </p>
           </GameIntro>
         )}

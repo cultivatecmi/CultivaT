@@ -252,7 +252,7 @@ export function TourController() {
       say("🌱 CultivaT: cuida tu planta virtual y tu kit de cultivo real");
       await at(4);
       tab("jugar");
-      say("📅 Crece al ritmo de una planta real: máximo 100 XP y 80 monedas por día");
+      say("📅 Crece al ritmo de una planta real: máximo 100 XP y 150 monedas por día");
       await at(7.8);
       tab("planta");
       g().tourPatch({ xp: 0, water: 85, fresh: 85, nutrients: 85, happy: 85, climate: "soleado", dirt: 0 });

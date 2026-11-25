@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useGameState } from "@/components/GameProvider";
-import { Countdown, GameIntro, GameResult } from "./GameUi";
+import { Countdown, GameIntro, GameResult, GAME_H } from "./GameUi";
 import { isTourActive, tourHint } from "@/lib/tour";
 import { playSound } from "@/lib/sound";
 
@@ -16,7 +16,7 @@ import { playSound } from "@/lib/sound";
  * (fondo, flores, polen, pesticida y cuerpo de la abeja) y por cuadro solo se copian.
  */
 
-const HEIGHT = 430;
+const HEIGHT = GAME_H; // llena la pantalla del celular
 const GROUND = HEIGHT - 44;
 const BEE_X = 78;
 const BEE_R = 14;

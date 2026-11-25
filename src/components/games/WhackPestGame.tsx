@@ -5,7 +5,7 @@ import { useGameState } from "@/components/GameProvider";
 import { AphidSvg } from "@/components/home/SceneProps";
 import { Pot } from "@/components/plant/Pot";
 import { LadybugSvg } from "@/components/home/Ladybug";
-import { Countdown, GameIntro, GameResult } from "./GameUi";
+import { Countdown, GameIntro, GameResult, GAME_H } from "./GameUi";
 import { scoreReward } from "@/lib/games";
 import { playSound } from "@/lib/sound";
 import { cn } from "@/lib/utils";
@@ -227,7 +227,7 @@ export function WhackPestGame({ onExit }: { onExit: () => void }) {
 
   if (phase === "intro" || (phase === "over" && result)) {
     return (
-      <div className="keep-light overflow-hidden rounded-3xl border-4 border-white shadow-lg" style={{ background: "linear-gradient(180deg, #DCEDC8, #AED581)", minHeight: 430 }}>
+      <div className="keep-light overflow-hidden rounded-3xl border-4 border-white shadow-lg" style={{ background: "linear-gradient(180deg, #DCEDC8, #AED581)", minHeight: GAME_H }}>
         {phase === "over" && result ? (
           <GameResult
             medal={result.score >= 250 ? "🏆" : result.score >= 120 ? "🥈" : "🌱"}
@@ -291,7 +291,8 @@ export function WhackPestGame({ onExit }: { onExit: () => void }) {
                 e.preventDefault();
                 whack(i);
               }}
-              className="relative h-[124px] touch-none select-none"
+              className="relative touch-none select-none"
+              style={{ height: Math.max(124, Math.min(170, (GAME_H - 140) / 2)) }}
               aria-label={h.up && h.kind ? `${h.kind} en la maceta ${i + 1}` : `Maceta ${i + 1}`}
             >
               {/* el bicho sale de la tierra */}

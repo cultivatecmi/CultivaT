@@ -35,7 +35,7 @@ export function PlayScreen() {
   if (game) {
     const info = getGame(game);
     return (
-      <div className="space-y-3">
+      <div className="flex min-h-[calc(100dvh-30px)] flex-col gap-3">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -51,12 +51,14 @@ export function PlayScreen() {
             {info.emoji} {info.name}
           </h2>
         </div>
+        <div className="flex flex-1 flex-col justify-center">
         {game === "lluvia" && <CatchRainGame onExit={exit} />}
         {game === "plagas" && <WhackPestGame onExit={exit} />}
         {game === "memorama" && <MemoryGame onExit={exit} />}
         {game === "trivia" && <TriviaGame onExit={exit} />}
         {game === "raices" && <RootMazeGame onExit={exit} />}
         {game === "polinizacion" && <PollinationGame onExit={exit} />}
+        </div>
       </div>
     );
   }
