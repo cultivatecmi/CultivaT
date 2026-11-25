@@ -8,18 +8,19 @@ const icons = require("lucide-react");
 const sharp = require("sharp");
 
 const OUT = path.join(__dirname, "assets", "icons");
+fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
 
 const NAMES = [
-  "Sprout", "Lightbulb", "Tractor", "Users", "Smartphone", "Heart", "Leaf", "Quote",
-  "Package", "School", "House", "Handshake", "Megaphone", "Share2", "GraduationCap",
-  "Trees", "Recycle", "CloudSun", "ThermometerSun", "Bug", "Gamepad2", "ScanLine",
-  "MessageCircle", "QrCode", "Lock", "Clock", "Compass", "FlaskConical", "Cpu",
-  "Timer", "TrendingUp", "ImagePlus", "Camera", "Coins", "Droplets", "Sun", "Hourglass",
-  "Shovel", "BookOpen", "Sparkles", "Flower2", "Wheat", "ClipboardList", "Award",
-  "MapPin", "ArrowRight", "Presentation", "Rocket", "ShieldCheck", "Target",
+  "Sprout", "Lightbulb", "Users", "Smartphone", "Leaf", "Package", "School", "House",
+  "Megaphone", "Coins", "GraduationCap", "Trees", "Recycle", "CloudSun", "Target",
+  "Compass", "FlaskConical", "Cpu", "Wheat", "Droplets", "Shovel", "BookOpen", "QrCode",
+  "ImagePlus", "Award", "Check", "X", "Microscope", "Calculator", "BookMarked", "Tractor",
+  "Hourglass", "Wifi", "ArrowRight", "Sparkles", "Brain", "Monitor", "ChartColumn",
+  "Puzzle", "MessagesSquare", "HeartHandshake", "Sun", "MapPin",
 ];
-const COLORS = { w: "#FFFFFF", g: "#15803D", b: "#422006", a: "#F59E0B" };
+// w blanco · m esmeralda claro · e esmeralda · a ámbar · s cielo · l gris claro · d pizarra
+const COLORS = { w: "#FFFFFF", m: "#34D399", e: "#10B981", a: "#F59E0B", s: "#38BDF8", l: "#CBD5E1", d: "#94A3B8" };
 
 (async () => {
   for (const name of NAMES) {
