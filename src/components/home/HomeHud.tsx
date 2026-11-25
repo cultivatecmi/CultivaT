@@ -7,6 +7,7 @@ import { CoinIcon } from "@/components/ui/GameIcons";
 import { NotificationsPanel } from "@/components/layout/NotificationsPanel";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
 import { StagesPanel } from "./StagesPanel";
+import { ShareStreakPanel } from "@/components/share/ShareStreakPanel";
 import { isShaded } from "@/lib/game";
 import { getStage } from "@/lib/stages";
 import { playSound } from "@/lib/sound";
@@ -62,6 +63,7 @@ export function HomeHud() {
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState(false);
   const [stages, setStages] = useState(false);
+  const [share, setShare] = useState(false);
   const st = getStage(state.xp);
   const unread = state.notifications.filter((n) => !n.read).length;
   const climate = CLIMATES[state.climate];
@@ -79,9 +81,18 @@ export function HomeHud() {
     <div className="pointer-events-none absolute inset-x-0 top-0 z-30 px-3 pt-[max(env(safe-area-inset-top),10px)]">
       {/* fila 1: racha · monedas · nivel · clima · campana · configuración */}
       <div className="pointer-events-auto relative flex items-center gap-1.5">
-        <div className={cn(pill, "text-sol-dark")} title="Racha diaria">
+        <button
+          type="button"
+          onClick={() => {
+            playSound("tap");
+            setShare(true);
+          }}
+          className={cn(pill, "text-sol-dark active:scale-95")}
+          title="Compartir mi racha"
+          aria-label={`Racha de ${state.streak} días: toca para compartir`}
+        >
           🔥 {state.streak}
-        </div>
+        </button>
         <div className={cn(pill, "text-sol-dark")} title="Monedas">
           <CoinIcon size={20} /> {state.coins}
         </div>
@@ -161,6 +172,7 @@ export function HomeHud() {
 
       {settings && <SettingsPanel onClose={() => setSettings(false)} />}
       {stages && <StagesPanel onClose={() => setStages(false)} />}
+      {share && <ShareStreakPanel onClose={() => setShare(false)} />}
     </div>
   );
 }
