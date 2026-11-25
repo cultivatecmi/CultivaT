@@ -99,7 +99,7 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
     const spawnWave = () => {
       const x = W + 40;
       const r = Math.random();
-      if (r < 0.58) {
+      if (r < 0.48) {
         // flor iluminada con una cadena de polen que lleva a ella
         const types: FlowerType[] = ["tomate", "chile", "girasol"];
         const flower = types[Math.floor(Math.random() * 3)];
@@ -107,8 +107,8 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
         const n = 4;
         const py = Math.max(50, Math.min(GROUND - 40, fy + rand(-90, 90)));
         for (let i = 0; i < n; i++) add({ kind: "polen", x: x + i * 26, y: py + Math.sin(i * 0.9) * 14, r: 7 });
-        add({ kind: "flor", x: x + n * 26 + 70, y: fy, r: flower === "girasol" ? 22 : 18, flower });
-      } else if (r < 0.8) {
+        add({ kind: "flor", x: x + n * 26 + 70, y: fy, r: flower === "girasol" ? 18 : 15, flower });
+      } else if (r < 0.74) {
         add({ kind: "viento", x, y: rand(60, GROUND - 60), r: 24 });
       } else {
         add({ kind: "pesticida", x, y: rand(50, GROUND - 90), r: 30 });
@@ -164,7 +164,7 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
         bee.vy = 0;
         bee.y += (inp.y - bee.y) * Math.min(1, dt * 9);
       } else {
-        bee.vy = Math.min(250, bee.vy + 560 * dt);
+        bee.vy = Math.min(280, bee.vy + 650 * dt);
         bee.y += bee.vy * dt;
       }
       if (bee.y < 26) {
@@ -176,12 +176,12 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
         bee.vy = 0;
       }
 
-      const speed = 120 + elapsed * 2.5;
+      const speed = 150 + elapsed * 4;
       scroll += speed * dt;
       spawnIn -= dt;
       if (spawnIn <= 0) {
         spawnWave();
-        spawnIn = rand(1.05, 1.6);
+        spawnIn = rand(0.85, 1.35);
       }
 
       for (let i = objs.length - 1; i >= 0; i--) {

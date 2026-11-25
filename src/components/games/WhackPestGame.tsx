@@ -135,19 +135,19 @@ export function WhackPestGame({ onExit }: { onExit: () => void }) {
     const t = elapsed();
     const free = holesRef.current.map((h, i) => (h.up ? -1 : i)).filter((i) => i >= 0);
     const upCount = HOLES - free.length;
-    if (free.length && upCount < 3) {
+    if (free.length && upCount < 4) {
       const i = free[Math.floor(Math.random() * free.length)];
       const r = Math.random();
-      const kind: Critter = r < 0.22 ? "catarina" : r < 0.52 ? "pulgon" : "gusano";
+      const kind: Critter = r < 0.28 ? "catarina" : r < 0.58 ? "pulgon" : "gusano";
       const key = ++keyRef.current;
-      const base = Math.max(620, 1300 - t * 22);
+      const base = Math.max(480, 1050 - t * 22);
       const upMs = kind === "pulgon" ? base * 0.8 : kind === "catarina" ? base * 1.15 : base;
       setHolesBoth((hs) => hs.map((h, j) => (j === i ? { key, kind, up: true, hit: false, fx: null } : h)));
       later(() => {
         setHolesBoth((hs) => hs.map((h, j) => (j === i && h.key === key && !h.hit ? { ...h, up: false } : h)));
       }, upMs);
     }
-    const next = Math.max(360, 820 - t * 16) * (0.7 + Math.random() * 0.5);
+    const next = Math.max(300, 700 - t * 16) * (0.7 + Math.random() * 0.5);
     later(spawn, next);
   };
 
