@@ -26,6 +26,7 @@ interface Result {
   coins: number;
   newBest: boolean;
   happy: number;
+  dailyDone: boolean;
 }
 
 export function TriviaGame({ onExit }: { onExit: () => void }) {
@@ -87,8 +88,8 @@ export function TriviaGame({ onExit }: { onExit: () => void }) {
       setCorrect((c) => c + 1);
       const extra = STREAK_BONUS[s] ?? 0;
       setBonus(extra || null);
-      setEarned((e) => e + TRIVIA_REWARD + extra);
-      reward(TRIVIA_REWARD + extra, 10 + extra, extra ? `¡Racha x${s}! (+${extra} bonus)` : "¡Respuesta correcta!");
+      const given = reward(TRIVIA_REWARD + extra, 10 + extra, extra ? `¡Racha x${s}! (+${extra} bonus)` : "¡Respuesta correcta!");
+      setEarned((e) => e + given);
       playSound("correct");
       if (navigator.vibrate) navigator.vibrate(30);
     } else {
@@ -101,8 +102,8 @@ export function TriviaGame({ onExit }: { onExit: () => void }) {
   const next = () => {
     if (idx + 1 >= questions.length) {
       recordTriviaRound(correct);
-      const { newBest, happy } = recordGame("trivia", { score: correct, coins: 0, xp: 5, label: "" });
-      setResult({ correct, bestStreak, coins: earned, newBest, happy });
+      const { newBest, happy, dailyDone } = recordGame("trivia", { score: correct, coins: 0, xp: 5, label: "" });
+      setResult({ correct, bestStreak, coins: earned, newBest, happy, dailyDone });
       if (correct >= 4) playSound("levelup");
       setPhase("done");
     } else {
@@ -142,6 +143,7 @@ export function TriviaGame({ onExit }: { onExit: () => void }) {
           coins={result.coins}
           newBest={result.newBest && result.correct > 0}
           happy={result.happy}
+            dailyDone={result.dailyDone}
           buttonTone="alerta"
           onRetry={start}
           onExit={onExit}

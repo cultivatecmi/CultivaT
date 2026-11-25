@@ -65,6 +65,8 @@ interface ResultProps {
   coins: number;
   /** felicidad que ganó la planta por jugar (+15 a +25 %) */
   happy?: number;
+  /** ya se llegó al tope diario de XP o monedas */
+  dailyDone?: boolean;
   newBest: boolean;
   buttonTone: "cielo" | "hoja" | "sol" | "alerta";
   onRetry: () => void;
@@ -73,7 +75,7 @@ interface ResultProps {
   children?: React.ReactNode;
 }
 
-export function GameResult({ medal, title, stats, coins, happy = 0, newBest, buttonTone, onRetry, onExit, className, children }: ResultProps) {
+export function GameResult({ medal, title, stats, coins, happy = 0, dailyDone = false, newBest, buttonTone, onRetry, onExit, className, children }: ResultProps) {
   return (
     <div className={cn("flex h-full flex-col items-center justify-center gap-3 p-6 text-center", className)}>
       <div className="anim-pop text-7xl">{medal}</div>
@@ -88,6 +90,11 @@ export function GameResult({ medal, title, stats, coins, happy = 0, newBest, but
         ))}
       </div>
       {children}
+      {dailyDone && (
+        <p className="max-w-[300px] rounded-2xl border-2 border-[#22C55E]/40 bg-[#DCFCE7] px-3 py-2 text-sm font-semibold leading-snug text-[#15803D]">
+          ¡Meta diaria completada! 🌱 Tu planta ya creció todo lo posible por hoy. Vuelve mañana para ganar más XP y monedas.
+        </p>
+      )}
       <div className="flex flex-wrap items-center justify-center gap-2">
         <div className="rounded-2xl border-b-4 border-sol-dark bg-sol px-5 py-2 font-display text-xl font-semibold text-[#422006] shadow">+{coins} <InlineCoin /> ganadas</div>
         {happy > 0 && (

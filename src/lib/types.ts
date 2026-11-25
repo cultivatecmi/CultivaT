@@ -71,6 +71,13 @@ export interface Profile {
   avatarEmoji: string;
 }
 
+/** Conteo diario de XP y monedas ganadas (fecha YYYY-MM-DD) */
+export interface DailyProgress {
+  date: string;
+  xp: number;
+  coins: number;
+}
+
 export interface GameState {
   version: 1;
   nickname: string;
@@ -93,6 +100,8 @@ export interface GameState {
   shadeUntil: number;
   /** Catarina Guardiana activa hasta (ms), 0 si no hay */
   ladybugUntil: number;
+  /** Lo ganado hoy (se reinicia cada día): tope de 100 XP y 80 monedas */
+  daily: DailyProgress;
   xp: number;
   coins: number;
   streak: number;

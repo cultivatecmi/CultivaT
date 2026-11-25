@@ -51,6 +51,7 @@ interface Result {
   coins: number;
   newBest: boolean;
   happy: number;
+  dailyDone: boolean;
 }
 
 export function MemoryGame({ onExit }: { onExit: () => void }) {
@@ -116,8 +117,8 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
     const m = movesRef.current;
     const secs = startRef.current ? Math.floor((performance.now() - startRef.current) / 1000) : 0;
     const coins = coinsFor(m);
-    const { newBest, happy } = recordGame("memorama", { score: m, coins, xp: 20, label: "por el Memorama" });
-    setResult({ moves: m, seconds: secs, coins, newBest, happy });
+    const { newBest, happy, coins: given, dailyDone } = recordGame("memorama", { score: m, coins, xp: 20, label: "por el Memorama" });
+    setResult({ moves: m, seconds: secs, coins: given, newBest, happy, dailyDone });
     playSound("levelup");
     setPhase("over");
   };
@@ -171,6 +172,7 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
             coins={result.coins}
             newBest={result.newBest}
             happy={result.happy}
+            dailyDone={result.dailyDone}
             buttonTone="sol"
             onRetry={start}
             onExit={onExit}

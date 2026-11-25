@@ -21,7 +21,9 @@ import {
   openUmbrella as openUmbrellaOn,
   sanitizeState,
   setClimate as setClimateOn,
+  withCoins,
   withXp,
+  isDailyDone,
   type BoostResult,
 } from "@/lib/game";
 import {
@@ -76,9 +78,14 @@ interface GameContextValue {
   cycleClimate: () => Climate | null;
   /** Modo Demo: avanza a la siguiente etapa de crecimiento (y vuelve a semilla al final) */
   growStage: () => void;
-  reward: (coins: number, xp: number, reason: string, quiet?: boolean) => void;
+  /** Da monedas y XP (con tope diario); devuelve las monedas que sí se dieron */
+  reward: (coins: number, xp: number, reason: string, quiet?: boolean) => number;
   /** Guarda el resultado de un minijuego, entrega monedas/XP y dice si es récord */
-  recordGame: (game: GameId, result: { score: number; coins: number; xp: number; label: string; happy?: number }) => { newBest: boolean; happy: number };
+  /** Guarda la partida; devuelve las monedas que sí se dieron (tope diario) y si ya se completó la meta del día */
+  recordGame: (
+    game: GameId,
+    result: { score: number; coins: number; xp: number; label: string; happy?: number }
+  ) => { newBest: boolean; happy: number; coins: number; dailyDone: boolean };
   /** Baja un medidor sin pasar de un piso (p. ej. el pulgón chupando nutrientes) */
   drain: (stat: BoostStat, amount: number, floor: number) => void;
   recordTriviaRound: (correct: number) => void;
@@ -493,7 +500,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (!s) return;
     const st = getStage(s.xp);
     if (st.next) {
-      const x = withXp(s, st.next.minXp - s.xp);
+      const x = withXp(s, st.next.minXp - s.xp, Date.now(), true);
       commit(x.state);
       celebrate(x.stageUp);
     } else {
@@ -506,9 +513,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const reward = useCallback(
     (coins: number, xp: number, reason: string, quiet = false) => {
       const s = current();
-      if (!s) return;
-      const x = withXp({ ...s, coins: s.coins + Math.max(0, coins) }, xp);
+      if (!s) return 0;
+      const now = Date.now();
+      const c = withCoins(s, Math.max(0, coins), now);
+      const x = withXp(c.state, xp, now);
       commit(x.state);
+      coins = c.given;
       // quiet: la pantalla ya muestra el "+5" flotante, sin aviso extra
       if (coins > 0) {
         if (quiet) {
@@ -516,6 +526,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         } else pushToast(`+${coins} 🪙 ${reason}`, "coins");
       }
       celebrate(x.stageUp);
+      return coins;
     },
     [current, commit, pushToast, celebrate]
   );
@@ -523,7 +534,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const recordGame = useCallback(
     (game: GameId, r: { score: number; coins: number; xp: number; label: string; happy?: number }) => {
       const s = current();
-      if (!s) return { newBest: false, happy: 0 };
+      if (!s) return { newBest: false, happy: 0, coins: 0, dailyDone: false };
       const lower = getGame(game).lowerIsBetter;
       // jugar es lo único que sube la felicidad de la planta
       const before = s.happy;
@@ -534,7 +545,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const base: GameState = {
         ...s,
         happy: happyAfter,
-        coins: s.coins + Math.max(0, r.coins),
         stats: {
           ...s.stats,
           gamesPlayed: s.stats.gamesPlayed + 1,
@@ -542,12 +552,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           best: { ...s.stats.best, [game]: newBest ? r.score : prev },
         },
       };
-      const x = withXp(base, Math.max(0, r.xp));
+      const now = Date.now();
+      const c = withCoins(base, Math.max(0, r.coins), now);
+      const x = withXp(c.state, Math.max(0, r.xp), now);
       commit(x.state);
-      if (r.coins > 0) pushToast(`+${r.coins} 🪙 ${r.label}`, "coins");
+      if (c.given > 0) pushToast(`+${c.given} 🪙 ${r.label}`, "coins");
       celebrate(x.stageUp);
       if (happy > 0) markJoy(happy);
-      return { newBest, happy };
+      return { newBest, happy, coins: c.given, dailyDone: isDailyDone(x.state, now) };
     },
     [current, commit, pushToast, celebrate]
   );
@@ -651,12 +663,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const coins = first ? 50 : 5;
       const xp = first ? 30 : 3;
       const withPhoto: GameState = {
-        ...s,
-        coins: s.coins + coins,
+        ...withCoins(s, coins, t, true).state,
         photos: [{ id: uid(), date: new Date(t).toISOString(), week, image, note: note.trim().slice(0, 140) }, ...s.photos],
         notifications: s.notifications.map((n) => (n.type === "photo" ? { ...n, read: true } : n)),
       };
-      const x = withXp(withPhoto, xp);
+      const x = withXp(withPhoto, xp, t, true); // la planta real siempre suma
       commit(x.state);
       pushToast(first ? `📸 ¡Semana ${week} verificada! +${coins} 🪙` : `📸 Foto extra guardada +${coins} 🪙`, "coins");
       celebrate(x.stageUp);

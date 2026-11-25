@@ -1,4 +1,5 @@
 import type {
+  DailyProgress,
   AppNotification,
   BoostStat,
   CareAction,
@@ -20,6 +21,9 @@ export const WEEK_MS = 7 * DAY;
 /** cuánto dura abierta la sombrilla */
 export const SHADE_MS = 15_000;
 export const MAX_DIRT = 3;
+/** Topes diarios: la planta virtual crece al ritmo de una planta real (~21 días) */
+export const DAILY_XP = 100;
+export const DAILY_COINS = 80;
 
 /** % por segundo expresado por minuto (las tasas de abajo son por minuto) */
 const PER_SEC = 60;
@@ -98,6 +102,7 @@ export function createInitialState(nickname: string, now = Date.now()): GameStat
     climate: "soleado",
     shadeUntil: 0,
     ladybugUntil: 0,
+    daily: { date: dateKey(new Date(now)), xp: 0, coins: 0 },
     xp: 0,
     coins: 50,
     streak: 0,
@@ -144,7 +149,7 @@ export function createDemoState(now = Date.now()): GameState {
     nutrients: 58,
     happy: 72,
     dirt: 1,
-    xp: 400,
+    xp: 1300, // demo: Planta Joven
     coins: 250,
     streak: 7,
     bestStreak: 7,
@@ -211,6 +216,11 @@ export function sanitizeState(raw: unknown, nickname: string): GameState {
     climate: isClimate(r.climate) ? r.climate : "soleado",
     shadeUntil: num(r.shadeUntil, 0),
     ladybugUntil: num(r.ladybugUntil, 0),
+    daily: {
+      date: typeof r.daily?.date === "string" ? r.daily.date : "",
+      xp: Math.max(0, num(r.daily?.xp, 0)),
+      coins: Math.max(0, num(r.daily?.coins, 0)),
+    },
     xp: Math.max(0, num(r.xp, 0)),
     coins: Math.max(0, num(r.coins, base.coins)),
     streak: Math.max(0, num(r.streak, 0)),
@@ -316,20 +326,53 @@ export const TAP_MESSAGES: Record<Mood, string[]> = {
 // Acciones
 // ---------------------------------------------------------------------------
 
-/** Suma XP y detecta si la planta subió de etapa */
-export function withXp(s: GameState, xp: number, now = Date.now()): { state: GameState; stageUp?: string } {
-  if (xp <= 0) return { state: s };
+/** Lo ganado hoy; si cambió el día, empieza en 0 */
+export function dailyOf(s: GameState, now = Date.now()): DailyProgress {
+  const today = dateKey(new Date(now));
+  return s.daily && s.daily.date === today ? s.daily : { date: today, xp: 0, coins: 0 };
+}
+
+/** ¿Ya llegó a la meta diaria de XP o de monedas? */
+export function isDailyDone(s: GameState, now = Date.now()) {
+  const d = dailyOf(s, now);
+  return d.xp >= DAILY_XP || d.coins >= DAILY_COINS;
+}
+
+/**
+ * Suma monedas respetando el tope diario.
+ * `exempt`: no cuenta para el tope (foto semanal del kit real).
+ */
+export function withCoins(s: GameState, coins: number, now = Date.now(), exempt = false): { state: GameState; given: number } {
+  if (coins <= 0) return { state: s, given: 0 };
+  if (exempt) return { state: { ...s, coins: s.coins + coins }, given: coins };
+  const d = dailyOf(s, now);
+  const given = Math.max(0, Math.min(coins, DAILY_COINS - d.coins));
+  if (given <= 0) return { state: { ...s, daily: d }, given: 0 };
+  return { state: { ...s, coins: s.coins + given, daily: { ...d, coins: d.coins + given } }, given };
+}
+
+/** Suma XP (con tope diario salvo `exempt`) y detecta si la planta subió de etapa */
+export function withXp(s: GameState, xp0: number, now = Date.now(), exempt = false): { state: GameState; stageUp?: string; given: number } {
+  if (xp0 <= 0) return { state: s, given: 0 };
+  let xp = xp0;
+  let daily = s.daily;
+  if (!exempt) {
+    const d = dailyOf(s, now);
+    xp = Math.max(0, Math.min(xp0, DAILY_XP - d.xp));
+    daily = { ...d, xp: d.xp + xp };
+    if (xp <= 0) return { state: { ...s, daily: d }, given: 0 };
+  }
   const before = getStage(s.xp).index;
-  const next = { ...s, xp: s.xp + xp };
+  const next = { ...s, xp: s.xp + xp, daily };
   const after = getStage(next.xp);
   if (after.index > before) {
     next.notifications = addNotification(
       next.notifications,
       makeNotification("stage", `${after.stage.emoji} ¡${s.plantName} creció!`, `Ahora es ${after.stage.name}. ¡Sigue así!`, now)
     );
-    return { state: next, stageUp: after.stage.name };
+    return { state: next, stageUp: after.stage.name, given: xp };
   }
-  return { state: next };
+  return { state: next, given: xp };
 }
 
 export function applyCare(
@@ -391,7 +434,9 @@ export function registerCare(s0: GameState, now = Date.now()): { state: GameStat
   s.streak = s.lastCareDate === yesterdayKey(new Date(now)) ? s.streak + 1 : 1;
   s.bestStreak = Math.max(s.bestStreak, s.streak);
   s.lastCareDate = today;
-  s.coins += 10;
+  const bonus = withCoins(s, 10, now);
+  s.coins = bonus.state.coins;
+  s.daily = bonus.state.daily;
   s.notifications = addNotification(
     s.notifications,
     makeNotification(
@@ -447,7 +492,7 @@ export function isLadybugActive(s: GameState, now = Date.now()) {
 
 export function cleanDirt(s: GameState, now = Date.now()): BoostResult {
   if (s.dirt <= 0) return { state: s, ok: false, full: true };
-  const reg = registerCare({ ...s, dirt: s.dirt - 1, coins: s.coins + 1 }, now);
+  const reg = registerCare(withCoins({ ...s, dirt: s.dirt - 1 }, 1, now).state, now);
   const x = withXp(reg.state, 3, now);
   return { state: x.state, ok: true, full: x.state.dirt === 0, streakUp: reg.streakUp, stageUp: x.stageUp };
 }

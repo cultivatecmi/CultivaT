@@ -7,9 +7,9 @@ export interface Stage {
 
 export const STAGES: Stage[] = [
   { id: "semilla", name: "Semilla", emoji: "🌰", minXp: 0 },
-  { id: "brote", name: "Brote", emoji: "🌱", minXp: 120 },
-  { id: "joven", name: "Planta Joven", emoji: "🌿", minXp: 320 },
-  { id: "floreciendo", name: "Planta Floreciendo", emoji: "🌻", minXp: 650 },
+  { id: "brote", name: "Brote", emoji: "🌱", minXp: 400 }, // días 5–11
+  { id: "joven", name: "Planta Joven", emoji: "🌿", minXp: 1100 }, // días 12–20
+  { id: "floreciendo", name: "Planta Floreciendo", emoji: "🌻", minXp: 2000 }, // día 21+
 ];
 
 export function getStage(xp: number) {

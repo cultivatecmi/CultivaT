@@ -740,12 +740,12 @@ export function HomeScreen() {
     setBug({ ...bug, squashed: true });
     playSound("squash");
     const p = toLocal(e.clientX, e.clientY);
+    // las monedas respetan el tope diario: el "+5" solo sale si sí se dieron
+    const given = reward(5, 2, "¡Pulgón aplastado!", true);
     emit([
       { x: p.x, y: p.y, kind: "burst", content: "💥", dy: 0, size: 34 },
-      { x: p.x, y: p.y - 14, kind: "text", content: "+5 🪙", size: 24 },
+      ...(given > 0 ? [{ x: p.x, y: p.y - 14, kind: "text" as const, content: `+${given} 🪙`, size: 24 }] : []),
     ]);
-    playSound("coin");
-    reward(5, 2, "¡Pulgón aplastado!", true);
     say("¡Salvada! 🪲");
     later(() => setBug(null), 650);
   };
