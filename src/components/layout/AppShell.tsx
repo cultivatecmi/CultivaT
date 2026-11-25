@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGame } from "@/components/GameProvider";
 import { Welcome } from "@/components/Welcome";
 import { HomeScreen } from "@/components/screens/HomeScreen";
@@ -11,6 +11,8 @@ import { SabiScreen } from "@/components/screens/SabiScreen";
 import { Header } from "./Header";
 import { BottomNav } from "./BottomNav";
 import { Toasts } from "./Toasts";
+import { TourController } from "@/components/tour/TourController";
+import { useTourEvent } from "@/components/tour/useTourEvent";
 import { Splash } from "@/components/brand/Splash";
 
 function Frame({ children }: { children: React.ReactNode }) {
@@ -24,10 +26,14 @@ function Frame({ children }: { children: React.ReactNode }) {
 
 export function AppShell() {
   const { hydrated } = useGame();
+  // el tour de presentación vuelve a mostrar la pantalla de carga
+  const [splashRun, setSplashRun] = useState(0);
+  useTourEvent("splash", () => setSplashRun((n) => n + 1));
   return (
     <>
       <AppContent />
-      <Splash ready={hydrated} />
+      <Splash key={splashRun} ready={hydrated} />
+      <TourController />
     </>
   );
 }

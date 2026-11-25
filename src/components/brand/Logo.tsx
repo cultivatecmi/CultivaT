@@ -30,6 +30,7 @@ export function Logo({
       width={f.w}
       height={f.h}
       draggable={false}
+      data-cultivat-logo=""
       decoding="async"
       fetchPriority={priority ? "high" : undefined}
       className={cn("select-none", className)}

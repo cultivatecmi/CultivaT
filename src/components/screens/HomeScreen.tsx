@@ -16,6 +16,8 @@ import { CLIMATES } from "@/lib/weather";
 import type { Mood, ToolId } from "@/lib/types";
 import { takeJoy } from "@/lib/joy";
 import { CoinText } from "@/components/ui/CoinText";
+import { isTourActive } from "@/lib/tour";
+import { useTourEvent } from "@/components/tour/useTourEvent";
 import { cn, pick } from "@/lib/utils";
 
 // Distribución vertical (desde abajo): menú → bandeja de herramientas → maceta
@@ -664,6 +666,7 @@ export function HomeScreen() {
     }
     if (!bug) {
       const t = setTimeout(() => {
+        if (isTourActive()) return;
         const s = pick(bugSpots(latest.current.stage));
         setBug({ id: Date.now(), x: s.x, y: s.y, squashed: false });
         playSound("pop", 0.5);
@@ -671,6 +674,13 @@ export function HomeScreen() {
       return () => clearTimeout(t);
     }
   }, [bug, say]);
+
+  // el tour de presentación hace aparecer un pulgón cuando lo necesita
+  useTourEvent("aphid", () => {
+    const s = pick(bugSpots(latest.current.stage));
+    setBug({ id: Date.now(), x: s.x, y: s.y, squashed: false });
+    playSound("pop", 0.5);
+  });
 
   // pulgón activo: chupa la savia (-1 % de nutrientes por segundo, sin bajar de 15 %)
   const bugActive = !!bug && !bug.squashed;
@@ -755,7 +765,7 @@ export function HomeScreen() {
     const schedule = () => {
       t = setTimeout(() => {
         const L = latest.current;
-        if (L.ctx.state.dirt < 3) {
+        if (L.ctx.state.dirt < 3 && !isTourActive()) {
           L.ctx.addDirt();
           if (Math.random() < 0.6) say("¡Me ensucié! Frótame 🧽");
         }
@@ -916,7 +926,7 @@ export function HomeScreen() {
 
       <ParticleLayer particles={particles} />
 
-      {hintTool && !activeTool && !bubble && <DragHint tool={hintTool} homeRef={homeRef} plantRef={plantRef} />}
+      {hintTool && !activeTool && !bubble && !isTourActive() && <DragHint tool={hintTool} homeRef={homeRef} plantRef={plantRef} />}
 
       <ActionBar
         activeTool={activeTool}

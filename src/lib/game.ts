@@ -13,6 +13,7 @@ import { DEFAULT_EQUIPPED, DEFAULT_OWNED, RETIRED_ITEMS, getItem } from "./shop"
 import { getStage } from "./stages";
 import { demoPhotoDataUrl } from "./demo-photos";
 import { clamp, dateKey, pick, uid, yesterdayKey } from "./utils";
+import { isTourActive } from "./tour";
 import { CLIMATES, isClimate, type Climate } from "./weather";
 
 const MIN = 60_000;
@@ -344,7 +345,7 @@ export function isDailyDone(s: GameState, now = Date.now()) {
  */
 export function withCoins(s: GameState, coins: number, now = Date.now(), exempt = false): { state: GameState; given: number } {
   if (coins <= 0) return { state: s, given: 0 };
-  if (exempt) return { state: { ...s, coins: s.coins + coins }, given: coins };
+  if (exempt || isTourActive()) return { state: { ...s, coins: s.coins + coins }, given: coins };
   const d = dailyOf(s, now);
   const given = Math.max(0, Math.min(coins, DAILY_COINS - d.coins));
   if (given <= 0) return { state: { ...s, daily: d }, given: 0 };
@@ -356,7 +357,7 @@ export function withXp(s: GameState, xp0: number, now = Date.now(), exempt = fal
   if (xp0 <= 0) return { state: s, given: 0 };
   let xp = xp0;
   let daily = s.daily;
-  if (!exempt) {
+  if (!exempt && !isTourActive()) {
     const d = dailyOf(s, now);
     xp = Math.max(0, Math.min(xp0, DAILY_XP - d.xp));
     daily = { ...d, xp: d.xp + xp };
