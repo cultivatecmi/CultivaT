@@ -21,12 +21,20 @@ function withItem(eq: Equipped, item: ShopItem): Equipped {
   return { ...eq, [item.category]: item.id };
 }
 
-function ItemThumb({ item, stage }: { item: ShopItem; stage: number }) {
+/** acercamiento por etapa: la plantita chica se ve más de cerca para que luzca el accesorio */
+const THUMB_ZOOM = [1.7, 1.35, 1.12, 1];
+
+function ItemThumb({ item, stage, current }: { item: ShopItem; stage: number; current: Equipped }) {
   if (item.category === "background") {
     return <BackgroundScene id={item.id} className="h-full w-full" />;
   }
-  const eq: Equipped = item.category === "pot" ? { pot: item.id, accessory: null, background: "bg-patio" } : { pot: "pot-barro", accessory: item.id, background: "bg-patio" };
-  return <PlantCharacter mood="feliz" stage={Math.max(2, stage)} pot={eq.pot} accessory={eq.accessory} className="h-full w-full p-1" />;
+  // se muestra la planta en SU etapa actual, con su maceta (o el accesorio que ya trae)
+  const eq: Equipped = item.category === "pot" ? { ...current, pot: item.id } : { ...current, accessory: item.id };
+  return (
+    <div className="h-full w-full" style={{ transform: `scale(${THUMB_ZOOM[stage] ?? 1})`, transformOrigin: "50% 92%" }}>
+      <PlantCharacter mood="feliz" stage={stage} pot={eq.pot} accessory={eq.accessory} className="h-full w-full p-1" />
+    </div>
+  );
 }
 
 export function ShopScreen() {
@@ -88,7 +96,7 @@ export function ShopScreen() {
               )}
             >
               <button type="button" onClick={() => setPreviewId(item.id)} className="relative h-28 overflow-hidden bg-crema">
-                <ItemThumb item={item} stage={stage} />
+                <ItemThumb item={item} stage={stage} current={state.equipped} />
                 {equipped && (
                   <span className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-hoja text-white shadow">
                     <Check size={16} strokeWidth={3} />
