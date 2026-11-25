@@ -47,10 +47,10 @@ const CLIMATE_RATES: Record<Climate, { open: Record<BoostStat, number>; shaded: 
     open: { water: 0, fresh: -4 * PER_SEC, nutrients: 0.3, happy: 0.5 },
     shaded: { water: 0, fresh: -4 * PER_SEC, nutrients: 0.3, happy: 0.5 },
   },
-  // lluvia (19 °C): el agua sube muy rápido (+12 %/s) y la frescura también (+8 %/s)
+  // lluvia (19 °C): riega poco a poco (+3 %/s) y refresca (+4 %/s)
   lluvia: {
-    open: { water: -12 * PER_SEC, fresh: -8 * PER_SEC, nutrients: 0.3, happy: 0.5 },
-    shaded: { water: -12 * PER_SEC, fresh: -8 * PER_SEC, nutrients: 0.3, happy: 0.5 },
+    open: { water: -3 * PER_SEC, fresh: -4 * PER_SEC, nutrients: 0.3, happy: 0.5 },
+    shaded: { water: -3 * PER_SEC, fresh: -4 * PER_SEC, nutrients: 0.3, happy: 0.5 },
   },
 };
 
@@ -298,18 +298,18 @@ export const TAP_MESSAGES: Record<Mood, string[]> = {
   feliz: [
     "¡Jiji, me haces cosquillas! 😄",
     "¡Hoy me siento súper verde! 🌿",
-    "¿Sabías que con la luz del sol preparo mi comida? ☀️",
-    "¡Eres el mejor cuidador del mundo! 💚",
-    "Cuando sea grande quiero dar flores 🌼",
+    "¡Con el sol hago mi comida! ☀️",
+    "¡Eres el mejor! 💚",
+    "¡Quiero dar flores! 🌼",
   ],
-  sedienta: ["Tengo seeed... ¿me riegas un poquito? 💧", "Mi tierra está muy seca 🏜️", "¡Agüita, porfa! 💦"],
+  sedienta: ["Tengo seeed... 💧", "Mi tierra está seca 🏜️", "¡Agüita, porfa! 💦"],
   acalorada: [
-    "¡Uf! Qué calorón hace en Culiacán 🥵",
-    "¡Sombrita, porfa! El sol está muy fuerte ☀️",
-    "Me estoy asando como elote 🌽🔥",
+    "¡Qué calorón! 🥵",
+    "¡Sombrita, porfa! ☀️",
+    "Me aso como elote 🌽🔥",
   ],
-  hambrienta: ["Mi pancita de tierra pide abono 🌱", "¿Tienes composta? ¡Tengo hambre! 😋", "Grrr... necesito nutrientes 🍂"],
-  marchita: ["Me siento muy débil... ayúdame 🥀", "Necesito agua, sombra y abono 😢", "No me rindo... ¡cuídame! 💔"],
+  hambrienta: ["¡Tengo hambre! 😋", "¿Me das abono? 🌱", "Grrr... nutrientes 🍂"],
+  marchita: ["Estoy muy débil... 🥀", "Ayúdame, porfa 😢", "¡Cuídame! 💔"],
 };
 
 // ---------------------------------------------------------------------------

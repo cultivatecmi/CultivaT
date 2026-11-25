@@ -10,25 +10,25 @@ export const CLIMATES: Record<Climate, { temp: number; label: string; emoji: str
     temp: 26,
     label: "Soleado",
     emoji: "☀️",
-    message: "¡Volvió el sol! Un día tranquilo ☀️",
+    message: "¡Salió el sol! ☀️",
   },
   nublado: {
     temp: 23,
     label: "Nublado",
     emoji: "⛅",
-    message: "Unas nubes tapan el sol… ¡qué sombrita tan rica! ⛅",
+    message: "Se nubló ⛅",
   },
   calor: {
     temp: 42,
     label: "Ola de calor",
     emoji: "🔥",
-    message: "¡Uf, 42 °C! Ponme la sombrilla ☂️ y riégame 💧",
+    message: "¡Qué calor! ☂️💧",
   },
   lluvia: {
     temp: 19,
     label: "Lluvia fresca",
     emoji: "🌧️",
-    message: "¡Lluvia fresquita! Me está regando 🌧️",
+    message: "¡Llueve! 🌧️",
   },
 };
 

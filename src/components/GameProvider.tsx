@@ -76,7 +76,7 @@ interface GameContextValue {
   cycleClimate: () => Climate | null;
   /** Modo Demo: avanza a la siguiente etapa de crecimiento (y vuelve a semilla al final) */
   growStage: () => void;
-  reward: (coins: number, xp: number, reason: string) => void;
+  reward: (coins: number, xp: number, reason: string, quiet?: boolean) => void;
   /** Guarda el resultado de un minijuego, entrega monedas/XP y dice si es récord */
   recordGame: (game: GameId, result: { score: number; coins: number; xp: number; label: string }) => { newBest: boolean; happy: number };
   /** Baja un medidor sin pasar de un piso (p. ej. el pulgón chupando nutrientes) */
@@ -156,7 +156,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const pushToast = useCallback((text: string, tone: Toast["tone"] = "info") => {
     if (inGameRef.current) return;
     const id = uid();
-    setToasts((t) => [...t.slice(-2), { id, text, tone }]);
+    setToasts([{ id, text, tone }]); // uno a la vez: no se enciman
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2600);
     if (tone === "coins") playSound("coin");
   }, []);
@@ -268,13 +268,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           commit(setClimateOn(applyDecay(s, now), c, now), false);
           setNow(now);
           if (c === "calor") {
-            pushToast(`🔥 ¡Ola de calor en Culiacán! ${CLIMATES.calor.temp} °C · ¡Sombrilla ☂️ y agua 💧!`, "warning");
             if (!inGameRef.current) playSound("whoosh");
           } else if (c === "lluvia") {
-            pushToast(`🌧️ ¡Lluvia fresca! ${CLIMATES.lluvia.temp} °C · tu planta se riega sola`, "info");
             if (!inGameRef.current) playSound("rain");
           } else if (c === "nublado") {
-            pushToast(`⛅ Se nubló · ${CLIMATES.nublado.temp} °C · tu planta se refresca sola`, "info");
           }
         }
         schedule();
@@ -507,12 +504,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [current, commit, celebrate, pushToast]);
 
   const reward = useCallback(
-    (coins: number, xp: number, reason: string) => {
+    (coins: number, xp: number, reason: string, quiet = false) => {
       const s = current();
       if (!s) return;
       const x = withXp({ ...s, coins: s.coins + Math.max(0, coins) }, xp);
       commit(x.state);
-      if (coins > 0) pushToast(`+${coins} 🪙 ${reason}`, "coins");
+      // quiet: la pantalla ya muestra el "+5" flotante, sin aviso extra
+      if (coins > 0) {
+        if (quiet) {
+          if (!inGameRef.current) playSound("coin");
+        } else pushToast(`+${coins} 🪙 ${reason}`, "coins");
+      }
       celebrate(x.stageUp);
     },
     [current, commit, pushToast, celebrate]
@@ -587,7 +589,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (!s) return false;
     const now = Date.now();
     if (isLadybugActive(s, now)) {
-      pushToast("🐞 Ya tienes una catarina cuidando tu planta", "info");
+      pushToast("🐞 Ya hay una catarina activa", "info");
       return false;
     }
     if (s.coins < LADYBUG_PRICE) {
@@ -597,7 +599,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     commit({ ...s, coins: s.coins - LADYBUG_PRICE, ladybugUntil: now + LADYBUG_MS });
     setNow(now);
     playSound("coin");
-    pushToast("🐞 ¡Catarina Guardiana activada por 3 minutos!", "success");
+    pushToast("🐞 ¡Catarina activada!", "success");
     return true;
   }, [current, commit, pushToast]);
 

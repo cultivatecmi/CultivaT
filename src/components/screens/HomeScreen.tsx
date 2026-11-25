@@ -351,7 +351,7 @@ export function HomeScreen() {
               { x: l.x, y: l.y - 10, kind: "text", content: "+1 🪙", size: 20 },
               ...[0, 1, 2, 3].map((i) => ({ x: l.x, y: l.y, kind: "burst" as const, content: "✨", dx: (i - 1.5) * 34, dy: -50, size: 18 })),
             ]);
-            say(res.full ? "¡Quedé rechinando de limpia! ✨" : "¡Una manchita menos! Sigue frotando 🧽");
+            say(res.full ? "¡Limpiecita! ✨" : "¡Una manchita menos! 🧽");
           }
         }
         return;
@@ -371,7 +371,7 @@ export function HomeScreen() {
     if (!p || p.id !== e.pointerId) return;
     pet.current = null;
     if (p.dist < 14 && performance.now() - p.t < 450) tapPlant(e.clientX, e.clientY);
-    else if (p.dist > 120) say(pick(["¡Qué rico, más caricias! 😊", "¡Jiji, me encanta! 💚", "¡Eres el mejor! 🥰"]));
+    else if (p.dist > 120) say(pick(["¡Qué rico! 😊", "¡Me encanta! 💚", "¡Jiji! 🥰"]));
   };
 
   // -------------------------------------------------------------------------
@@ -463,7 +463,7 @@ export function HomeScreen() {
       if (L.ctx.state.climate === "lluvia") {
         if (!d.warned) {
           d.warned = true;
-          say("¡Ya me riega la lluvia! Si me pones más agua mis raíces se pueden ahogar 🌧️", 4200);
+          say("¡Ya me riega la lluvia! 🌧️");
           playSound("tap");
         }
         return;
@@ -490,7 +490,7 @@ export function HomeScreen() {
         if (res.full) say("¡Glup! Ya estoy llenita 💧");
       } else if (!d.warned) {
         d.warned = true;
-        say("¡Ya estoy llenita! 💧 Mucha agua pudre mis raíces");
+        say("¡Ya estoy llenita! 💧");
       }
     } else if (d.tool === "feed") {
       const res = L.ctx.boost("nutrients", 6, true);
@@ -512,22 +512,22 @@ export function HomeScreen() {
         setReaction("comiendo");
         restart("reaction", () => setReaction(null), 1300);
         if (d.ticks % 2 === 1) playSound("bite");
-        if (res.full) say("¡Ñam ñam! ¡Qué rica composta! 🌱");
+        if (res.full) say("¡Ñam ñam! 🌱");
       } else if (!d.warned) {
         d.warned = true;
-        say("¡Estoy llenísima! Mucho abono quema mis raíces 🌱");
+        say("¡Ya no quiero más! 🌱");
       }
     } else if (d.tool === "shade") {
       // con lluvia no hace falta sombra: las nubes ya la refrescan
       if (L.ctx.state.climate === "lluvia") {
-        say("¡Las nubes y la lluvia ya me mantienen fresquita! 🌧️", 4200);
+        say("La lluvia ya me refresca 🌧️");
         playSound("tap");
         endDrag();
         return;
       }
       L.ctx.openUmbrella();
       playSound("whoosh");
-      say(L.ctx.state.climate === "calor" ? "¡Gracias! La sombrilla me protege del sol de Culiacán 😎" : "¡Qué fresquito bajo la sombrilla! ☂️");
+      say("¡Qué fresquito! ☂️");
       const top = plantPoint(0.5, 0.05);
       emit(["✨", "💨", "✨"].map((c, i) => ({ x: top.x + (i - 1) * 50, y: top.y, kind: "burst" as const, content: c, dy: -30, size: 22 })), 800);
       endDrag();
@@ -557,7 +557,7 @@ export function HomeScreen() {
               { x: p.x, y: p.y - 10, kind: "text", content: "+1 🪙", size: 20 },
               ...[0, 1, 2, 3].map((i) => ({ x: p.x, y: p.y, kind: "burst" as const, content: "✨", dx: (i - 1.5) * 34, dy: -50, size: 18 })),
             ]);
-            say(res.full ? "¡Quedé rechinando de limpia! ✨" : "¡Una manchita menos! 🧽");
+            say(res.full ? "¡Limpiecita! ✨" : "¡Una manchita menos! 🧽");
           }
         } else if (!d.warned) {
           d.warned = true;
@@ -658,7 +658,7 @@ export function HomeScreen() {
     if (bug && !bug.squashed) {
       const t = setTimeout(() => {
         setBug(null);
-        say("¡El pulgón se escapó! 🐛 Al siguiente lo atrapas");
+        say("Se escapó el pulgón 🐛");
       }, 12000);
       return () => clearTimeout(t);
     }
@@ -676,7 +676,7 @@ export function HomeScreen() {
   const bugActive = !!bug && !bug.squashed;
   useEffect(() => {
     if (!bugActive) return;
-    if (!isLadybugActive(latest.current.ctx.state)) say("¡Ay! Un pulgón me está chupando la savia 🪲 ¡Aplástalo!", 3200);
+    if (!isLadybugActive(latest.current.ctx.state)) say("¡Un pulgón! Aplástalo 🪲");
     const t = setInterval(() => latest.current.ctx.drain("nutrients", 1, 15), 1000);
     return () => clearInterval(t);
   }, [bugActive, say]);
@@ -695,10 +695,9 @@ export function HomeScreen() {
       setLadyLeaving(false);
       setLadyShown(true);
       setLadyPos(pick(bugSpots(latest.current.stage)));
-      say("¡Llegó la Catarina Guardiana! 🐞 Cuidará mis hojas 3 minutos", 3600);
     } else if (!ladyActive && prevLady.current) {
       setLadyLeaving(true);
-      say("¡Gracias, catarina! Ya se va volando 🐞👋", 3200);
+      say("¡Adiós, catarina! 🐞");
       later(() => {
         setLadyShown(false);
         setLadyLeaving(false);
@@ -727,7 +726,7 @@ export function HomeScreen() {
         { x: p.x, y: p.y, kind: "burst", content: "✨", dy: -20, size: 26 },
         { x: p.x, y: p.y - 12, kind: "text", content: "¡Ñam! 🐞", size: 20 },
       ]);
-      say("¡Control biológico! La catarina eliminó al pulgón sin pesticidas 🐞", 4200);
+      say("¡La catarina se comió al pulgón! 🐞");
       later(() => setBug((b) => (b && b.id === bugId ? null : b)), 650);
     }, 1200);
     return () => clearTimeout(t);
@@ -746,8 +745,8 @@ export function HomeScreen() {
       { x: p.x, y: p.y - 14, kind: "text", content: "+5 🪙", size: 24 },
     ]);
     playSound("coin");
-    reward(5, 2, "¡Pulgón aplastado!");
-    say("¡Salvada! Los pulgones chupan la savia y roban nutrientes 🪲", 4200);
+    reward(5, 2, "¡Pulgón aplastado!", true);
+    say("¡Salvada! 🪲");
     later(() => setBug(null), 650);
   };
 
@@ -758,7 +757,7 @@ export function HomeScreen() {
         const L = latest.current;
         if (L.ctx.state.dirt < 3) {
           L.ctx.addDirt();
-          if (Math.random() < 0.6) say("¡Ay! Me cayó tierrita. ¡Frótame con el dedo para limpiarme! 🧽");
+          if (Math.random() < 0.6) say("¡Me ensucié! Frótame 🧽");
         }
         schedule();
       }, 35000 + Math.random() * 15000);
@@ -775,7 +774,7 @@ export function HomeScreen() {
   const prevClimate = useRef(state.climate);
   useEffect(() => {
     if (state.climate !== prevClimate.current) {
-      say(CLIMATES[state.climate].message, 3800);
+      say(CLIMATES[state.climate].message);
       if (state.climate === "lluvia") {
         setWet(true);
         restart("wet", () => setWet(false), 4000);
@@ -788,7 +787,7 @@ export function HomeScreen() {
   useEffect(() => {
     if (stage > prevStage.current) {
       setDancing(true);
-      say("¡Crecí! ¡Mira cómo bailo! 💃🌱", 3500);
+      say("¡Crecí! 💃🌱");
       const c = plantPoint(0.5, 0.3);
       emit(["🎉", "⭐", "🌟", "🎊", "✨", "⭐"].map((e, i) => ({ x: c.x, y: c.y, kind: "burst" as const, content: e, dx: (i - 2.5) * 40, dy: -80 - (i % 2) * 30, size: 26 })), 900);
       later(() => setDancing(false), 2100);
@@ -808,7 +807,7 @@ export function HomeScreen() {
     later(() => {
       setDancing(true);
       playSound("coin");
-      say(`¡Jugar contigo me pone muy feliz! +${joy}% 😊`, 3600);
+      say(`¡Qué divertido! +${joy}% 😊`);
       const c = plantPoint(0.5, 0.3);
       emit(["💖", "😊", "💚", "✨", "💛", "💕"].map((e, i) => ({ x: c.x, y: c.y, kind: "burst" as const, content: e, dx: (i - 2.5) * 38, dy: -70 - (i % 2) * 30, size: 26 })), 900);
       later(() => setDancing(false), 1800);
@@ -917,7 +916,7 @@ export function HomeScreen() {
 
       <ParticleLayer particles={particles} />
 
-      {hintTool && !activeTool && <DragHint tool={hintTool} homeRef={homeRef} plantRef={plantRef} />}
+      {hintTool && !activeTool && !bubble && <DragHint tool={hintTool} homeRef={homeRef} plantRef={plantRef} />}
 
       <ActionBar
         activeTool={activeTool}
