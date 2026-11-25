@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useGameState } from "@/components/GameProvider";
 import { Countdown, GameIntro, GameResult } from "./GameUi";
+import { isTourActive, tourHint } from "@/lib/tour";
 import { playSound } from "@/lib/sound";
 
 /**
@@ -78,6 +79,7 @@ interface Result {
   dailyDone: boolean;
   level: number;
   reason: "suelo" | "vida";
+  xp: number;
 }
 
 /** Puntos → monedas y XP con tope (los puntos no tienen tope) */
@@ -445,8 +447,8 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
       finished = true;
       runningRef.current = false;
       const reward = capReward(score);
-      const { newBest, happy, coins, dailyDone } = recordRef.current("polinizacion", { score, ...reward, label: "por Vuelo de Polinización", happy: HAPPY });
-      setResult({ score, coins, newBest, happy, level, reason, dailyDone });
+      const { newBest, happy, coins, dailyDone, xp } = recordRef.current("polinizacion", { score, ...reward, label: "por Vuelo de Polinización", happy: HAPPY });
+      setResult({ score, coins, newBest, happy, level, reason, dailyDone, xp });
       setPhase("over");
     };
 
@@ -542,6 +544,11 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
 
       const d = diff();
       const speed = 150 + 170 * d;
+      if (isTourActive()) {
+        // el tour guía a la abeja hacia el siguiente polen o flor
+        const next = objs.find((o) => !o.done && o.kind !== "pesticida" && o.x > BEE_X - 6);
+        tourHint.beeY = next ? next.y : null;
+      }
       scroll += speed * dt;
       spawnIn -= dt;
       if (spawnIn <= 0) {
@@ -917,6 +924,7 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
             newBest={result.newBest}
             happy={result.happy}
             dailyDone={result.dailyDone}
+            xp={result.xp}
             buttonTone="hoja"
             onRetry={start}
             onExit={onExit}

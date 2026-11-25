@@ -5,6 +5,7 @@ import { Play, RotateCcw } from "lucide-react";
 import { TapButton } from "@/components/ui/TapButton";
 import { playSound } from "@/lib/sound";
 import { InlineCoin } from "@/components/ui/CoinText";
+import { isTourActive } from "@/lib/tour";
 import { cn } from "@/lib/utils";
 
 /** Cuenta regresiva 3-2-1-¡Ya! que llama a onDone al terminar */
@@ -15,11 +16,11 @@ export function Countdown({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     if (n === 0) {
       playSound("go");
-      const t = setTimeout(() => doneRef.current(), 450);
+      const t = setTimeout(() => doneRef.current(), isTourActive() ? 150 : 450);
       return () => clearTimeout(t);
     }
     playSound("beep");
-    const t = setTimeout(() => setN(n - 1), 650);
+    const t = setTimeout(() => setN(n - 1), isTourActive() ? 180 : 650);
     return () => clearTimeout(t);
   }, [n]);
   return (
@@ -65,6 +66,8 @@ interface ResultProps {
   coins: number;
   /** felicidad que ganó la planta por jugar (+15 a +25 %) */
   happy?: number;
+  /** XP ganada (se muestra si se pasa) */
+  xp?: number;
   /** ya se llegó al tope diario de XP o monedas */
   dailyDone?: boolean;
   newBest: boolean;
@@ -75,7 +78,7 @@ interface ResultProps {
   children?: React.ReactNode;
 }
 
-export function GameResult({ medal, title, stats, coins, happy = 0, dailyDone = false, newBest, buttonTone, onRetry, onExit, className, children }: ResultProps) {
+export function GameResult({ medal, title, stats, coins, happy = 0, xp, dailyDone = false, newBest, buttonTone, onRetry, onExit, className, children }: ResultProps) {
   return (
     <div className={cn("flex h-full flex-col items-center justify-center gap-3 p-6 text-center", className)}>
       <div className="anim-pop text-7xl">{medal}</div>
@@ -97,6 +100,9 @@ export function GameResult({ medal, title, stats, coins, happy = 0, dailyDone = 
       )}
       <div className="flex flex-wrap items-center justify-center gap-2">
         <div className="rounded-2xl border-b-4 border-sol-dark bg-sol px-5 py-2 font-display text-xl font-semibold text-[#422006] shadow">+{coins} <InlineCoin /> ganadas</div>
+        {xp !== undefined && xp > 0 && (
+          <div className="rounded-2xl border-b-4 border-[#15803D] bg-[#22C55E] px-4 py-2 font-display text-xl font-semibold text-white shadow">+{xp} XP</div>
+        )}
         {happy > 0 && (
           <div className="anim-pop rounded-2xl border-b-4 border-[#C2185B] bg-[#F06292] px-4 py-2 font-display text-xl font-semibold text-white shadow">
             +{happy}% 😊 Felicidad

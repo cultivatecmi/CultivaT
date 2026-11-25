@@ -44,6 +44,7 @@ import { CLIMATES, pickNextClimate, randomClimateDelay, type Climate } from "@/l
 import { gameJoyBonus, markJoy } from "@/lib/joy";
 import { getStage } from "@/lib/stages";
 import { playSound, unlockAudio } from "@/lib/sound";
+import { isTourActive } from "@/lib/tour";
 import { uid } from "@/lib/utils";
 
 export type SyncStatus = "local" | "saving" | "saved" | "error" | "demo";
@@ -85,9 +86,11 @@ interface GameContextValue {
   recordGame: (
     game: GameId,
     result: { score: number; coins: number; xp: number; label: string; happy?: number }
-  ) => { newBest: boolean; happy: number; coins: number; dailyDone: boolean };
+  ) => { newBest: boolean; happy: number; coins: number; xp: number; dailyDone: boolean };
   /** Baja un medidor sin pasar de un piso (p. ej. el pulgón chupando nutrientes) */
   drain: (stat: BoostStat, amount: number, floor: number) => void;
+  /** Solo para el tour de presentación: cambia partes del estado al instante */
+  tourPatch: (patch: Partial<GameState>) => void;
   recordTriviaRound: (correct: number) => void;
   buyItem: (id: string) => boolean;
   /** Compra la Catarina Guardiana (3 min); false si no alcanza o ya hay una */
@@ -269,7 +272,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const schedule = () => {
       t = setTimeout(() => {
         const s = stateRef.current;
-        if (s) {
+        if (s && !isTourActive()) {
           const now = Date.now();
           const c = pickNextClimate(s.climate);
           commit(setClimateOn(applyDecay(s, now), c, now), false);
@@ -534,7 +537,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const recordGame = useCallback(
     (game: GameId, r: { score: number; coins: number; xp: number; label: string; happy?: number }) => {
       const s = current();
-      if (!s) return { newBest: false, happy: 0, coins: 0, dailyDone: false };
+      if (!s) return { newBest: false, happy: 0, coins: 0, xp: 0, dailyDone: false };
       const lower = getGame(game).lowerIsBetter;
       // jugar es lo único que sube la felicidad de la planta
       const before = s.happy;
@@ -559,7 +562,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (c.given > 0) pushToast(`+${c.given} 🪙 ${r.label}`, "coins");
       celebrate(x.stageUp);
       if (happy > 0) markJoy(happy);
-      return { newBest, happy, coins: c.given, dailyDone: isDailyDone(x.state, now) };
+      return { newBest, happy, coins: c.given, xp: x.given, dailyDone: isDailyDone(x.state, now) };
     },
     [current, commit, pushToast, celebrate]
   );
@@ -570,6 +573,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (!s || s[stat] <= floor) return;
       commit({ ...s, [stat]: Math.max(floor, s[stat] - amount) }, false);
       setNow(Date.now());
+    },
+    [current, commit]
+  );
+
+  const tourPatch = useCallback(
+    (patch: Partial<GameState>) => {
+      const s = current();
+      if (!s) return;
+      const now = Date.now();
+      commit({ ...s, ...patch, lastTick: now }, false);
+      setNow(now);
     },
     [current, commit]
   );
@@ -759,6 +773,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       recordGame,
       recordTriviaRound,
       drain,
+      tourPatch,
       buyItem,
       buyLadybug,
       setInGame,
@@ -773,7 +788,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       hydrated, session, state, now, syncStatus, tab, toasts, pushToast, login, startDemo, logout,
-      care, boost, openUmbrella, cleanDirt, addDirt, setClimate, cycleClimate, growStage, reward, recordGame, recordTriviaRound, drain, buyItem, buyLadybug, setInGame, equipItem, addPhoto, deletePhoto,
+      care, boost, openUmbrella, cleanDirt, addDirt, setClimate, cycleClimate, growStage, reward, recordGame, recordTriviaRound, drain, tourPatch, buyItem, buyLadybug, setInGame, equipItem, addPhoto, deletePhoto,
       markAllRead, clearNotifications, setPlantName, updateProfile, enableBrowserNotifications,
     ]
   );

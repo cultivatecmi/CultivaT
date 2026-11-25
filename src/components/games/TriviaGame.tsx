@@ -7,6 +7,7 @@ import { GameIntro, GameResult } from "./GameUi";
 import { TRIVIA_QUESTIONS, TRIVIA_REWARD, TRIVIA_ROUND, TRIVIA_SECONDS, type TriviaQuestion } from "@/lib/trivia";
 import { playSound } from "@/lib/sound";
 import { InlineCoin } from "@/components/ui/CoinText";
+import { isTourActive } from "@/lib/tour";
 import { cn, shuffle } from "@/lib/utils";
 
 const LETTERS = ["A", "B", "C", "D"];
@@ -195,6 +196,7 @@ export function TriviaGame({ onExit }: { onExit: () => void }) {
               type="button"
               disabled={answered}
               onClick={() => choose(i)}
+              data-tour-correct={isTourActive() && i === q.answer ? "1" : undefined}
               className={cn(
                 "btn-3d flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left font-display text-[17px] font-medium transition-colors",
                 !answered && "border-stone-200 border-b-stone-300 bg-white active:bg-stone-50",

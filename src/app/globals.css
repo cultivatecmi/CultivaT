@@ -518,3 +518,15 @@ html.dark body { color: #eef3ec; }
 @media (prefers-reduced-motion: reduce) {
   .ladybug-walk, .ladybug-call { animation: none; }
 }
+
+/* Tour de presentación: resalta lo que se está explicando */
+@keyframes tour-focus {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.9), 0 0 0 0 rgba(34, 197, 94, 0.5); }
+  50% { box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.9), 0 0 0 10px rgba(34, 197, 94, 0); }
+}
+.tour-focus { animation: tour-focus 1s ease-in-out infinite; border-radius: 9999px; }
+
+/* Tour de presentación: franja superior de 26 px que recorre la app hacia abajo */
+html.tour-on body { padding-top: 26px; }
+html.tour-on .h-dvh { height: calc(100dvh - 26px); }
+html.tour-on header.sticky { top: 26px; }

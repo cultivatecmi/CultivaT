@@ -9,6 +9,7 @@ import { playSound } from "@/lib/sound";
 import { InlineCoin } from "@/components/ui/CoinText";
 import { TapButton } from "@/components/ui/TapButton";
 import { cn } from "@/lib/utils";
+import { useTourEvent } from "@/components/tour/useTourEvent";
 import { LadybugSvg, formatLeft, useLadybugLeft } from "./Ladybug";
 
 const SIZE = 46;
@@ -23,6 +24,10 @@ export function LadybugButton({ aphidAlert }: { aphidAlert: boolean }) {
   const left = useLadybugLeft(state.ladybugUntil ?? 0);
   const active = left > 0;
   const [open, setOpen] = useState(false);
+  useTourEvent("ladybugOpen", () => setOpen(true));
+  useTourEvent("ladybugConfirm", () => {
+    if (buyLadybug()) setOpen(false);
+  });
 
   const r = (SIZE - STROKE) / 2;
   const len = 2 * Math.PI * r;
