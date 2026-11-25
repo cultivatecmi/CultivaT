@@ -61,7 +61,7 @@ export function GameIntro({ emoji, title, color, children, best, buttonTone, onS
 interface ResultProps {
   medal: string;
   title: string;
-  stats: { label: string; value: string }[];
+  stats?: { label: string; value: string }[];
   coins: number;
   /** felicidad que ganó la planta por jugar (+15 a +25 %) */
   happy?: number;
@@ -80,7 +80,7 @@ export function GameResult({ medal, title, stats, coins, happy = 0, newBest, but
       <h3 className="text-3xl font-bold text-tinta">{title}</h3>
       {newBest && <span className="anim-streak rounded-full bg-sol px-3 py-1 font-display text-sm font-bold text-white">⭐ ¡Nuevo récord!</span>}
       <div className="flex flex-wrap justify-center gap-2">
-        {stats.map((s) => (
+        {(stats ?? []).map((s) => (
           <div key={s.label} className="min-w-[78px] rounded-2xl bg-white/85 px-3 py-1.5 shadow-sm">
             <div className="font-display text-xl font-bold leading-tight">{s.value}</div>
             <div className="text-[11px] font-semibold text-stone-500">{s.label}</div>

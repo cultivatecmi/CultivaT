@@ -234,22 +234,13 @@ export function WhackPestGame({ onExit }: { onExit: () => void }) {
           <GameResult
             medal={result.score >= 250 ? "🏆" : result.score >= 120 ? "🥈" : "🌱"}
             title={`${result.score} puntos`}
-            stats={[
-              { label: "gusanos", value: `🐛 ${result.gusanos}` },
-              { label: "pulgones", value: `🟢 ${result.pulgones}` },
-              { label: "catarinas tocadas", value: `🐞 ${result.catarinas}` },
-            ]}
             coins={result.coins}
             newBest={result.newBest}
             happy={result.happy}
             buttonTone="hoja"
             onRetry={start}
             onExit={onExit}
-          >
-            <p className="max-w-[280px] text-sm leading-snug text-stone-700">
-              🤓 ¿Sabías que una catarina puede comerse unos <b>50 pulgones al día</b>? ¡Por eso los agricultores las cuidan!
-            </p>
-          </GameResult>
+          />
         ) : (
           <GameIntro
             emoji="🐛"

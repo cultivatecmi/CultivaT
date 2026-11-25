@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useGameState } from "@/components/GameProvider";
 import { GameIntro, GameResult } from "./GameUi";
 import { playSound } from "@/lib/sound";
-import { InlineCoin } from "@/components/ui/CoinText";
 import { cn, shuffle } from "@/lib/utils";
 
 interface CardDef {
@@ -166,20 +165,14 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
         {phase === "over" && result ? (
           <GameResult
             medal={"⭐".repeat(starsFor(result.moves))}
-            title="¡Memorama completo!"
-            stats={[
-              { label: "movimientos", value: `🃏 ${result.moves}` },
-              { label: "tiempo", value: `⏱ ${mmss(result.seconds)}` },
-            ]}
+            title={`${result.moves} movimientos`}
             coins={result.coins}
             newBest={result.newBest}
             happy={result.happy}
             buttonTone="sol"
             onRetry={start}
             onExit={onExit}
-          >
-            <p className="text-sm text-stone-700">Menos movimientos = más monedas (máximo 45 <InlineCoin /> con 8 movimientos).</p>
-          </GameResult>
+          />
         ) : (
           <GameIntro
             emoji="🃏"
