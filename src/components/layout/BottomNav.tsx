@@ -6,10 +6,10 @@ import type { TabId } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const TABS: { id: TabId; label: string; icon: React.ElementType; color: string }[] = [
-  { id: "planta", label: "Mi Planta", icon: Sprout, color: "#4CAF50" },
+  { id: "planta", label: "Mi Planta", icon: Sprout, color: "#15803D" },
   { id: "jugar", label: "Jugar", icon: Gamepad2, color: "#29B6F6" },
-  { id: "kit", label: "Mi Kit", icon: Camera, color: "#8D6E63" },
-  { id: "tienda", label: "Tienda", icon: ShoppingBag, color: "#FFB300" },
+  { id: "kit", label: "Mi Kit", icon: Camera, color: "#D97706" },
+  { id: "tienda", label: "Tienda", icon: ShoppingBag, color: "#F59E0B" },
   { id: "sabi", label: "Sabi", icon: MessageCircle, color: "#FF7043" },
 ];
 

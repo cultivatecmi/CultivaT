@@ -37,7 +37,7 @@ export function Welcome() {
     <div className="flex min-h-screen flex-col px-5 pb-8 pt-8">
       <div className="text-center">
         <h1 className="flex justify-center">
-          <Logo priority className="w-[min(78%,300px)]" />
+          <Logo priority className="h-auto w-[min(62%,220px)]" />
         </h1>
         <p className="mt-1 font-display text-lg text-tierra">Cuida tu planta, cultiva tu futuro 🌱</p>
       </div>

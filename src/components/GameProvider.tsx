@@ -277,7 +277,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         Notification.permission === "granted" &&
         document.visibilityState === "hidden"
       ) {
-        new Notification(latest.title, { body: latest.body, icon: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/icon.svg` });
+        new Notification(latest.title, { body: latest.body, icon: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/icon.png` });
       }
     } catch {
       /* algunos navegadores móviles no permiten new Notification() */
