@@ -92,7 +92,7 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const W = wrap.clientWidth;
     canvas.width = W * dpr;
     canvas.height = HEIGHT * dpr;
@@ -112,13 +112,14 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
     let left = DURATION;
     let elapsed = 0;
     let spawnIn = 0.8;
-    let gustIn = 3.5;
+    let gustIn = 7;
     let scroll = 0;
     let clock = 0;
     let shake = 0;
     let flash = 0;
     let lastBeep = 99;
-    let hudT = 0;
+    let hudScore = -1;
+    let hudSec = -1;
     let falling = false;
     let fallT = 0;
     let finished = false;
@@ -271,7 +272,7 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
       gustIn -= dt;
       if (gustIn <= 0) {
         spawnGust();
-        gustIn = rand(3.2, 5) - Math.min(1.2, elapsed * 0.04);
+        gustIn = rand(6.5, 9);
       }
 
       // ráfagas: aviso y luego cruzan la pantalla
@@ -342,11 +343,12 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
     };
 
     // ---------------------------------------------------------------- dibujo
+    const sky = ctx.createLinearGradient(0, 0, 0, GROUND);
+    sky.addColorStop(0, "#7DD3FC");
+    sky.addColorStop(0.65, "#E0F2FE");
+    sky.addColorStop(1, "#FEF3C7");
+
     const drawBackground = () => {
-      const sky = ctx.createLinearGradient(0, 0, 0, GROUND);
-      sky.addColorStop(0, "#7DD3FC");
-      sky.addColorStop(0.65, "#E0F2FE");
-      sky.addColorStop(1, "#FEF3C7");
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, W, GROUND);
       // sol con rayos que giran
@@ -443,13 +445,14 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
       ctx.fill();
       // brillo pulsante: flor lista para polinizar
       if (!o.done) {
-        const g = 0.4 + Math.sin(clock * 5 + o.phase) * 0.2;
-        const halo = ctx.createRadialGradient(hx, o.y, o.r * 0.4, hx, o.y, o.r + 16);
-        halo.addColorStop(0, `rgba(253,224,71,${g + 0.2})`);
-        halo.addColorStop(1, "rgba(253,224,71,0)");
-        ctx.fillStyle = halo;
+        const g = 0.25 + Math.sin(clock * 5 + o.phase) * 0.12;
+        ctx.fillStyle = `rgba(253,224,71,${g * 0.6})`;
         ctx.beginPath();
-        ctx.arc(hx, o.y, o.r + 16, 0, Math.PI * 2);
+        ctx.arc(hx, o.y, o.r + 15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(253,224,71,${g})`;
+        ctx.beginPath();
+        ctx.arc(hx, o.y, o.r + 8, 0, Math.PI * 2);
         ctx.fill();
       }
       // el fruto crece con un pequeño rebote
@@ -593,11 +596,10 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
       ctx.beginPath();
       ctx.rect(0, top - 6, W, GUST_H + 12);
       ctx.clip();
-      const grad = ctx.createLinearGradient(g.x, 0, g.x + g.len, 0);
-      grad.addColorStop(0, "rgba(224,242,254,.75)");
-      grad.addColorStop(1, "rgba(224,242,254,0)");
-      ctx.fillStyle = grad;
-      ctx.fillRect(g.x, top, g.len, GUST_H);
+      ctx.fillStyle = "rgba(224,242,254,.55)";
+      ctx.fillRect(g.x, top, g.len * 0.6, GUST_H);
+      ctx.fillStyle = "rgba(224,242,254,.25)";
+      ctx.fillRect(g.x + g.len * 0.6, top, g.len * 0.4, GUST_H);
       ctx.strokeStyle = "rgba(255,255,255,.95)";
       ctx.lineCap = "round";
       for (let i = 0; i < 4; i++) {
@@ -606,7 +608,7 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(g.x + off, ly);
-        for (let x = 0; x < g.len * 0.7; x += 20) ctx.lineTo(g.x + off + x, ly + Math.sin((x + clock * 300) * 0.05) * 3);
+        for (let x = 0; x < g.len * 0.7; x += 30) ctx.lineTo(g.x + off + x, ly + Math.sin((x + clock * 300) * 0.05) * 3);
         ctx.stroke();
       }
       ctx.lineWidth = 3;
@@ -709,13 +711,14 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
         if (o.kind === "polen" && !o.done) {
           const tw = 1 + Math.sin(clock * 8 + o.phase) * 0.15;
           const py = o.y + Math.sin(clock * 3 + o.phase) * 3;
-          ctx.shadowColor = "rgba(251,191,36,.9)";
-          ctx.shadowBlur = 12;
+          ctx.fillStyle = "rgba(251,191,36,.3)";
+          ctx.beginPath();
+          ctx.arc(o.x, py, o.r * tw + 5, 0, Math.PI * 2);
+          ctx.fill();
           ctx.fillStyle = "#FBBF24";
           ctx.beginPath();
           ctx.arc(o.x, py, o.r * tw, 0, Math.PI * 2);
           ctx.fill();
-          ctx.shadowBlur = 0;
           ctx.fillStyle = "#FEF3C7";
           ctx.beginPath();
           ctx.arc(o.x - 2, py - 2, 2.4, 0, Math.PI * 2);
@@ -762,11 +765,9 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
       ctx.restore();
       // destello rojo al chocar
       if (flash > 0) {
-        const v = ctx.createRadialGradient(W / 2, HEIGHT / 2, HEIGHT * 0.3, W / 2, HEIGHT / 2, HEIGHT * 0.8);
-        v.addColorStop(0, "rgba(239,68,68,0)");
-        v.addColorStop(1, `rgba(239,68,68,${flash * 0.9})`);
-        ctx.fillStyle = v;
-        ctx.fillRect(0, 0, W, HEIGHT);
+        ctx.strokeStyle = `rgba(239,68,68,${flash * 1.6})`;
+        ctx.lineWidth = 18;
+        ctx.strokeRect(0, 0, W, HEIGHT);
       }
     };
 
@@ -775,9 +776,10 @@ export function PollinationGame({ onExit }: { onExit: () => void }) {
       last = now;
       step(dt);
       draw();
-      hudT += dt;
-      if (hudT > 0.1) {
-        hudT = 0;
+      const sec = Math.ceil(left);
+      if (score !== hudScore || sec !== hudSec) {
+        hudScore = score;
+        hudSec = sec;
         setHud({ score, left });
       }
       if (!finished) raf = requestAnimationFrame(loop);

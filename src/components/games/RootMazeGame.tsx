@@ -72,7 +72,7 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const W = wrap.clientWidth;
     canvas.width = W * dpr;
     canvas.height = HEIGHT * dpr;
@@ -96,7 +96,8 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
     let shake = 0;
     let hitCool = 0;
     let lastBeep = 99;
-    let hudT = 0;
+    let hudScore = -1;
+    let hudSec = -1;
     let clock = 0;
     let finished = false;
     let last = performance.now();
@@ -224,8 +225,10 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
       ctx.translate(x, y);
       ctx.rotate(clock * 1.2);
       ctx.scale(s, s);
-      ctx.shadowColor = "rgba(253,224,71,.9)";
-      ctx.shadowBlur = 10;
+      ctx.fillStyle = "rgba(253,224,71,.3)";
+      ctx.beginPath();
+      ctx.arc(0, 0, 14, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = "#FDE047";
       ctx.beginPath();
       for (let i = 0; i < 8; i++) {
@@ -238,22 +241,24 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
       ctx.restore();
     };
 
+    // degradados creados una sola vez
+    const sky = ctx.createLinearGradient(0, 0, 0, SURFACE);
+    sky.addColorStop(0, "#BAE6FD");
+    sky.addColorStop(1, "#E0F2FE");
+    const soil = ctx.createLinearGradient(0, SURFACE, 0, HEIGHT);
+    soil.addColorStop(0, "#D97706");
+    soil.addColorStop(0.35, "#B45309");
+    soil.addColorStop(1, "#78350F");
+
     const draw = () => {
       ctx.clearRect(0, 0, W, HEIGHT);
       // cielo y pasto
-      const sky = ctx.createLinearGradient(0, 0, 0, SURFACE);
-      sky.addColorStop(0, "#BAE6FD");
-      sky.addColorStop(1, "#E0F2FE");
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, W, SURFACE);
       // maceta (paredes de barro)
       ctx.fillStyle = "#9A3412";
       ctx.fillRect(0, SURFACE - 6, W, HEIGHT - SURFACE + 6);
       // tierra
-      const soil = ctx.createLinearGradient(0, SURFACE, 0, HEIGHT);
-      soil.addColorStop(0, "#D97706");
-      soil.addColorStop(0.35, "#B45309");
-      soil.addColorStop(1, "#78350F");
       ctx.fillStyle = soil;
       ctx.beginPath();
       ctx.moveTo(inset(SURFACE), SURFACE);
@@ -390,9 +395,10 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
       last = now;
       step(dt);
       draw();
-      hudT += dt;
-      if (hudT > 0.1) {
-        hudT = 0;
+      const sec = Math.ceil(left);
+      if (score !== hudScore || sec !== hudSec) {
+        hudScore = score;
+        hudSec = sec;
         setHud({ score, left });
       }
       if (!finished) raf = requestAnimationFrame(loop);
