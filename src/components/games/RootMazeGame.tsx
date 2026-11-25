@@ -8,6 +8,7 @@ import { playSound } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 import { PlantCharacter } from "@/components/plant/PlantCharacter";
 import { getStage } from "@/lib/stages";
+import { isTourActive, tourHint } from "@/lib/tour";
 import { svgToImage } from "@/lib/svgImage";
 
 /**
@@ -207,6 +208,23 @@ export function RootMazeGame({ onExit }: { onExit: () => void }) {
         left = 0;
         finish();
         return;
+      }
+
+      if (isTourActive()) {
+        const t0 = tip();
+        const d2 = (x: number, y: number) => (x - t0.x) ** 2 + (y - t0.y) ** 2;
+        let good: { x: number; y: number } | null = null;
+        let bad: { x: number; y: number } | null = null;
+        for (const it of items) {
+          if ((it.kind === "agua" || it.kind === "mineral") && (!good || d2(it.x, it.y) < d2(good.x, good.y))) good = { x: it.x, y: it.y };
+          if (it.kind === "piedra" && (!bad || d2(it.x, it.y) < d2(bad.x, bad.y))) bad = { x: it.x, y: it.y };
+        }
+        for (const w of grubs) {
+          const h = grubBody(w)[0];
+          if (h.x > 0 && h.x < W && (!bad || d2(h.x, h.y) < d2(bad.x, bad.y))) bad = { x: h.x, y: h.y };
+        }
+        tourHint.rootGood = good;
+        tourHint.rootBad = bad;
       }
 
       const p = pointerRef.current;

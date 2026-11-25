@@ -8,6 +8,7 @@ import { getStage } from "@/lib/stages";
 import { svgToImage } from "@/lib/svgImage";
 import { Countdown, GameIntro, GameResult, GAME_H } from "./GameUi";
 import { scoreReward } from "@/lib/games";
+import { isTourActive, tourHint } from "@/lib/tour";
 import { playSound } from "@/lib/sound";
 
 const DURATION = 30;
@@ -457,6 +458,19 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
           lastBeep = sec;
           playSound("beep", 0.5);
         }
+      }
+
+      if (isTourActive()) {
+        let good: Item | null = null;
+        let bad: Item | null = null;
+        for (const it of items) {
+          if (it.y > potTop) continue;
+          const isGood = it.kind === "drop" || it.kind === "abono";
+          if (isGood && (!good || it.y > good.y)) good = it;
+          if (!isGood && (!bad || it.y > bad.y)) bad = it;
+        }
+        tourHint.rainGoodX = good ? good.x : null;
+        tourHint.rainBadX = bad ? bad.x : null;
       }
 
       for (let i = items.length - 1; i >= 0; i--) {

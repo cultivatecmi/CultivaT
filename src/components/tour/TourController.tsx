@@ -136,94 +136,147 @@ export function TourController() {
       }
     };
 
-    const clipRain = async (ms: number) => {
-      await openGame("Atrapa la Lluvia");
-      const b = canvasBox();
-      if (!b) return;
-      await playFor(ms, (t) => {
-        const x = b.r.left + b.r.width / 2 + Math.sin(t / 420) * b.r.width * 0.38;
-        pointer(b.c, "pointermove", x, b.r.top + b.r.height - 40, "mouse");
-      });
+    /** juega bien `good` ms y luego se equivoca `bad` ms, cambiando el subtítulo */
+    const clip = async (
+      name: string,
+      texts: [string, string],
+      good: number,
+      bad: number,
+      tick: (mode: "good" | "bad", t: number) => void | Promise<void>,
+      every = 60
+    ) => {
+      await openGame(name);
+      say(texts[0]);
+      await playFor(good, (t) => tick("good", t), every);
+      say(texts[1]);
+      await playFor(bad, (t) => tick("bad", t), every);
     };
-    const clipWhack = async (ms: number) => {
-      await openGame("Aplasta Plagas");
-      await playFor(
-        ms,
-        () => {
-          $$("button[aria-label]")
-            .filter((el) => /^(gusano|pulgon) en la maceta/.test(el.getAttribute("aria-label") ?? ""))
-            .slice(0, 1)
-            .forEach((el) => {
-              const r = el.getBoundingClientRect();
-              pointer(el, "pointerdown", r.left + r.width / 2, r.top + r.height / 2);
-            });
+
+    const clipRain = (good: number, bad: number) => {
+      let b: ReturnType<typeof canvasBox> = null;
+      return clip(
+        "Atrapa la Lluvia",
+        ["🌧️ Atrapa la Lluvia: mueve tu planta para juntar agua y abono", "❌ Si atrapas rayos UV o plagas, ¡pierdes puntos!"],
+        good,
+        bad,
+        (mode) => {
+          b = canvasBox();
+          if (!b) return;
+          const tx = mode === "good" ? tourHint.rainGoodX : tourHint.rainBadX;
+          const x = b.r.left + (tx ?? b.r.width / 2);
+          pointer(b.c, "pointermove", x, b.r.top + b.r.height - 40, "mouse");
         },
-        260
+        50
       );
     };
-    const clipMemory = async (ms: number) => {
-      await openGame("Memorama Botánico");
+    const clipWhack = (good: number, bad: number) =>
+      clip(
+        "Aplasta Plagas",
+        ["🐛 Aplasta Plagas: toca a los gusanos y pulgones", "❌ ¡Cuidado! Las catarinas son amigas: tocarlas resta puntos"],
+        good,
+        bad,
+        (mode) => {
+          const re = mode === "good" ? /^(gusano|pulgon) en la maceta/ : /^catarina en la maceta/;
+          const el = $$("button[aria-label]").find((e) => re.test(e.getAttribute("aria-label") ?? ""));
+          if (!el) return;
+          const r = el.getBoundingClientRect();
+          pointer(el, "pointerdown", r.left + r.width / 2, r.top + r.height / 2);
+        },
+        280
+      );
+    const clipMemory = (good: number, bad: number) => {
       const nameOf = (b: HTMLElement) => b.querySelector(".card-front span:nth-child(2)")?.textContent ?? "";
-      await playFor(
-        ms,
-        async () => {
+      return clip(
+        "Memorama Botánico",
+        ["🃏 Memorama: encuentra los pares de cultivos de Sinaloa", "❌ Si no son iguales, las cartas se voltean otra vez"],
+        good,
+        bad,
+        async (mode) => {
           const closed = $$<HTMLButtonElement>("button[aria-label^='Carta ']");
-          if (closed.length < 2) return;
+          if (closed.length < 2 || (mode === "good" && closed.length <= 6)) return;
           const a = closed[0];
-          const pair = closed.slice(1).find((c) => nameOf(c) === nameOf(a));
-          if (!pair) return;
+          const other = mode === "good" ? closed.slice(1).find((c) => nameOf(c) === nameOf(a)) : closed.slice(1).find((c) => nameOf(c) !== nameOf(a));
+          if (!other) return;
           a.click();
-          await sleep(260);
-          pair.click();
-          await sleep(380);
+          await sleep(300);
+          other.click();
+          await sleep(mode === "good" ? 420 : 1000);
         },
         60
       );
     };
-    const clipTrivia = async (ms: number) => {
-      await openGame("Trivia del Campo");
-      await playFor(
-        ms,
-        () => {
-          const right = $<HTMLButtonElement>("button[data-tour-correct='1']:not([disabled])");
-          if (right) {
-            center(right);
-            right.click();
-          }
-          else buttonWithText("Siguiente")?.click();
+    const clipTrivia = (good: number, bad: number) =>
+      clip(
+        "Trivia del Campo",
+        ["🧠 Trivia: preguntas relámpago, ¡cada acierto da monedas!", "❌ Si fallas, te enseña la respuesta correcta"],
+        good,
+        bad,
+        (mode) => {
+          const options = $$<HTMLButtonElement>("button:not([disabled])").filter((b) => /^[ABCD]\s/.test(b.innerText.trim()));
+          const pick = mode === "good" ? options.find((b) => b.dataset.tourCorrect === "1") : options.find((b) => b.dataset.tourCorrect !== "1");
+          if (pick) {
+            center(pick);
+            pick.click();
+          } else buttonWithText("Siguiente")?.click();
         },
-        900
+        1200
       );
-    };
-    const clipRoots = async (ms: number) => {
-      await openGame("Laberinto de Raíces");
-      const b = canvasBox();
-      if (!b) return;
-      const cx = b.r.left + b.r.width / 2;
-      pointer(b.c, "pointerdown", cx, b.r.top + 150);
-      await playFor(ms, (t) => {
-        const k = (t % 6000) / 6000;
-        const x = cx + Math.sin(k * Math.PI * 4) * b.r.width * 0.3;
-        const y = b.r.top + 160 + k * (b.r.height - 190);
-        pointer(b.c, "pointermove", x, y);
+    const clipRoots = (good: number, bad: number) => {
+      let b: ReturnType<typeof canvasBox> = null;
+      let down = false;
+      tourHint.rootGood = null;
+      return clip(
+        "Laberinto de Raíces",
+        ["🌱 Laberinto: guía la raíz hacia el agua y los minerales", "❌ Las piedras y las larvas de gallina ciega la detienen"],
+        good,
+        bad,
+        (mode) => {
+          b = canvasBox();
+          if (!b) return;
+          if (!down && !tourHint.rootGood) return; // el juego aún no empieza
+          const target = mode === "good" ? tourHint.rootGood : tourHint.rootBad;
+          const x = b.r.left + (target?.x ?? b.r.width / 2);
+          const y = b.r.top + (target?.y ?? b.r.height / 2);
+          if (!down) {
+            down = true;
+            pointer(b.c, "pointerdown", x, y);
+          }
+          pointer(b.c, "pointermove", x, y);
+        },
+        60
+      ).then(() => {
+        const box = b as ReturnType<typeof canvasBox>;
+        if (box) pointer(box.c, "pointerup", 0, 0);
       });
-      pointer(b.c, "pointerup", cx, b.r.top + 150);
     };
-    const clipBee = async (ms: number) => {
-      await openGame("Vuelo de Polinización");
-      const b = canvasBox();
-      if (!b) return;
-      const x = b.r.left + b.r.width / 2;
+    const clipBee = async (good: number, bad: number) => {
+      let b: ReturnType<typeof canvasBox> = null;
       let y = 175;
-      pointer(b.c, "pointerdown", x, b.r.top + y);
-      await playFor(ms, () => {
-        const target = tourHint.beeY ?? 175;
-        y += (target - y) * 0.35;
-        pointer(b.c, "pointermove", x, b.r.top + y + (Math.random() - 0.5) * 2);
-      }, 60);
-      pointer(b.c, "pointerup", x, b.r.top + 175); // la abeja baja y termina: tarjeta de resultados
+      let pressed = false;
+      tourHint.beeRunning = false;
+      await clip(
+        "Vuelo de Polinización",
+        ["🐝 Vuelo de Polinización: de flor en flor juntando polen", "❌ El pesticida le quita vida… ¡y si toca el suelo se acaba!"],
+        good,
+        bad,
+        (mode) => {
+          b = canvasBox();
+          if (!b || !tourHint.beeRunning) return; // espera a que termine la cuenta regresiva
+          if (!pressed) {
+            pressed = true;
+            pointer(b.c, "pointerdown", b.r.left + b.r.width / 2, b.r.top + y);
+          }
+          const target = mode === "good" ? tourHint.beeY ?? 175 : tourHint.beeBadY ?? b.r.height - 60;
+          y += (target - y) * 0.3;
+          pointer(b.c, "pointermove", b.r.left + b.r.width / 2, b.r.top + y);
+        },
+        60
+      );
+      const box = b as ReturnType<typeof canvasBox>;
+      if (box) pointer(box.c, "pointerup", 0, 0); // se suelta: la abeja cae y sale el resultado
       const done = await waitFor(() => buttonWithText("Otra vez"), 4000);
       center(done);
+      say("🏆 Cada partida da monedas, XP y +20 % de felicidad");
     };
 
     // ------------------------------------------------- foto del kit real
@@ -244,141 +297,141 @@ export function TourController() {
     };
     const showKitResult = () => center($$("span").find((el) => /^\+\d+ XP$/.test(el.innerText.trim())));
 
+    const tap = async (label: string) => {
+      const el = $(`button[aria-label^='${label}']`);
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      pointer(el, "pointerdown", r.left + r.width / 2, r.top + r.height / 2);
+      await sleep(80);
+      pointer(el, "pointerup", r.left + r.width / 2, r.top + r.height / 2);
+    };
+    const closeDialog = () => $<HTMLButtonElement>("[role=dialog] [aria-label='Cerrar']")?.click();
+    const focusEl = (el: Element | null | undefined, ms: number) => {
+      el?.classList.add("tour-focus");
+      setTimeout(() => el?.classList.remove("tour-focus"), ms);
+    };
+
     try {
-      // 0:00 – 0:20 · Splash, contadores diarios y 21 días de crecimiento
+      // 0:00 – 0:27 · Splash y crecimiento real de 21 días
       tourEmit("splash");
       g().startDemo();
-      await at(2);
-      say("🌱 CultivaT: cuida tu planta virtual y tu kit de cultivo real");
-      await at(4);
-      tab("jugar");
-      say("📅 Crece al ritmo de una planta real: máximo 100 XP y 150 monedas por día");
-      await at(7.8);
-      tab("planta");
+      await at(2.5);
+      say("🌱 CultivaT: un kit de cultivo real + una planta virtual para cuidar");
+      await at(6.5);
       g().tourPatch({ xp: 0, water: 85, fresh: 85, nutrients: 85, happy: 85, climate: "soleado", dirt: 0 });
-      say("🌰 Día 1: Semilla");
+      say("🌰 Día 1: Semilla. La planta virtual crece al ritmo de la planta real");
       await at(10.5);
       g().growStage();
       say("🌱 Día 5: Brote");
-      await at(13.5);
+      await at(14);
       g().growStage();
       say("🌿 Día 12: Planta Joven");
-      await at(16.5);
+      await at(17.5);
       g().growStage();
-      say("🌻 Día 21: ¡Planta Floreciendo! En 3 semanas, como la planta del kit");
-
-      // 0:20 – 0:55 · Clima dinámico de Culiacán
-      await at(20);
-      g().setClimate("soleado");
-      say("☀️ El clima de Culiacán cambia solo: Soleado, 26 °C");
+      say("🌻 Día 21: ¡Floreciendo! Máximo 100 XP y 150 monedas por día");
+      await at(21.5);
+      $<HTMLButtonElement>("button[aria-label^='Ver etapas']")?.click();
+      say("📈 Aquí ven el progreso de cada etapa");
       await at(26);
+      closeDialog();
+
+      // 0:27 – 0:50 · Cuidados y clima de Culiacán
+      await at(27);
+      g().tourPatch({ water: 30, nutrients: 35 });
+      say("💧 Los niños la riegan y la abonan tocando o arrastrando");
+      await at(28.5);
+      await tap("Regar");
+      await at(31.5);
+      await tap("Abonar");
+      await at(35);
       g().tourPatch({ fresh: 55 });
       g().setClimate("calor");
-      say("🔥 ¡Ola de calor de 42 °C! El agua y la frescura bajan rápido");
-      await at(31);
+      say("🔥 El clima de Culiacán cambia solo: ¡ola de calor de 42 °C!");
+      await at(39.5);
       g().openUmbrella();
-      say("☂️ La sombrilla la protege del sol y la refresca");
-      await at(38);
-      g().setClimate("nublado");
-      say("⛅ Nublado, 23 °C: la frescura se recupera sola");
-      await at(45);
+      say("☂️ Hay que protegerla con la sombrilla, como en el campo");
+      await at(44);
       g().tourPatch({ water: 35, fresh: 45 });
       g().setClimate("lluvia");
-      say("🌧️ Lluvia, 19 °C: la planta se riega y se refresca sola");
+      say("🌧️ Con lluvia la planta se riega y se refresca sola");
 
-      // 0:55 – 1:25 · Pulgones y Catarina Guardiana
-      await at(55);
+      // 0:50 – 1:10 · Plagas y control biológico
+      await at(50);
       g().setClimate("soleado");
       g().tourPatch({ nutrients: 70 });
       tourEmit("aphid");
-      say("🪲 ¡Un pulgón! Le roba nutrientes a la planta: -1 % por segundo");
-      await at(62);
+      say("🪲 Aparecen pulgones que le roban nutrientes");
+      await at(55);
       tourEmit("ladybugOpen");
-      say("🐞 La Catarina Guardiana: aliada natural por 35 monedas");
-      await at(67);
+      say("🐞 La Catarina Guardiana: una aliada natural del campo");
+      await at(60);
       tourEmit("ladybugConfirm");
-      say("🐞 Patrulla las hojas 3 minutos y se come los pulgones sin químicos");
+      say("🐞 Se come los pulgones sin usar químicos: control biológico");
+      await at(63);
+      tourEmit("aphid");
+
+      // 1:10 – 1:52 · Minijuegos educativos: primero bien, luego un error
       await at(70);
-      tourEmit("aphid");
-      await at(76);
-      tourEmit("aphid");
-      say("✨ ¡Control biológico! Así cuidan los agricultores sus cultivos");
-
-      // 1:25 – 2:10 · Los 6 minijuegos
-      await at(85);
       tab("jugar");
-      say("🎮 6 minijuegos para aprender jugando");
-      await at(87);
-      say("🌧️ Atrapa la Lluvia: junta agua y abono, esquiva rayos UV");
-      await clipRain(4800);
+      say("🎮 6 minijuegos para aprender jugando. Veamos 3:");
+      await at(73);
+      await clipRain(6000, 3500);
       backToGames();
-      await at(94);
-      say("🐛 Aplasta Plagas: toca a las plagas, cuida a las catarinas");
-      await clipWhack(4800);
+      await at(85);
+      await clipRoots(6000, 3500);
       backToGames();
-      await at(101);
-      say("🃏 Memorama Botánico: cultivos de Sinaloa");
-      await clipMemory(4800);
-      backToGames();
-      await at(108);
-      say("🧠 Trivia del Campo: preguntas relámpago");
-      await clipTrivia(4800);
-      backToGames();
-      await at(115);
-      say("🌱 Laberinto de Raíces: la raíz busca agua y minerales");
-      await clipRoots(3800);
-      backToGames();
-      await at(120.5);
+      await at(97);
       g().tourPatch({ happy: 70 });
-      say("🐝 Vuelo de Polinización: de flor en flor, sin tocar el suelo");
-      await clipBee(4000);
-      await at(127);
-      say("🏆 Cada partida da monedas, XP y +20 % de felicidad");
+      await clipBee(6000, 3000);
 
-      // 2:10 – 2:35 · Conexión phygital: Mi Kit
-      await at(130.5);
+      // 1:52 – 2:10 · Conexión phygital: Mi Kit
+      await at(112);
       tab("kit");
-      say("📸 Mi Kit: la foto semanal de la planta real");
-      await at(134);
+      say("📸 Mi Kit: cada semana fotografían su planta real");
+      await at(114.5);
       await scanKit();
-      say("🔍 Escaneo botánico de la planta del kit…");
-      await at(139);
+      say("🔍 La app escanea la foto de la planta del kit…");
+      await at(119);
       showKitResult();
       say("✅ ¡Semana verificada! +50 monedas por cuidar la planta real");
-      await at(148);
-      center(buttonWithText("Antes") ?? $$("h3, h2").find((h) => h.textContent?.includes("Antes")) ?? null);
-      say("🪴 La línea de tiempo muestra cómo crece semana a semana");
+      await at(125);
+      say("🪴 Así ven cómo crece su planta semana a semana");
 
-      // 2:35 – 2:50 · Tienda, Sabi y Configuración
-      await at(155);
+      // 2:10 – 2:18 · Compartir la racha
+      await at(130);
+      $<HTMLButtonElement>("button[aria-label^='Racha de']")?.click();
+      say("🔥 Su racha diaria se comparte con la foto de su planta");
+      await at(137.5);
+      closeDialog();
+
+      // 2:18 – 2:30 · Sabi
+      await at(138);
+      tab("sabi");
+      say("🌻 Sabi, la guía del campo");
+      await sleep(900);
+      buttonWithText("Diagnosticar a mi planta")?.click();
+      say("🩺 Sabi revisa a la planta y explica qué necesita");
+      await at(144.5);
+      buttonWithText(SABI_SUGGESTIONS[0])?.click();
+      say("💬 Y responde dudas sobre el kit y la agricultura de Sinaloa");
+
+      // 2:30 – 2:40 · Tienda
+      await at(150);
       tab("tienda");
-      say("🛍️ Tienda: macetas, accesorios y escenarios");
+      say("🛍️ Con sus monedas personalizan su planta en la Tienda");
       for (const i of [1, 2, 3]) {
-        await sleep(1200);
+        await sleep(1800);
         const item = $$<HTMLButtonElement>("button").filter((b) => b.className.includes("h-28"))[i];
         center(item);
         item?.click();
       }
-      await at(160);
-      tab("sabi");
-      say("🌻 Sabi, la guía que responde dudas del campo");
-      await sleep(900);
-      buttonWithText(SABI_SUGGESTIONS[0])?.click();
-      await at(165);
-      $<HTMLButtonElement>("[aria-label='Configuración y perfil']")?.click();
-      say("⚙️ Configuración: sonido, modo oscuro y perfil sin datos personales");
-      const sw = await waitFor(() => $("[role=switch][aria-label='Sonidos']") ?? $$("[role=switch]")[0] ?? null, 1500);
-      sw?.classList.add("tour-focus");
-      await at(169.5);
-      sw?.classList.remove("tour-focus");
-      $<HTMLButtonElement>("[role=dialog][aria-label='Configuración'] [aria-label='Cerrar']")?.click();
 
-      // 2:50 – 3:00 · Cierre de marca
-      await at(170);
+      // 2:40 – 3:00 · Cierre de marca
+      await at(160);
       tab("planta");
       g().tourPatch({ water: 100, fresh: 100, nutrients: 100, happy: 100, climate: "soleado", dirt: 0 });
-      say("💚 Lista para cuidar la naturaleza de Culiacán");
-      await at(172.5);
+      say("💚 Niños que cuidan la naturaleza y descubren el campo de Culiacán");
+      await at(166);
       setCaption(null);
       setClosing(true);
       await at(TOUR_SECONDS);
@@ -451,7 +504,9 @@ export function TourController() {
       </div>
 
       {caption && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-[104px] z-[305] mx-auto flex max-w-[430px] justify-center px-4">
+        <div
+          className={`pointer-events-none fixed inset-x-0 z-[305] mx-auto flex max-w-[430px] justify-center px-4 ${game.inGame ? "top-[34px]" : "bottom-[104px]"}`}
+        >
           <p key={caption} className="anim-pop rounded-full bg-[#14532D]/90 px-4 py-2 text-center font-display text-[15px] font-semibold leading-snug text-white shadow-xl backdrop-blur-sm">
             {caption}
           </p>
