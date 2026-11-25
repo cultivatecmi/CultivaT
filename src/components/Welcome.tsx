@@ -8,6 +8,7 @@ import { listLocalProfiles, type SavedProfile } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { PlantScene } from "@/components/plant/PlantScene";
 import { TapButton } from "@/components/ui/TapButton";
+import { Logo } from "@/components/brand/Logo";
 
 export function Welcome() {
   const { login, startDemo, cloudEnabled } = useGame();
@@ -35,8 +36,8 @@ export function Welcome() {
   return (
     <div className="flex min-h-screen flex-col px-5 pb-8 pt-8">
       <div className="text-center">
-        <h1 className="text-5xl font-bold tracking-tight text-hoja">
-          Cultiva<span className="text-sol">T</span>
+        <h1 className="flex justify-center">
+          <Logo priority className="w-[min(78%,300px)]" />
         </h1>
         <p className="mt-1 font-display text-lg text-tierra">Cuida tu planta, cultiva tu futuro 🌱</p>
       </div>

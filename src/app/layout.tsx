@@ -19,15 +19,22 @@ const nunito = localFont({
   display: "swap",
 });
 
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export const metadata: Metadata = {
   title: "CultivaT · Cuida tu planta, cultiva tu futuro",
   description:
     "Mascota-planta virtual que acompaña a tu kit de cultivo real. Aprende a cuidar la naturaleza y descubre el campo de Sinaloa.",
   applicationName: "CultivaT",
   appleWebApp: { capable: true, title: "CultivaT", statusBarStyle: "default" },
+  // Archivos oficiales de marca en /public (logo.svg, icon.svg y PNG generados desde el mismo dibujo)
   icons: {
-    icon: [{ url: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/icon.svg`, type: "image/svg+xml" }],
-    apple: [{ url: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/apple-touch-icon.png`, sizes: "180x180" }],
+    icon: [
+      { url: `${BASE}/icon.svg`, type: "image/svg+xml" },
+      { url: `${BASE}/icon-192.png`, type: "image/png", sizes: "192x192" },
+    ],
+    shortcut: [{ url: `${BASE}/icon-192.png` }],
+    apple: [{ url: `${BASE}/apple-touch-icon.png`, sizes: "180x180" }],
   },
 };
 
