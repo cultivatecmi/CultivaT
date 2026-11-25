@@ -3,6 +3,8 @@
 // - quita el fondo crema (transparente) y las marcas del generador (esquinas)
 // - recorta al contenido -> public/logo.png (900 px, ligero) y design/logo-hd.png (alta resolución)
 // - palabra "CultivaT" -> public/logo-wordmark.png (cabeceras)
+// - isotipo + palabra en horizontal -> public/logo-horizontal.png (pantalla de carga)
+// - el lema de abajo se quita (y >= 1195 en la imagen original)
 // - isotipo (brote + flores + tierra) -> public/icon.png 512, apple-touch-icon, icon-192, favicon.ico
 const fs = require("fs");
 const path = require("path");
@@ -27,7 +29,8 @@ const SRC = path.join(PROJECT, "design", "logo-original.png");
       const i = y * W + x;
       let r = data[i * 3], g = data[i * 3 + 1], b = data[i * 3 + 2];
       // marcas del generador en las esquinas: fuera
-      const mark = (x >= 1080 && y >= 1400) || (x < 130 && y < 120);
+      // fuera: marcas del generador en las esquinas y el lema de abajo ("Agrotech & Educación · Sinaloa")
+      const mark = (x >= 1080 && y >= 1400) || (x < 130 && y < 120) || y >= 1195;
       const d = mark ? 0 : Math.hypot(r - bg[0], g - bg[1], b - bg[2]);
       const a = Math.max(0, Math.min(1, (d - 10) / 42));
       if (a > 0) {
@@ -83,6 +86,7 @@ const SRC = path.join(PROJECT, "design", "logo-original.png");
           minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
         }
     const box = crop({ minX, minY, maxX, maxY }, 8);
+    fs.writeFileSync(path.join(PUB, "logo-wordmark-hd.tmp.png"), await sharp(wm, { raw: { width: W, height: H, channels: 4 } }).extract(box).png().toBuffer());
     const buf = await sharp(wm, { raw: { width: W, height: H, channels: 4 } }).extract(box).resize({ height: 240 }).png({ palette: true, quality: 95, effort: 10, compressionLevel: 9 }).toBuffer();
     fs.writeFileSync(path.join(PUB, "logo-wordmark.png"), buf);
     console.log("wordmark", box);
@@ -92,6 +96,26 @@ const SRC = path.join(PROJECT, "design", "logo-original.png");
   const iso = bbox(480, 200, 1060, 925);
   const isoBox = crop(iso, 6);
   const isoPng = await img().extract(isoBox).png().toBuffer();
+
+  // logo horizontal: isotipo a la izquierda + "CultivaT" a la derecha (pantalla de carga)
+  {
+    const IH = 420;
+    const isoR = await sharp(isoPng).resize({ height: IH }).toBuffer({ resolveWithObject: true });
+    const wmR = await sharp(path.join(PUB, "logo-wordmark-hd.tmp.png")).resize({ height: 250 }).toBuffer({ resolveWithObject: true });
+    const gap = 36;
+    const Wh = isoR.info.width + gap + wmR.info.width;
+    const horiz = await sharp({ create: { width: Wh, height: IH, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+      .composite([
+        { input: isoR.data, left: 0, top: 0 },
+        { input: wmR.data, left: isoR.info.width + gap, top: Math.round((IH - wmR.info.height) / 2) + 40 },
+      ])
+      .png()
+      .toBuffer();
+    fs.writeFileSync(path.join(PUB, "logo-horizontal.png"), await sharp(horiz).resize({ width: 960 }).png({ palette: true, quality: 95, effort: 10, compressionLevel: 9 }).toBuffer());
+    fs.unlinkSync(path.join(PUB, "logo-wordmark-hd.tmp.png"));
+    const m = await sharp(path.join(PUB, "logo-horizontal.png")).metadata();
+    console.log("horizontal", m.width, m.height);
+  }
 
   const square = async (size, { radius = 0, scale = 0.8, bgColor = "#FFFBEB" } = {}) => {
     const inner = Math.round(size * scale);

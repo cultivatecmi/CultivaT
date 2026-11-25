@@ -47,6 +47,7 @@ function TipSprout() {
  */
 export function Splash({ ready }: { ready: boolean }) {
   const [progress, setProgress] = useState(0);
+  const [minDone, setMinDone] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [gone, setGone] = useState(false);
   const readyRef = useRef(ready);
@@ -54,17 +55,28 @@ export function Splash({ ready }: { ready: boolean }) {
     readyRef.current = ready;
   }, [ready]);
 
+  // el tiempo mínimo lo marca un temporizador (no depende de la animación)
+  useEffect(() => {
+    const t = setTimeout(() => setMinDone(true), MIN_MS);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (minDone && ready) {
+      setProgress(100);
+      setLeaving(true);
+    }
+  }, [minDone, ready]);
+
+  // la barra avanza suave; si los datos aún no llegan, se queda en 92 %
   useEffect(() => {
     const start = performance.now();
     let raf = 0;
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / MIN_MS);
-      // avance suave; si los datos aún no llegan, se queda en 92 %
       const eased = 1 - Math.pow(1 - p, 2);
-      const target = readyRef.current ? eased * 100 : Math.min(92, eased * 100);
-      setProgress(target);
-      if (p < 1 || !readyRef.current) raf = requestAnimationFrame(tick);
-      else setLeaving(true);
+      setProgress((prev) => Math.max(prev, readyRef.current ? eased * 100 : Math.min(92, eased * 100)));
+      if (p < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -105,7 +117,7 @@ export function Splash({ ready }: { ready: boolean }) {
       </div>
 
       <div className="relative mx-auto flex h-full max-w-[430px] flex-col items-center justify-center px-8">
-        <Logo priority className="splash-logo h-auto w-[min(72vw,290px)]" />
+        <Logo variant="horizontal" priority className="splash-logo h-auto w-[min(84vw,340px)]" />
 
         <div className="mt-10 w-[min(80vw,300px)]">
           <div className="relative h-6 rounded-full border-b-4 border-[#78350F] bg-[#92400E] p-1 shadow-inner">

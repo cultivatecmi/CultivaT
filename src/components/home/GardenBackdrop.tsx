@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 const SKIES: Record<Climate, string> = {
   soleado: "linear-gradient(180deg, #4FC3F7 0%, #9FE0FF 42%, #FFF4D6 100%)",
+  nublado: "linear-gradient(180deg, #8FB3C9 0%, #BCD5E2 45%, #EEF2EA 100%)",
   calor: "linear-gradient(180deg, #FF7043 0%, #FFA05C 38%, #FFE0B2 100%)",
   lluvia: "linear-gradient(180deg, #607D8B 0%, #93A9B5 45%, #D5E0E6 100%)",
 };
@@ -77,13 +78,25 @@ function GardenBackdropBase({ background, climate, floorBottom }: Props) {
         <div key={c} className="absolute inset-0 transition-opacity duration-[2500ms] ease-in-out" style={{ background: SKIES[c], opacity: climate === c ? 1 : 0 }} />
       ))}
 
-      <div className={cn("transition-opacity duration-[2000ms]", climate === "lluvia" ? "opacity-0" : "opacity-100")}>
+      <div className={cn("transition-opacity duration-[2000ms]", climate === "lluvia" ? "opacity-0" : climate === "nublado" ? "opacity-60" : "opacity-100")}>
         <SunShape intense={climate === "calor"} />
+      </div>
+
+      {/* nublado: nubes suaves que tapan el sol */}
+      <div className="absolute right-[1%] top-[12%] transition-opacity duration-[2000ms]" style={{ opacity: climate === "nublado" ? 1 : 0 }}>
+        <div className="cloud-bob relative">
+          <div className="scale-[1.25]">
+            <CloudShape dark={false} />
+          </div>
+          <div className="absolute -left-14 top-7 scale-90">
+            <CloudShape dark={false} />
+          </div>
+        </div>
       </div>
 
       {/* nubes: siempre montadas, aparecen/oscurecen con transición suave */}
       {CLOUDS.map((c, i) => {
-        const visible = climate === "lluvia" ? true : climate === "calor" ? i < 2 : i < 4;
+        const visible = climate === "lluvia" || climate === "nublado" ? true : climate === "calor" ? i < 2 : i < 4;
         return (
           <div key={i} className="cloud-drift absolute left-0" style={{ top: c.top, animationDuration: `${c.dur}s`, animationDelay: `${c.delay}s` }}>
             <div className="relative transition-opacity duration-[2000ms]" style={{ transform: `scale(${c.scale})`, opacity: visible ? 1 : 0 }}>

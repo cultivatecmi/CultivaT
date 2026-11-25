@@ -3,7 +3,7 @@
  * (el niño ya no lo controla: debe estar pendiente para proteger su planta).
  * No usa GPS ni servicios externos: privacidad infantil.
  */
-export type Climate = "soleado" | "calor" | "lluvia";
+export type Climate = "soleado" | "nublado" | "calor" | "lluvia";
 
 export const CLIMATES: Record<Climate, { temp: number; label: string; emoji: string; message: string }> = {
   soleado: {
@@ -11,6 +11,12 @@ export const CLIMATES: Record<Climate, { temp: number; label: string; emoji: str
     label: "Soleado",
     emoji: "☀️",
     message: "¡Volvió el sol! Un día tranquilo ☀️",
+  },
+  nublado: {
+    temp: 23,
+    label: "Nublado",
+    emoji: "⛅",
+    message: "Unas nubes tapan el sol… ¡qué sombrita tan rica! ⛅",
   },
   calor: {
     temp: 42,
@@ -37,11 +43,13 @@ export function randomClimateDelay() {
 /** Siguiente clima: alterna de forma dinámica, sin repetir el actual */
 export function pickNextClimate(c: Climate): Climate {
   const r = Math.random();
-  if (c === "soleado") return r < 0.55 ? "calor" : "lluvia";
-  if (c === "calor") return r < 0.7 ? "soleado" : "lluvia";
-  return r < 0.7 ? "soleado" : "calor";
+  // las nubes suelen ir entre el sol y la lluvia, como en el cielo real
+  if (c === "soleado") return r < 0.45 ? "calor" : r < 0.8 ? "nublado" : "lluvia";
+  if (c === "calor") return r < 0.6 ? "soleado" : "nublado";
+  if (c === "nublado") return r < 0.45 ? "lluvia" : r < 0.85 ? "soleado" : "calor";
+  return r < 0.6 ? "nublado" : "soleado";
 }
 
 export function isClimate(v: unknown): v is Climate {
-  return v === "soleado" || v === "calor" || v === "lluvia";
+  return v === "soleado" || v === "nublado" || v === "calor" || v === "lluvia";
 }

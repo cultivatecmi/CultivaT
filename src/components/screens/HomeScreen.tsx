@@ -509,6 +509,13 @@ export function HomeScreen() {
         say("¡Estoy llenísima! Mucho abono quema mis raíces 🌱");
       }
     } else if (d.tool === "shade") {
+      // con lluvia no hace falta sombra: las nubes ya la refrescan
+      if (L.ctx.state.climate === "lluvia") {
+        say("¡Las nubes y la lluvia ya me mantienen fresquita! 🌧️", 4200);
+        playSound("tap");
+        endDrag();
+        return;
+      }
       L.ctx.openUmbrella();
       playSound("whoosh");
       say(L.ctx.state.climate === "calor" ? "¡Gracias! La sombrilla me protege del sol de Culiacán 😎" : "¡Qué fresquito bajo la sombrilla! ☂️");
