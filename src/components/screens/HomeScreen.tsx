@@ -76,6 +76,12 @@ export function HomeScreen() {
   const mood = computeMood(state, now);
   const heat = isHeatActive(state, now);
   const shaded = isShaded(state, now);
+  // cuando la sombrilla termina su tiempo y se cierra: sonido suave que baja
+  const wasShaded = useRef(shaded);
+  useEffect(() => {
+    if (wasShaded.current && !shaded) playSound("umbrellaOff");
+    wasShaded.current = shaded;
+  }, [shaded]);
   const stage = getStage(state.xp).index;
 
   const homeRef = useRef<HTMLDivElement>(null);
@@ -656,12 +662,12 @@ export function HomeScreen() {
     }
   }, [bug, say]);
 
-  // pulgón activo: chupa la savia (-2 % de nutrientes por segundo, sin bajar de 15 %)
+  // pulgón activo: chupa la savia (-1 % de nutrientes por segundo, sin bajar de 15 %)
   const bugActive = !!bug && !bug.squashed;
   useEffect(() => {
     if (!bugActive) return;
     say("¡Ay! Un pulgón me está chupando la savia 🪲 ¡Aplástalo!", 3200);
-    const t = setInterval(() => latest.current.ctx.drain("nutrients", 2, 15), 1000);
+    const t = setInterval(() => latest.current.ctx.drain("nutrients", 1, 15), 1000);
     return () => clearInterval(t);
   }, [bugActive, say]);
 

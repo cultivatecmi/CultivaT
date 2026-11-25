@@ -19,7 +19,9 @@ export type SoundName =
   | "wrong"
   | "flip"
   | "beep"
-  | "go";
+  | "go"
+  | "umbrellaOff"
+  | "tab";
 
 const MUTE_KEY = "cultivat:v1:muted";
 
@@ -288,6 +290,13 @@ function render(c: AudioContext, name: SoundName, gain: number) {
       break;
     case "tap":
       tone(c, t, { type: "triangle", f0: 660, f1: 880, dur: 0.06, vol: 0.14 }, gain);
+      break;
+    case "umbrellaOff": // la sombrilla se cierra: whoosh suave que baja
+      noise(c, t, { filter: "bandpass", f0: 2200, f1: 350, q: 0.9, dur: 0.38, vol: 0.22 }, gain);
+      tone(c, t, { type: "sine", f0: 620, f1: 300, dur: 0.32, vol: 0.08 }, gain);
+      break;
+    case "tab": // clic muy discreto al cambiar de pestaña
+      tone(c, t, { type: "sine", f0: 980, f1: 760, dur: 0.045, vol: 0.07 }, gain);
       break;
     case "rain":
       noise(c, t, { filter: "highpass", f0: 1800, dur: 0.6, vol: 0.12 }, gain);
