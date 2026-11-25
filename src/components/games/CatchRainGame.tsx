@@ -572,7 +572,7 @@ export function CatchRainGame({ onExit }: { onExit: () => void }) {
 
   return (
     <div className="space-y-3">
-      <div ref={wrapRef} className="relative overflow-hidden rounded-3xl border-4 border-white bg-cielo-light shadow-lg" style={{ height: HEIGHT }}>
+      <div ref={wrapRef} className="keep-light relative overflow-hidden rounded-3xl border-4 border-white bg-cielo-light shadow-lg" style={{ height: HEIGHT }}>
         {active ? (
           <>
             <canvas

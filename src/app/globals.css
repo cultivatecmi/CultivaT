@@ -386,6 +386,30 @@ html.dark body { color: #eef3ec; }
 .nav-idle { color: #6d4c41; }
 .dark .nav-idle { color: #e3e8e4; }
 .dark nav .opacity-70 { opacity: 0.85; }
+/* Tarjetas con fondo claro fijo (juegos): conservan los colores del modo claro */
+.dark .keep-light { --color-tinta: #3e2c23; color: #3e2c23; }
+.dark .keep-light .text-tinta { color: #3e2c23; }
+.dark .keep-light .text-stone-400 { color: #a8a29e; }
+.dark .keep-light .text-stone-500 { color: #78716c; }
+.dark .keep-light .text-stone-600 { color: #57534e; }
+.dark .keep-light .text-stone-700 { color: #44403c; }
+.dark .keep-light .bg-white { background-color: #fff; }
+.dark .keep-light .bg-white\/70 { background-color: rgba(255, 255, 255, 0.7); }
+.dark .keep-light .bg-white\/80 { background-color: rgba(255, 255, 255, 0.8); }
+.dark .keep-light .bg-white\/85 { background-color: rgba(255, 255, 255, 0.85); }
+.dark .keep-light .bg-white\/90 { background-color: rgba(255, 255, 255, 0.9); }
+.dark .keep-light .bg-stone-100 { background-color: #f5f5f4; }
+.dark .keep-light .bg-stone-200 { background-color: #e7e5e4; }
+.dark .keep-light .border-white { border-color: #fff; }
+.dark .keep-light .border-stone-200 { border-color: #e7e5e4; }
+.dark .keep-light .text-tierra { color: #8d6e63; }
+.dark .keep-light .text-hoja-dark { color: #388e3c; }
+.dark .keep-light .text-sol-dark { color: #e69500; }
+.dark .keep-light .text-cielo-dark { color: #0288d1; }
+.dark .keep-light .text-alerta-dark { color: #e64a19; }
+/* las tarjetas de juego se ven un poco menos brillantes de noche */
+.dark .keep-light { filter: brightness(0.94); }
+
 /* noche en el jardín de "Mi Planta" */
 .night-overlay { opacity: 0; transition: opacity 1s; }
 .dark .night-overlay { opacity: 1; }

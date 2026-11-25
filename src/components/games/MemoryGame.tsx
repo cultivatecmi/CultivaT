@@ -160,7 +160,7 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
 
   if (phase !== "playing") {
     return (
-      <div className="overflow-hidden rounded-3xl border-4 border-white shadow-lg" style={{ background: "linear-gradient(180deg, #FFF8E1, #FFE082)", minHeight: 430 }}>
+      <div className="keep-light overflow-hidden rounded-3xl border-4 border-white shadow-lg" style={{ background: "linear-gradient(180deg, #FFF8E1, #FFE082)", minHeight: 430 }}>
         {phase === "over" && result ? (
           <GameResult
             medal={"⭐".repeat(starsFor(result.moves))}
@@ -211,7 +211,7 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
         ))}
       </div>
 
-      <div className="rounded-3xl border-4 border-white p-2.5 shadow-lg" style={{ background: "linear-gradient(180deg, #FFE082, #FFB300)" }}>
+      <div className="keep-light rounded-3xl border-4 border-white p-2.5 shadow-lg" style={{ background: "linear-gradient(180deg, #FFE082, #FFB300)" }}>
         <div className="grid grid-cols-4 gap-2">
           {deck.map((c, i) => (
             <button
