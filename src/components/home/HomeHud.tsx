@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Bell, Settings } from "lucide-react";
 import { useGameState } from "@/components/GameProvider";
+import { CoinIcon } from "@/components/ui/GameIcons";
 import { NotificationsPanel } from "@/components/layout/NotificationsPanel";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
 import { StagesPanel } from "./StagesPanel";
@@ -45,8 +46,11 @@ function Meter({ emoji, label, value, color }: { emoji: string; label: string; v
       <span className={cn("text-lg leading-none", low && "anim-wiggle")}>{emoji}</span>
       <div className="min-w-0 flex-1">
         <div className="truncate font-display text-[10px] font-semibold leading-tight text-stone-600">{label}</div>
-        <div className="mt-0.5 h-2 overflow-hidden rounded-full bg-stone-200">
-          <div className={cn("h-full rounded-full transition-[width] duration-500", low && "animate-pulse")} style={{ width: `${Math.max(5, v)}%`, background: low ? "#FF7043" : color }} />
+        <div className="mt-0.5 flex items-center gap-1">
+          <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-stone-200">
+            <div className={cn("h-full rounded-full transition-[width] duration-500", low && "animate-pulse")} style={{ width: `${Math.max(5, v)}%`, background: low ? "#FF7043" : color }} />
+          </div>
+          <span className={cn("shrink-0 font-display text-[9px] font-bold leading-none", low ? "text-alerta-dark" : "text-stone-500")}>{v}%</span>
         </div>
       </div>
     </div>
@@ -79,7 +83,7 @@ export function HomeHud() {
           🔥 {state.streak}
         </div>
         <div className={cn(pill, "text-sol-dark")} title="Monedas">
-          🪙 {state.coins}
+          <CoinIcon size={20} /> {state.coins}
         </div>
 
         <div className="relative">

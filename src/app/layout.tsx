@@ -1,19 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Fredoka, Nunito } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 
-const fredoka = Fredoka({
-  subsets: ["latin"],
+// Fredoka y Nunito (Google Fonts) incluidas en el proyecto vía @fontsource-variable:
+// así la compilación no depende de descargar fuentes de Google (fallaba en GitHub Actions).
+const fredoka = localFont({
+  src: "../../node_modules/@fontsource-variable/fredoka/files/fredoka-latin-wght-normal.woff2",
   variable: "--font-fredoka",
-  weight: ["400", "500", "600", "700"],
+  weight: "300 700",
   display: "swap",
 });
 
-const nunito = Nunito({
-  subsets: ["latin"],
+const nunito = localFont({
+  src: "../../node_modules/@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2",
   variable: "--font-nunito",
-  weight: ["400", "600", "700", "800"],
+  weight: "200 1000",
   display: "swap",
 });
 

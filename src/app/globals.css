@@ -390,6 +390,26 @@ html.dark body { color: #eef3ec; }
 .night-overlay { opacity: 0; transition: opacity 1s; }
 .dark .night-overlay { opacity: 1; }
 
+/* --------------------------------------------------------------------- */
+/* Mano guía: enseña a arrastrar una herramienta hasta la planta          */
+/* --------------------------------------------------------------------- */
+
+@keyframes drag-hint {
+  0% { transform: translate(var(--sx), var(--sy)) scale(1); opacity: 0; }
+  10% { transform: translate(var(--sx), var(--sy)) scale(0.9); opacity: 1; }
+  18% { transform: translate(var(--sx), var(--sy)) scale(0.9); opacity: 1; }
+  70% { transform: translate(var(--ex), var(--ey)) scale(0.9); opacity: 1; }
+  85% { transform: translate(var(--ex), var(--ey)) scale(1); opacity: 1; }
+  100% { transform: translate(var(--ex), var(--ey)) scale(1); opacity: 0; }
+}
+@keyframes drag-hint-tool {
+  0%, 12% { opacity: 0; }
+  18%, 85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.drag-hint { animation: drag-hint 2.6s ease-in-out infinite; will-change: transform; }
+.drag-hint-tool { animation: drag-hint-tool 2.6s ease-in-out infinite; }
+
 /* Botón táctil 3D */
 .btn-3d {
   border-bottom-width: 4px;

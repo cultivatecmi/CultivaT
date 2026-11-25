@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Bell, Cloud, CloudOff, Loader2, Smartphone, Clapperboard, Settings } from "lucide-react";
 import { useGameState } from "@/components/GameProvider";
+import { CoinIcon } from "@/components/ui/GameIcons";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
 import { getStage } from "@/lib/stages";
 import { cn } from "@/lib/utils";
@@ -36,7 +37,7 @@ export function Header() {
           <span className="text-xs font-medium">{state.streak === 1 ? "día" : "días"}</span>
         </div>
         <div className="flex items-center gap-1.5 rounded-full border-2 border-sol/40 bg-sol-light px-3 py-1 font-display text-base font-semibold text-sol-dark" title="Monedas">
-          🪙 {state.coins}
+          <CoinIcon size={20} /> {state.coins}
         </div>
         <div className="flex-1" />
         <span className={cn("flex items-center gap-1 text-xs font-bold", sync.cls)} title="Estado de guardado">
