@@ -11,6 +11,7 @@ import { SabiScreen } from "@/components/screens/SabiScreen";
 import { Header } from "./Header";
 import { BottomNav } from "./BottomNav";
 import { Toasts } from "./Toasts";
+import { Splash } from "@/components/brand/Splash";
 
 function Frame({ children }: { children: React.ReactNode }) {
   return (
@@ -22,6 +23,16 @@ function Frame({ children }: { children: React.ReactNode }) {
 }
 
 export function AppShell() {
+  const { hydrated } = useGame();
+  return (
+    <>
+      <AppContent />
+      <Splash ready={hydrated} />
+    </>
+  );
+}
+
+function AppContent() {
   const { hydrated, session, state, tab } = useGame();
 
   useEffect(() => {
@@ -31,9 +42,7 @@ export function AppShell() {
   if (!hydrated) {
     return (
       <Frame>
-        <div className="grid min-h-screen place-items-center">
-          <div className="anim-bob text-6xl">🌱</div>
-        </div>
+        <div className="min-h-screen" />
       </Frame>
     );
   }

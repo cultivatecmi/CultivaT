@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#FFFBEB"/>
+  <circle cx="256" cy="236" r="196" fill="#FEF3C7"/>
+  <circle cx="256" cy="236" r="150" fill="#FDE68A" opacity="0.55"/>
+  <g transform="translate(46 50) scale(2.1)">
+  <path d="M100 124 C 100 106 99 92 100 70" stroke="#15803D" stroke-width="9" stroke-linecap="round" fill="none"/>
+  <path d="M98 98 C 84 68 62 58 44 62 C 48 86 70 102 98 98 Z" fill="#22C55E"/>
+  <path d="M98 98 C 80 93 60 81 44 62 C 48 86 70 102 98 98 Z" fill="#15803D"/>
+  <path d="M102 86 C 112 58 134 46 154 46 C 154 72 132 90 102 86 Z" fill="#22C55E"/>
+  <path d="M102 86 C 122 76 140 63 154 46 C 154 72 132 90 102 86 Z" fill="#15803D"/>
+  <path d="M100 74 C 89 60 90 42 100 30 C 110 42 111 60 100 74 Z" fill="#22C55E"/>
+  <path d="M100 74 C 101 60 101 44 100 30 C 110 42 111 60 100 74 Z" fill="#15803D"/>
+  <path d="M60 70 C 66 66 74 66 80 70" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.55"/>
+  <path d="M120 60 C 126 55 134 53 140 54" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.55"/>
+  <path d="M60 138 L140 138 L130 182 Q128 192 118 192 L82 192 Q72 192 70 182 Z" fill="#D97706"/>
+  <path d="M60 138 L140 138 L138 148 L62 148 Z" fill="#B45309" opacity="0.35"/>
+  <rect x="50" y="116" width="100" height="26" rx="11" fill="#D97706"/>
+  <rect x="58" y="121" width="34" height="6" rx="3" fill="#FFFFFF" opacity="0.35"/>
+  <circle cx="86" cy="160" r="6" fill="#422006"/>
+  <circle cx="114" cy="160" r="6" fill="#422006"/>
+  <circle cx="88" cy="158" r="2" fill="#FFFFFF"/>
+  <circle cx="116" cy="158" r="2" fill="#FFFFFF"/>
+  <path d="M90 171 Q100 180 110 171" stroke="#422006" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <circle cx="75" cy="170" r="5.5" fill="#FB923C" opacity="0.7"/>
+  <circle cx="125" cy="170" r="5.5" fill="#FB923C" opacity="0.7"/>
+  <path d="M168 8 Q170 22 184 24 Q170 26 168 40 Q166 26 152 24 Q166 22 168 8 Z" fill="#F59E0B"/>
+  <rect x="178" y="48" width="8" height="8" rx="2" fill="#F59E0B" opacity="0.85"/>
+  <rect x="188" y="38" width="5" height="5" rx="1.5" fill="#F59E0B" opacity="0.6"/>
+  <path d="M34 30 Q35 39 44 40 Q35 41 34 50 Q33 41 24 40 Q33 39 34 30 Z" fill="#F59E0B" opacity="0.9"/>
+</g>
+</svg>
