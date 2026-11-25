@@ -7,7 +7,8 @@ import { GardenBackdrop } from "@/components/home/GardenBackdrop";
 import { HomeHud } from "@/components/home/HomeHud";
 import { DragHint } from "@/components/home/DragHint";
 import { ActionBar, AphidSvg, ParticleLayer, ToolIcon, UmbrellaSvg, type Particle } from "@/components/home/SceneProps";
-import { computeMood, isHeatActive, isShaded, TAP_MESSAGES } from "@/lib/game";
+import { computeMood, isHeatActive, isLadybugActive, isShaded, TAP_MESSAGES } from "@/lib/game";
+import { LadybugSvg } from "@/components/home/Ladybug";
 import { leafSpots, plantGeometry, VIEW_H } from "@/components/plant/geometry";
 import { getStage } from "@/lib/stages";
 import { playSound } from "@/lib/sound";
@@ -675,10 +676,63 @@ export function HomeScreen() {
   const bugActive = !!bug && !bug.squashed;
   useEffect(() => {
     if (!bugActive) return;
-    say("¡Ay! Un pulgón me está chupando la savia 🪲 ¡Aplástalo!", 3200);
+    if (!isLadybugActive(latest.current.ctx.state)) say("¡Ay! Un pulgón me está chupando la savia 🪲 ¡Aplástalo!", 3200);
     const t = setInterval(() => latest.current.ctx.drain("nutrients", 1, 15), 1000);
     return () => clearInterval(t);
   }, [bugActive, say]);
+
+  // -------------------------------------------------------------------------
+  // Catarina Guardiana: patrulla las hojas y se come los pulgones (control biológico)
+  // -------------------------------------------------------------------------
+  const ladyActive = isLadybugActive(state, now);
+  const [ladyShown, setLadyShown] = useState(ladyActive);
+  const [ladyLeaving, setLadyLeaving] = useState(false);
+  const [ladyPos, setLadyPos] = useState(() => pick(bugSpots(stage)));
+  const prevLady = useRef(ladyActive);
+
+  useEffect(() => {
+    if (ladyActive && !prevLady.current) {
+      setLadyLeaving(false);
+      setLadyShown(true);
+      setLadyPos(pick(bugSpots(latest.current.stage)));
+      say("¡Llegó la Catarina Guardiana! 🐞 Cuidará mis hojas 3 minutos", 3600);
+    } else if (!ladyActive && prevLady.current) {
+      setLadyLeaving(true);
+      say("¡Gracias, catarina! Ya se va volando 🐞👋", 3200);
+      later(() => {
+        setLadyShown(false);
+        setLadyLeaving(false);
+      }, 1300);
+    }
+    prevLady.current = ladyActive;
+  }, [ladyActive, say, later]);
+
+  // patrulla: camina de hoja en hoja
+  useEffect(() => {
+    if (!ladyActive || bugActive) return;
+    const t = setInterval(() => setLadyPos(pick(bugSpots(latest.current.stage))), 3200);
+    return () => clearInterval(t);
+  }, [ladyActive, bugActive]);
+
+  // caza: va hacia el pulgón (≈1.1 s) y se lo come
+  const bugId = bug?.id;
+  useEffect(() => {
+    if (!ladyActive || !bugActive || !bug) return;
+    setLadyPos({ x: bug.x, y: bug.y });
+    const t = setTimeout(() => {
+      setBug((b) => (b && b.id === bugId ? { ...b, squashed: true } : b));
+      playSound("pop");
+      const p = plantPoint(bug.x / 100, bug.y / 100);
+      emit([
+        { x: p.x, y: p.y, kind: "burst", content: "✨", dy: -20, size: 26 },
+        { x: p.x, y: p.y - 12, kind: "text", content: "¡Ñam! 🐞", size: 20 },
+      ]);
+      say("¡Control biológico! La catarina eliminó al pulgón sin pesticidas 🐞", 4200);
+      later(() => setBug((b) => (b && b.id === bugId ? null : b)), 650);
+    }, 1200);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ladyActive, bugActive, bugId]);
 
   const squashBug = (e: React.PointerEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -832,6 +886,23 @@ export function HomeScreen() {
           >
             <AphidSvg className="h-9 w-10 drop-shadow" />
           </button>
+        )}
+
+        {ladyShown && (
+          <div
+            className="pointer-events-none absolute z-20 h-10 w-10"
+            style={{
+              left: `${ladyPos.x}%`,
+              top: `${ladyPos.y}%`,
+              transform: "translate(-50%, -70%)",
+              transition: "left 1.1s ease-in-out, top 1.1s ease-in-out",
+            }}
+            aria-hidden="true"
+          >
+            <div className={ladyLeaving ? "ladybug-fly" : "ladybug-walk"}>
+              <LadybugSvg className="h-10 w-10 drop-shadow" />
+            </div>
+          </div>
         )}
 
         {bubble && (

@@ -12,6 +12,7 @@ import { isShaded } from "@/lib/game";
 import { getStage } from "@/lib/stages";
 import { playSound } from "@/lib/sound";
 import { CLIMATES } from "@/lib/weather";
+import { formatLeft, useLadybugLeft } from "@/components/home/Ladybug";
 import { cn } from "@/lib/utils";
 
 /** anillo de progreso circular (nivel / etapa) */
@@ -65,6 +66,7 @@ export function HomeHud() {
   const [stages, setStages] = useState(false);
   const [share, setShare] = useState(false);
   const st = getStage(state.xp);
+  const ladyLeft = useLadybugLeft(state.ladybugUntil ?? 0);
   const unread = state.notifications.filter((n) => !n.read).length;
   const climate = CLIMATES[state.climate];
   const shaded = isShaded(state, now);
@@ -169,6 +171,15 @@ export function HomeHud() {
         <Meter emoji="☀️" label="Frescura" value={state.fresh} color="#F59E0B" />
         <Meter emoji="😊" label="Felicidad" value={state.happy} color="#F06292" />
       </div>
+
+      {/* Catarina Guardiana: tiempo restante, discreto */}
+      {ladyLeft > 0 && (
+        <div className="pointer-events-none mt-1.5 flex">
+          <span className="hud-card rounded-full bg-[#FFEBEE]/95 px-2.5 py-0.5 font-display text-xs font-bold text-[#C62828] shadow-sm backdrop-blur-sm" aria-label={`Catarina Guardiana: ${formatLeft(ladyLeft)}`}>
+            🐞 {formatLeft(ladyLeft)}
+          </span>
+        </div>
+      )}
 
       {settings && <SettingsPanel onClose={() => setSettings(false)} />}
       {stages && <StagesPanel onClose={() => setStages(false)} />}

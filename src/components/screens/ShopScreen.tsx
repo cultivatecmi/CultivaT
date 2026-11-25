@@ -8,7 +8,8 @@ import { PlantScene } from "@/components/plant/PlantScene";
 import { PlantCharacter } from "@/components/plant/PlantCharacter";
 import { BackgroundScene } from "@/components/plant/BackgroundScene";
 import { TapButton } from "@/components/ui/TapButton";
-import { computeMood } from "@/lib/game";
+import { computeMood, LADYBUG_PRICE } from "@/lib/game";
+import { LadybugSvg, formatLeft, useLadybugLeft } from "@/components/home/Ladybug";
 import { CATEGORY_LABELS, SHOP_ITEMS, type ShopItem } from "@/lib/shop";
 import { getStage } from "@/lib/stages";
 import type { Equipped, ItemCategory } from "@/lib/types";
@@ -39,7 +40,8 @@ function ItemThumb({ item, stage, current }: { item: ShopItem; stage: number; cu
 }
 
 export function ShopScreen() {
-  const { state, now, buyItem, equipItem } = useGameState();
+  const { state, now, buyItem, equipItem, buyLadybug } = useGameState();
+  const ladyLeft = useLadybugLeft(state.ladybugUntil ?? 0);
   const [cat, setCat] = useState<ItemCategory>("pot");
   const [previewId, setPreviewId] = useState<string | null>(null);
   const stage = getStage(state.xp).index;
@@ -66,6 +68,28 @@ export function ShopScreen() {
           <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 font-display text-sm font-semibold shadow">👀 Probando: {previewItem.name}</span>
         )}
       </PlantScene>
+
+      {/* ayudante temporal: control biológico */}
+      <section className="flex items-center gap-3 rounded-3xl border-2 border-[#E53935]/30 bg-[#FFEBEE] p-3 shadow-sm" aria-label="Ayudante temporal">
+        <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-white shadow-inner">
+          <LadybugSvg className={cn("h-12 w-12", ladyLeft > 0 && "anim-float")} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-display text-[11px] font-bold uppercase tracking-wide text-[#C62828]">Ayudante temporal</p>
+          <h3 className="font-display text-base font-semibold leading-tight text-[#3E2C23]">🐞 Catarina Guardiana (3 min)</h3>
+          <p className="text-xs leading-snug text-stone-600">Se come automáticamente a los pulgones sin usar químicos.</p>
+        </div>
+        {ladyLeft > 0 ? (
+          <span className="shrink-0 rounded-2xl bg-white px-3 py-2 text-center font-display text-sm font-bold text-[#C62828] shadow-sm">
+            Activa
+            <br />🐞 {formatLeft(ladyLeft)}
+          </span>
+        ) : (
+          <TapButton tone="sol" size="sm" className="shrink-0" onClick={() => buyLadybug()}>
+            {LADYBUG_PRICE} <InlineCoin />
+          </TapButton>
+        )}
+      </section>
 
       <div className="grid grid-cols-3 gap-1 rounded-2xl bg-stone-200/70 p-1">
         {CATS.map((c) => (

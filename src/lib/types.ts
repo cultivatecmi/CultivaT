@@ -91,6 +91,8 @@ export interface GameState {
   climate: Climate;
   /** Sombrilla abierta hasta (ms), 0 si no hay */
   shadeUntil: number;
+  /** Catarina Guardiana activa hasta (ms), 0 si no hay */
+  ladybugUntil: number;
   xp: number;
   coins: number;
   streak: number;
