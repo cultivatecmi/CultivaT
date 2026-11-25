@@ -7,6 +7,8 @@ import { CatchRainGame } from "@/components/games/CatchRainGame";
 import { WhackPestGame } from "@/components/games/WhackPestGame";
 import { MemoryGame } from "@/components/games/MemoryGame";
 import { TriviaGame } from "@/components/games/TriviaGame";
+import { RootMazeGame } from "@/components/games/RootMazeGame";
+import { PollinationGame } from "@/components/games/PollinationGame";
 import { GAMES, getGame, type GameId } from "@/lib/games";
 import { CoinText } from "@/components/ui/CoinText";
 import { playSound } from "@/lib/sound";
@@ -50,6 +52,8 @@ export function PlayScreen() {
         {game === "plagas" && <WhackPestGame onExit={exit} />}
         {game === "memorama" && <MemoryGame onExit={exit} />}
         {game === "trivia" && <TriviaGame onExit={exit} />}
+        {game === "raices" && <RootMazeGame onExit={exit} />}
+        {game === "polinizacion" && <PollinationGame onExit={exit} />}
       </div>
     );
   }

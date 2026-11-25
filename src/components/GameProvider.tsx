@@ -78,7 +78,7 @@ interface GameContextValue {
   growStage: () => void;
   reward: (coins: number, xp: number, reason: string, quiet?: boolean) => void;
   /** Guarda el resultado de un minijuego, entrega monedas/XP y dice si es récord */
-  recordGame: (game: GameId, result: { score: number; coins: number; xp: number; label: string }) => { newBest: boolean; happy: number };
+  recordGame: (game: GameId, result: { score: number; coins: number; xp: number; label: string; happy?: number }) => { newBest: boolean; happy: number };
   /** Baja un medidor sin pasar de un piso (p. ej. el pulgón chupando nutrientes) */
   drain: (stat: BoostStat, amount: number, floor: number) => void;
   recordTriviaRound: (correct: number) => void;
@@ -521,13 +521,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   );
 
   const recordGame = useCallback(
-    (game: GameId, r: { score: number; coins: number; xp: number; label: string }) => {
+    (game: GameId, r: { score: number; coins: number; xp: number; label: string; happy?: number }) => {
       const s = current();
       if (!s) return { newBest: false, happy: 0 };
       const lower = getGame(game).lowerIsBetter;
       // jugar es lo único que sube la felicidad de la planta
       const before = s.happy;
-      const happyAfter = Math.min(100, before + gameJoyBonus());
+      const happyAfter = Math.min(100, before + (r.happy ?? gameJoyBonus()));
       const happy = Math.round(happyAfter - before);
       const prev = s.stats.best[game];
       const newBest = prev === undefined || (lower ? r.score < prev : r.score > prev);
