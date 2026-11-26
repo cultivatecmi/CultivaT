@@ -172,9 +172,27 @@ export function HomeHud({ aphidAlert = false }: { aphidAlert?: boolean }) {
       </div>
 
       {/* Catarina Guardiana: botón circular justo debajo de "Agua" */}
-      <div className="pointer-events-none mt-2 flex">
+      <div className="pointer-events-none relative mt-2 flex">
         <div className="pointer-events-auto">
           <LadybugButton aphidAlert={aphidAlert} />
+        </div>
+        {/* nombre de la planta, centrado sobre ella */}
+        <div className="pointer-events-none absolute inset-x-0 top-1 flex justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              playSound("tap");
+              setStages(true);
+            }}
+            className="hud-card pointer-events-auto flex max-w-[46%] items-center gap-1.5 rounded-full bg-white/85 px-3 py-1 shadow-sm backdrop-blur-sm active:scale-95"
+            aria-label={`${state.plantName}, ${st.stage.name}: ver etapas`}
+          >
+            <span className="text-base leading-none">{st.stage.emoji}</span>
+            <span className="min-w-0 text-left leading-tight">
+              <span className="block truncate font-display text-[15px] font-bold text-tinta">{state.plantName}</span>
+              <span className="block truncate font-display text-[10px] font-semibold text-stone-500">{st.stage.name}</span>
+            </span>
+          </button>
         </div>
       </div>
 

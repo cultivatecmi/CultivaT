@@ -90,8 +90,33 @@ function getCtx(): AudioContext | null {
       return null;
     }
   }
-  if (ctx.state === "suspended") void ctx.resume().catch(() => undefined);
+  // "interrupted" ocurre en iPhone al volver de segundo plano o tras una llamada
+  if (ctx.state !== "running" && !released) void ctx.resume().catch(() => undefined);
   return ctx;
+}
+
+/** true mientras la app está en segundo plano: el audio queda liberado para otras apps */
+let released = false;
+
+/**
+ * Libera el audio cuando la app pasa a segundo plano (Safari en iPhone mantiene la sesión
+ * de reproducción ocupada y no deja que otras apps suenen). Se reactiva con el siguiente toque.
+ */
+export function releaseAudio() {
+  released = true;
+  unlocked = false;
+  try {
+    silentAudio?.pause();
+  } catch {
+    /* sin audio */
+  }
+  try {
+    const nav = navigator as Navigator & { audioSession?: { type: string } };
+    if (nav.audioSession) nav.audioSession.type = "auto";
+  } catch {
+    /* no disponible */
+  }
+  if (ctx && ctx.state === "running") void ctx.suspend().catch(() => undefined);
 }
 
 let unlocked = false;
@@ -126,6 +151,8 @@ function silentWavUrl() {
  */
 export function unlockAudio() {
   if (typeof window === "undefined") return;
+  if (document.visibilityState === "hidden") return;
+  released = false;
   // iOS 17+: los sonidos del juego se tratan como reproducción multimedia
   try {
     const nav = navigator as Navigator & { audioSession?: { type: string } };
@@ -151,7 +178,13 @@ export function unlockAudio() {
       silentAudio.volume = 0.01;
     }
     void silentAudio.play().catch(() => undefined);
-    unlocked = true;
+    // solo cuenta como desbloqueado cuando el contexto realmente suena
+    void c
+      .resume()
+      .then(() => {
+        unlocked = c.state === "running";
+      })
+      .catch(() => undefined);
   } catch {
     /* sin audio */
   }
