@@ -43,7 +43,7 @@ import { getGame, type GameId } from "@/lib/games";
 import { CLIMATES, pickNextClimate, randomClimateDelay, type Climate } from "@/lib/weather";
 import { gameJoyBonus, markJoy } from "@/lib/joy";
 import { getStage } from "@/lib/stages";
-import { playSound, unlockAudio } from "@/lib/sound";
+import { playSound, releaseAudio, unlockAudio } from "@/lib/sound";
 import { isTourActive } from "@/lib/tour";
 import { uid } from "@/lib/utils";
 
@@ -244,11 +244,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     // el audio solo puede activarse tras un gesto del usuario
     // (Safari en iPhone solo acepta touchend/click como gesto válido; se escucha en fase de captura
     // para que ningún componente lo bloquee con stopPropagation)
+    // también al empezar a arrastrar (regar/abonar), para que el sonido no dependa de un toque "limpio"
     const unlock = () => unlockAudio();
-    const events = ["touchend", "click", "pointerup", "keydown"] as const;
+    const events = ["touchstart", "touchend", "pointerdown", "click", "pointerup", "keydown"] as const;
     events.forEach((ev) => window.addEventListener(ev, unlock, { capture: true, passive: true }));
+    // al salir de Safari se libera el audio para que otras apps puedan sonar
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") releaseAudio();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", releaseAudio);
     return () => {
       events.forEach((ev) => window.removeEventListener(ev, unlock, { capture: true }));
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", releaseAudio);
     };
   }, []);
 
